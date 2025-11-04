@@ -1,0 +1,46 @@
+{
+  "kits": [
+    {
+      "id": "k1",
+      "name": "T-34/85",
+      "manufacturer": "Tamiya",
+      "category": "tank",
+      "scale": "1:35",
+      "difficulty": 2,
+      "releaseYear": 2019,
+      "coverUrl": "https://images.unsplash.com/photo-1594297910954-2f0f0dffb5a7?auto=format&fit=crop&w=1200&q=60"
+    },
+    {
+      "id": "k2",
+      "name": "Bismarck Battleship",
+      "manufacturer": "Revell",
+      "category": "ship",
+      "scale": "1:700",
+      "difficulty": 4,
+      "releaseYear": 2017,
+      "coverUrl": "https://images.unsplash.com/photo-1518407613690-d9fc990e795f?auto=format&fit=crop&w=1200&q=60"
+    },
+    {
+      "id": "k3",
+      "name": "F-16C Falcon",
+      "manufacturer": "Hasegawa",
+      "category": "aircraft",
+      "scale": "1:72",
+      "difficulty": 3,
+      "releaseYear": 2021,
+      "coverUrl": "https://images.unsplash.com/photo-1519060825752-c4832f2d4009?auto=format&fit=crop&w=1200&q=60"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "r1",
+      "kitId": "k1",
+      "user": "Zoli",
+      "rating": 5,
+      "pros": "Jó illeszkedés, kevés utómunka",
+      "cons": "Matricák vékonyak",
+      "body": "Remek kezdőknek, gyors sikerélmény.",
+      "createdAt": "2025-10-01T10:00:00.000Z"
+    }
+  ]
+}
