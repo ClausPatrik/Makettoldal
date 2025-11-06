@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Regisztráció • Makett Véleményező</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="wrap header-inner">
+        <div class="brand">
+          <div class="logo"></div>
+          <h1>Makett Véleményező</h1>
+        </div>
+
+        <nav class="nav">
+          <a href="/">Főoldal</a>
+          <a href="/login.html">Bejelentkezés</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Form -->
+    <section class="login-hero">
+      <div class="login-card">
+        <h2>Regisztráció</h2>
+
+        <form id="loginForm">
+
+          <div class="form-row">
+            <label class="small" for="vezetek">Vezetéknév</label>
+            <input class="input" id="vezetek" name="vezetek" type="text" required placeholder="Tóth" />
+          </div>
+
+          <div class="form-row">
+            <label class="small" for="kereszt">Keresztnév</label>
+            <input class="input" id="kereszt" name="kereszt" type="text" required placeholder="Béla" />
+          </div>
+
+          <div class="form-row">
+            <label class="small" for="email">Email</label>
+            <input class="input" id="email" name="email" type="email" required placeholder="te@pelda.hu" />
+          </div>
+
+          <div class="form-row">
+            <label class="small" for="password">Jelszó</label>
+            <input class="input" id="password" name="password" type="password" required placeholder="••••••••" />
+          </div>
+
+          <div class="form-row" style="margin-top:10px; display:flex; gap:8px;">
+            <button class="btn" type="submit">Regisztráció</button>
+            <button class="btn" type="button" id="backBtn">Vissza</button>
+          </div>
+
+        </form>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="wrap">© <span id="year"></span> Makett Véleményező</div>
+    </footer>
+
+    <!-- Script -->
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+      document.getElementById("backBtn").addEventListener("click", () => (location.href = "/"));
+
+      document.getElementById("loginForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+
+        const vezetek = fd.get("vezetek").trim();
+        const kereszt = fd.get("kereszt").trim();
+        const email = fd.get("email").trim();
+        const pw = fd.get("password");
+
+        if (!vezetek || !kereszt || !email || !pw) {
+          alert("Kérjük, tölts ki minden mezőt.");
+          return;
+        }
+
+        alert("Sikeres regisztráció (demó)");
+        location.href = "/login.html";
+      });
+    </script>
+  </body>
+</html>

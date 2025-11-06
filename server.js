@@ -1,12 +1,37 @@
-const express = require('express'); 
-const path = require('path'); 
-const app = express(); 
-const PORT = process.env.PORT || 3000;
-app.use(express.static(__dirname));
+const mysql = require("mysql2");
 
-app.get('/', (req,res)=>res.sendFile(path.join(__dirname,'index.html')));
+const express = require("express");
+const path = require("path");
+const port = 3000;
+const app = express();
 
-app.get('/login', (req,res)=>res.sendFile(path.join(__dirname,'login.html')));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
+/* 
+const db = mysql.createConnection({
+  host: "localhost",
+  port: 3307, 
+  user: "root",
+  password: "",
+  database: ""
+});
+ 
+db.connect(err => {
+  if (err) console.error(" Adatbázis hiba:", err);
+  else console.log(" MySQL kapcsolat létrejött!");
+});
+ 
+ 
+app.get("/felhasznalok", (req, res) => {
+  db.query("SELECT * FROM felhasznalok", (err, results) => {
+    if (err) return res.status(500).json({ error: err });
+    res.json(results);
+  });
+});
+ 
+ 
+*/
 
-app.use((req,res)=>res.status(404).sendFile(path.join(__dirname,'index.html')));
-app.listen(PORT, ()=>console.log(`✅ Server running: http://localhost:${PORT}`));
+app.listen(port, () => console.log("server running http://localhost:" + port));
+
+ 

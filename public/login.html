@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bejelentkezés • Makett Véleményező</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="wrap header-inner">
+        <div class="brand">
+          <div class="logo"></div>
+          <h1>Makett Véleményező</h1>
+        </div>
+
+        <nav class="nav" aria-label="Fő navigáció">
+          <a href="/">Főoldal</a>
+          <a href="/login.html" aria-current="page">Bejelentkezés</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Login Form -->
+    <section class="login-hero">
+      <div class="login-card">
+        <h2>Bejelentkezés</h2>
+
+        <form id="loginForm">
+          <div class="form-row">
+            <label class="small" for="email">Email</label>
+            <input
+              class="input"
+              id="email"
+              name="email"
+              type="email"
+              required
+              placeholder="te@pelda.hu"
+            />
+          </div>
+
+          <div class="form-row">
+            <label class="small" for="password">Jelszó</label>
+            <input
+              class="input"
+              id="password"
+              name="password"
+              type="password"
+              required
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div class="form-actions" style="margin-top: 10px; display: flex; gap: 8px;">
+            <button class="btn" type="submit">Belépés</button>
+            <button class="btn" type="button" id="backBtn">Vissza</button>
+          </div>
+        </form>
+      </div>
+    </section>
+ 
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="wrap">
+        © <span id="year"></span> Makett Véleményező
+      </div>
+    </footer>
+
+    <!-- Script -->
+    <script>
+      // Aktuális év láblécbe
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      // Vissza gomb → kezdőoldal
+      document.getElementById("backBtn").addEventListener("click", () => {
+        location.href = "/";
+      });
+
+      // Bejelentkezés (demó funkció)
+      document.getElementById("loginForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const fd = new FormData(e.target);
+        const email = String(fd.get("email") || "").trim();
+        const password = String(fd.get("password") || "");
+
+        if (!email || !password) {
+          alert("Hiányzó adatok.");
+          return;
+        }
+
+        alert("Belépés sikeres (demó)");
+        location.href = "/";
+      });
+    </script>
+  </body>
+</html>

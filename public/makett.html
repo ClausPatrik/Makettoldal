@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Makett Véleményező</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <div class="wrap header-inner">
+        <div class="brand">
+          <div class="logo"></div>
+          <h1>Makett Véleményező</h1>
+        </div>
+
+        <nav class="nav">
+          <a href="/">Főoldal</a>
+          <a href="/login">Bejelentkezés</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <div>
+          <h2>Modern, katonai stílusú makett-értékelések</h2>
+          <p>Tankok, hajók, repülők – gyors keresés, szűrés és közösségi vélemények.</p>
+
+          <div class="row" style="margin-top:14px; display:flex; gap:10px;">
+            <a class="btn" href="/login" style="max-width:200px; text-align:center;">
+              Belépés
+            </a>
+            <span class="badge">MVP • gyors prototípus</span>
+          </div>
+        </div>
+
+        <div class="hero-card">
+          <div class="row">
+            <div class="kpi">
+              <span class="small">Készletek</span>
+              <span class="val" id="kpiKits">—</span>
+            </div>
+            <div class="kpi">
+              <span class="small">Vélemények</span>
+              <span class="val" id="kpiReviews">—</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="badge">⚡ React mini-widget</div>
+            <div id="react-stats"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar -->
+    <section class="toolbar">
+      <div class="wrap grid">
+        <div class="cell">
+          <input id="searchInput" class="input" placeholder="Keresés név vagy gyártó szerint..." />
+        </div>
+
+        <div class="cell">
+          <select id="categorySelect" class="input">
+            <option value="all">Kategória: Mind</option>
+            <option value="tank">Tank</option>
+            <option value="ship">Hajó</option>
+            <option value="aircraft">Repülő</option>
+          </select>
+        </div>
+
+        <div class="cell">
+          <select id="scaleSelect" class="input">
+            <option value="all">Skála: Mind</option>
+            <option>1:35</option>
+            <option>1:48</option>
+            <option>1:72</option>
+            <option>1:700</option>
+          </select>
+        </div>
+
+        <div class="cell">
+          <select id="sortSelect" class="input">
+            <option value="rating-desc">Rendezés: értékelés ↓</option>
+            <option value="newest">Rendezés: megjelenés ↓</option>
+            <option value="difficulty-asc">Rendezés: nehézség ↑</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cards -->
+    <main class="wrap grid-cards" id="cards"></main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="wrap">© <span id="year"></span> Makett Véleményező</div>
+    </footer>
+
+    <!-- Add Kit Modal -->
+    <dialog id="addKitModal" class="modal">
+      <form method="dialog" class="modal-card" id="addKitForm">
+        <h2>Új kit hozzáadása</h2>
+
+        <div class="grid2">
+          <label>Név <input required name="name" class="input" /></label>
+          <label>Gyártó <input required name="manufacturer" class="input" /></label>
+
+          <label>Kategória
+            <select name="category" class="input">
+              <option>tank</option>
+              <option>ship</option>
+              <option>aircraft</option>
+            </select>
+          </label>
+
+          <label>Skála
+            <select name="scale" class="input">
+              <option>1:35</option>
+              <option>1:48</option>
+              <option>1:72</option>
+              <option>1:700</option>
+            </select>
+          </label>
+
+          <label>Nehézség (1-5)
+            <input type="number" min="1" max="5" value="3" name="difficulty" class="input" />
+          </label>
+
+          <label>Megjelenés éve
+            <input type="number" name="releaseYear" class="input" placeholder="pl. 2021" />
+          </label>
+
+          <label class="span2">Kép URL (opcionális)
+            <input name="coverUrl" class="input" placeholder="https://..." />
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn" value="cancel">Mégse</button>
+          <button class="btn" value="default" id="saveKitBtn">Mentés</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Review Modal -->
+    <dialog id="reviewModal" class="modal">
+      <form method="dialog" class="modal-card" id="reviewForm">
+        <h2 id="reviewTitle">Értékelés</h2>
+
+        <div class="grid2">
+          <label>Pontszám
+            <select name="rating" class="input">
+              <option>1</option>
+              <option>2</option>
+              <option selected>3</option>
+              <option>4</option>
+              <option>5</option>
+            </select>
+          </label>
+
+          <label class="span2">Előnyök (opcionális)
+            <input name="pros" class="input" />
+          </label>
+
+          <label class="span2">Hátrányok (opcionális)
+            <input name="cons" class="input" />
+          </label>
+
+          <label class="span2">Részletes vélemény (min. 10 karakter)
+            <textarea name="body" class="input" minlength="10" required></textarea>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn" value="cancel">Mégse</button>
+          <button class="btn" value="default" id="saveReviewBtn">Mentés</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+
+    <script type="module">
+      import React from "https://esm.sh/react@18";
+      import { createRoot } from "https://esm.sh/react-dom@18/client";
+
+      function Stats({ kits, reviews }) {
+        const avg = reviews.length
+          ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+          : "—";
+
+        return React.createElement("div", { className: "badge" }, "Átlag értékelés: " + avg);
+      }
+
+      window.addEventListener("makett:data", (e) => {
+        const { kits, reviews } = e.detail;
+        createRoot(document.getElementById("react-stats"))
+          .render(React.createElement(Stats, { kits, reviews }));
+      });
+    </script>
+  </body>
+</html>
