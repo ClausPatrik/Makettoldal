@@ -1,0 +1,2 @@
+cd Makettoldal/Makettoldal/client
+npm install @mlc-ai/web-llm
