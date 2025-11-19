@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useAdat } from "../context/AdatContext";
+import { Link, useNavigate } from "react-router-dom";
 
 function generalSzin(nev) {
   if (!nev) return "#4b5563";
@@ -11,239 +13,162 @@ function generalSzin(nev) {
   return `hsl(${hue}, 70%, 45%)`;
 }
 
-function AvatarNagy({ nev }) {
-  if (!nev) nev = "P";
-
-  const fileKulcs = "profil_kep_file_" + nev;
-  const urlKulcs = "profil_kep_url_" + nev;
-
-  const fileAdat = typeof window !== "undefined" ? localStorage.getItem(fileKulcs) : null;
-  const urlAdat = typeof window !== "undefined" ? localStorage.getItem(urlKulcs) : null;
-
-  const stilus = {
-    width: 96,
-    height: 96,
-    borderRadius: "999px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 40,
-    background: generalSzin(nev),
-    color: "#f9fafb",
-    overflow: "hidden",
-    marginBottom: 8,
-  };
-
-  if (fileAdat) {
-    return <img src={fileAdat} alt="profil" style={{ ...stilus, objectFit: "cover" }} />;
-  }
-
-  if (urlAdat) {
-    return <img src={urlAdat} alt="profil" style={{ ...stilus, objectFit: "cover" }} />;
-  }
-
-  const kezdobetu = nev.trim().charAt(0).toUpperCase();
-  return <div style={stilus}>{kezdobetu}</div>;
-}
-
-export default function Profil() {
-  const { felhasznalo, kijelentkezes } = useAuth();
-  const [kepUrl, beallitKepUrl] = useState("");
-  const [profil, beallitProfil] = useState({
-    becenev: "",
-    bemutatkozas: "",
-    kedvencSkala: "",
-    kedvencTema: "",
-  });
-
-  if (!felhasznalo) {
+function AvatarNagy({ nev, profilKepUrl }) {
+  if (profilKepUrl) {
     return (
-      <div className="wrap" style={{ padding: 16 }}>
-        <h2>Nincs bejelentkezve</h2>
-        <p>Profil megtekintesehez jelentkezzen be.</p>
+      <div className="profile-avatar-wrapper">
+        <img
+          src={profilKepUrl}
+          alt={`${nev || "Felhasználó"} profilképe`}
+          className="profile-avatar-image"
+        />
       </div>
     );
   }
 
-  const nev = felhasznalo.felhasznalo_nev;
-  const kulcsKepUrl = "profil_kep_url_" + nev;
-  const kulcsKepFile = "profil_kep_file_" + nev;
-  const kulcsProfil = "profil_adatok_" + nev;
+  if (!nev) nev = "P";
+  const kezdobetu = nev.trim().charAt(0).toUpperCase();
+  const hatter = generalSzin(nev);
+
+  const stilus = {
+    width: "96px",
+    height: "96px",
+    borderRadius: "9999px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "42px",
+    fontWeight: "bold",
+    background: hatter,
+    color: "white",
+  };
+
+  return <div style={stilus}>{kezdobetu}</div>;
+}
+
+export default function Profil() {
+  const { felhasznalo, bejelentkezve, kijelentkezes, profilFrissites } =
+    useAuth();
+  const { makettek, kedvencek, betoltKedvencek } = useAdat();
+  const navigate = useNavigate();
+
+  const [nev, beallitNev] = useState(felhasznalo?.felhasznalo_nev || "");
+  const [profilKepUrl, beallitProfilKepUrl] = useState(
+    felhasznalo?.profil_kep_url || ""
+  );
+  const [mentesFolyamatban, beallitMentesFolyamatban] = useState(false);
 
   useEffect(() => {
-    const url = localStorage.getItem(kulcsKepUrl);
-    if (url) beallitKepUrl(url);
-
-    const adatStr = localStorage.getItem(kulcsProfil);
-    if (adatStr) {
-      try {
-        const obj = JSON.parse(adatStr);
-        beallitProfil((r) => ({ ...r, ...obj }));
-      } catch (e) {
-        console.warn("Hibas profil JSON:", e);
-      }
+    if (!bejelentkezve) {
+      navigate("/bejelentkezes");
+      return;
     }
-  }, [kulcsKepUrl, kulcsProfil]);
+    betoltKedvencek();
+  }, [bejelentkezve, betoltKedvencek, navigate]);
 
-  function kezeliKepFajlValasztast(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const adatUrl = reader.result;
-      localStorage.setItem(kulcsKepFile, adatUrl);
-      // ha fajl van, URL-t nem toroljuk, de a preview-t a file fogja adni
-      // csak egy teszt alert:
-      alert("Profilkep fajl elmentve.");
-    };
-    reader.readAsDataURL(file);
+  useEffect(() => {
+    if (felhasznalo) {
+      beallitNev(felhasznalo.felhasznalo_nev || "");
+      beallitProfilKepUrl(felhasznalo.profil_kep_url || "");
+    }
+  }, [felhasznalo]);
+
+  if (!bejelentkezve) {
+    return null;
   }
 
-  function kezeliKepUrlMentes() {
-    localStorage.setItem(kulcsKepUrl, kepUrl.trim());
-    alert("Profilkep URL elmentve.");
-  }
-
-  function kezeliProfilValtozast(mezo, ertek) {
-    beallitProfil((elozo) => ({ ...elozo, [mezo]: ertek }));
-  }
-
-  function kezeliProfilMentes() {
-    localStorage.setItem(kulcsProfil, JSON.stringify(profil));
-    alert("Profil adatok elmentve.");
+  async function kezeliProfilMentese(e) {
+    e.preventDefault();
+    try {
+      beallitMentesFolyamatban(true);
+      await profilFrissites({
+        felhasznalo_nev: nev,
+        profil_kep_url: profilKepUrl,
+      });
+      alert("Profil mentve.");
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      beallitMentesFolyamatban(false);
+    }
   }
 
   function kezeliKijelentkezes() {
     kijelentkezes();
+    navigate("/");
   }
 
-  return (
-    <div className="wrap" style={{ padding: 16, maxWidth: 700 }}>
-      <h2>Profil</h2>
+  const kedvencMakettek = makettek.filter((m) => kedvencek.includes(m.id));
 
-      <div
-        style={{
-          display: "flex",
-          gap: 20,
-          alignItems: "flex-start",
-          marginTop: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <AvatarNagy nev={nev} />
-          <p style={{ margin: 0, fontWeight: "bold" }}>{nev}</p>
-          <p className="small" style={{ marginTop: 2 }}>
-            {felhasznalo.email}
+  return (
+    <section className="page">
+      <h1>Profilom</h1>
+
+      <div className="profile-card card">
+        <AvatarNagy nev={nev} profilKepUrl={profilKepUrl} />
+        <div className="profile-info">
+          <p>
+            <strong>Email:</strong> {felhasznalo.email}
+          </p>
+          <p>
+            <strong>Szerepkör:</strong>{" "}
+            {felhasznalo.szerepkor_id === 2 ? "Admin" : "Felhasználó"}
           </p>
         </div>
 
-        <div style={{ flex: 1, minWidth: 260 }}>
-          <h3>Profilkep beallitasa</h3>
-
-          <div className="form-row">
-            <label className="small">Kep feltoltese fajlbol</label>
+        <form onSubmit={kezeliProfilMentese} className="profile-form form">
+          <label>
+            Név
             <input
-              className="input"
-              type="file"
-              accept="image/*"
-              onChange={kezeliKepFajlValasztast}
+              type="text"
+              value={nev}
+              onChange={(e) => beallitNev(e.target.value)}
+              required
             />
-          </div>
-
-          <div className="form-row" style={{ marginTop: 8 }}>
-            <label className="small">Kep URL megadása (opcionalis)</label>
+          </label>
+          <label>
+            Profilkép URL
             <input
-              className="input"
-              value={kepUrl}
-              onChange={(e) => beallitKepUrl(e.target.value)}
+              type="url"
+              value={profilKepUrl}
+              onChange={(e) => beallitProfilKepUrl(e.target.value)}
               placeholder="https://..."
             />
+          </label>
+          <div className="button-row">
+            <button type="submit" className="btn" disabled={mentesFolyamatban}>
+              {mentesFolyamatban ? "Mentés..." : "Profil mentése"}
+            </button>
             <button
-              className="btn"
               type="button"
-              style={{ marginTop: 6 }}
-              onClick={kezeliKepUrlMentes}
+              className="btn secondary"
+              onClick={kezeliKijelentkezes}
             >
-              URL mentese
+              Kijelentkezés
             </button>
           </div>
-        </div>
+        </form>
       </div>
 
-      <hr style={{ margin: "16px 0" }} />
-
-      <div style={{ display: "grid", gap: 10 }}>
-        <h3>Profil adatok</h3>
-
-        <div className="form-row">
-          <label className="small">Becenev</label>
-          <input
-            className="input"
-            value={profil.becenev}
-            onChange={(e) => kezeliProfilValtozast("becenev", e.target.value)}
-            placeholder="Pl. xZokniHUN"
-          />
-        </div>
-
-        <div className="form-row">
-          <label className="small">Bemutatkozas</label>
-          <textarea
-            className="input"
-            rows={3}
-            value={profil.bemutatkozas}
-            onChange={(e) =>
-              kezeliProfilValtozast("bemutatkozas", e.target.value)
-            }
-            placeholder="Ird le roviden, ki vagy, milyen maketteket szeretsz..."
-          />
-        </div>
-
-        <div className="form-row">
-          <label className="small">Kedvenc makett skala</label>
-          <select
-            className="input"
-            value={profil.kedvencSkala}
-            onChange={(e) =>
-              kezeliProfilValtozast("kedvencSkala", e.target.value)
-            }
-          >
-            <option value="">Nincs megadva</option>
-            <option value="1:35">1:35</option>
-            <option value="1:48">1:48</option>
-            <option value="1:72">1:72</option>
-            <option value="1:700">1:700</option>
-          </select>
-        </div>
-
-        <div className="form-row">
-          <label className="small">Kedvenc tema (pl. tank, hajo...)</label>
-          <input
-            className="input"
-            value={profil.kedvencTema}
-            onChange={(e) =>
-              kezeliProfilValtozast("kedvencTema", e.target.value)
-            }
-            placeholder="Pl. WWII tankok, modern repulok..."
-          />
-        </div>
-
-        <div
-          className="form-row"
-          style={{ display: "flex", gap: 8, marginTop: 10 }}
-        >
-          <button className="btn" type="button" onClick={kezeliProfilMentes}>
-            Profil mentese
-          </button>
-          <button
-            className="btn"
-            type="button"
-            onClick={kezeliKijelentkezes}
-          >
-            Kijelentkezes
-          </button>
-        </div>
-      </div>
-    </div>
+      <section className="card">
+        <h2>Kedvenc makettjeim</h2>
+        {kedvencMakettek.length === 0 ? (
+          <p>
+            Még nincs kedvenc maketted. A{" "}
+            <Link to="/makettek">Makettek</Link> oldalon a szívecskével tudsz
+            kedvencet jelölni.
+          </p>
+        ) : (
+          <ul className="kedvenc-lista">
+            {kedvencMakettek.map((m) => (
+              <li key={m.id} className="kedvenc-sor">
+                <strong>{m.nev}</strong> – {m.gyarto} ({m.kategoria},{" "}
+                {m.skala})
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </section>
   );
 }

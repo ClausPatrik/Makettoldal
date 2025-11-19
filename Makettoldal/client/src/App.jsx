@@ -17,86 +17,85 @@ function generalSzin(nev) {
   return `hsl(${hue}, 70%, 45%)`;
 }
 
-function Avatar({ nev, meret = 28 }) {
+function AvatarKicsi({ nev, profilKepUrl }) {
+  if (profilKepUrl) {
+    return (
+      <img
+        src={profilKepUrl}
+        alt={`${nev || "Felhasználó"} profilképe`}
+        className="nav-avatar-img"
+      />
+    );
+  }
+
   if (!nev) nev = "P";
-
-  const fileKulcs = "profil_kep_file_" + nev;
-  const urlKulcs = "profil_kep_url_" + nev;
-
-  const fileAdat = typeof window !== "undefined" ? localStorage.getItem(fileKulcs) : null;
-  const urlAdat = typeof window !== "undefined" ? localStorage.getItem(urlKulcs) : null;
+  const kezdobetu = nev.trim().charAt(0).toUpperCase();
+  const hatter = generalSzin(nev);
 
   const stilus = {
-    width: meret,
-    height: meret,
-    borderRadius: "999px",
+    width: "32px",
+    height: "32px",
+    borderRadius: "9999px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: meret / 2,
-    background: generalSzin(nev),
-    color: "#f9fafb",
-    overflow: "hidden",
+    fontSize: "16px",
+    fontWeight: "bold",
+    background: hatter,
+    color: "white",
   };
 
-  if (fileAdat) {
-    return <img src={fileAdat} alt="profil" style={{ ...stilus, objectFit: "cover" }} />;
-  }
-
-  if (urlAdat) {
-    return <img src={urlAdat} alt="profil" style={{ ...stilus, objectFit: "cover" }} />;
-  }
-
-  const kezdobetu = nev.trim().charAt(0).toUpperCase();
   return <div style={stilus}>{kezdobetu}</div>;
 }
 
-function Elrendezes({ gyerekek }) {
-  const ev = new Date().getFullYear();
-  const { felhasznalo } = useAuth();
+export default function App() {
+  const { felhasznalo, bejelentkezve, kijelentkezes } = useAuth();
+  const admin = felhasznalo?.szerepkor_id === 2;
 
   return (
     <div className="app">
-      <header className="header">
-        <div className="wrap header-inner">
-          <div className="brand">
-            <div className="logo"></div>
-            <h1>Makett Velemenyezo</h1>
-          </div>
-          <nav className="nav" aria-label="Fo navigacio">
-            <NavLink to="/">Fooldal</NavLink>
-            <NavLink to="/makettek">Makettek</NavLink>
+      <header className="nav">
+        <div className="nav-left">
+          <span className="logo">Makettező Klub</span>
+          <NavLink to="/" className="nav-link">
+            Kezdőlap
+          </NavLink>
+          <NavLink to="/makettek" className="nav-link">
+            Makettek
+          </NavLink>
+          {admin && <span className="nav-badge">Admin</span>}
+        </div>
 
-            {!felhasznalo && <NavLink to="/bejelentkezes">Bejelentkezes</NavLink>}
-
-            {felhasznalo && (
-              <Link
-                to="/profil"
-                style={{ display: "flex", alignItems: "center", gap: 6 }}
-              >
-                <Avatar nev={felhasznalo.felhasznalo_nev} meret={28} />
-                <span style={{ fontSize: "0.85rem" }}>
+        <div className="nav-right">
+          {bejelentkezve ? (
+            <>
+              <Link to="/profil" className="nav-profile">
+                <AvatarKicsi
+                  nev={felhasznalo.felhasznalo_nev}
+                  profilKepUrl={felhasznalo.profil_kep_url}
+                />
+                <span className="nav-user-name">
                   {felhasznalo.felhasznalo_nev}
                 </span>
               </Link>
-            )}
-          </nav>
+              <button className="nav-btn" onClick={kijelentkezes}>
+                Kijelentkezés
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/bejelentkezes" className="nav-link">
+                Bejelentkezés
+              </NavLink>
+              <NavLink to="/regisztracio" className="nav-link">
+                Regisztráció
+              </NavLink>
+            </>
+          )}
         </div>
       </header>
 
-      <main>{gyerekek}</main>
-
-      <footer className="footer">
-        <div className="wrap">© {ev} Makett Velemenyezo</div>
-      </footer>
-    </div>
-  );
-}
-
-export default function App() {
-  return (
-    <Elrendezes
-      gyerekek={
+      <main className="main">
         <Routes>
           <Route path="/" element={<Kezdolap />} />
           <Route path="/makettek" element={<Makettek />} />
@@ -104,7 +103,7 @@ export default function App() {
           <Route path="/regisztracio" element={<Regisztracio />} />
           <Route path="/profil" element={<Profil />} />
         </Routes>
-      }
-    />
+      </main>
+    </div>
   );
 }

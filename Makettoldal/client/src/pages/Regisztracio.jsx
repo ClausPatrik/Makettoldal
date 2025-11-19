@@ -1,207 +1,69 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-
-const API_ALAP = "http://localhost:3001/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function Regisztracio() {
-  const navigacio = useNavigate();
-  const [hibaUzenet, beallitHibaUzenet] = useState("");
+  const { regisztracio } = useAuth();
+  const navigate = useNavigate();
+  const [felhasznaloNev, beallitFelhasznaloNev] = useState("");
+  const [email, beallitEmail] = useState("");
+  const [jelszo, beallitJelszo] = useState("");
+  const [betolt, beallitBetolt] = useState(false);
+  const [hiba, beallitHiba] = useState(null);
 
-  async function kezelRegisztracio(k) {
-    k.preventDefault();
-    const urlapAdat = new FormData(k.target);
-
-    const vezeteknev = String(urlapAdat.get("vezeteknev") || "").trim();
-    const keresztnev = String(urlapAdat.get("keresztnev") || "").trim();
-    const becenev = String(urlapAdat.get("becenev") || "").trim();
-    const email = String(urlapAdat.get("email") || "").trim();
-    const jelszo = String(urlapAdat.get("jelszo") || "");
-    const jelszoUjra = String(urlapAdat.get("jelszoUjra") || "");
-    const kedvencSkala = String(urlapAdat.get("kedvencSkala") || "");
-    const feltetelekElfogadva = urlapAdat.get("feltetelek") === "on";
-
-    if (!vezeteknev || !keresztnev || !email || !jelszo || !jelszoUjra) {
-      beallitHibaUzenet("Kerjuk, toltson ki minden kotelezo mezot.");
-      return;
-    }
-
-    if (jelszo.length < 6) {
-      beallitHibaUzenet("A jelszo legalabb 6 karakter legyen.");
-      return;
-    }
-
-    if (jelszo !== jelszoUjra) {
-      beallitHibaUzenet("A ket jelszo nem egyezik.");
-      return;
-    }
-
-    if (!feltetelekElfogadva) {
-      beallitHibaUzenet("A regisztraciohoz el kell fogadni a felteteleket.");
-      return;
-    }
-
+  async function kezeliKuldes(e) {
+    e.preventDefault();
     try {
-      const felhasznalo_nev = becenev || `${vezeteknev}_${keresztnev}`;
-
-      const valasz = await fetch(`${API_ALAP}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          felhasznalo_nev,
-          email,
-          jelszo,
-          kedvencSkala,
-        }),
-      });
-
-      if (!valasz.ok) {
-        const hiba = await valasz.json().catch(() => ({}));
-        beallitHibaUzenet(hiba.hiba || "Regisztracios hiba tortent.");
-        return;
-      }
-
-      beallitHibaUzenet("");
-      alert("Sikeres regisztracio, most mar be tud lepni.");
-      navigacio("/bejelentkezes");
-    } catch (hiba) {
-      console.error("Regisztracios hiba:", hiba);
-      beallitHibaUzenet("Szerver hiba, probalja ujra kesobb.");
+      beallitBetolt(true);
+      beallitHiba(null);
+      await regisztracio(felhasznaloNev, email, jelszo);
+      navigate("/");
+    } catch (err) {
+      beallitHiba(err.message);
+    } finally {
+      beallitBetolt(false);
     }
   }
 
   return (
-    <section className="hero hero-small">
-      <div className="wrap hero-inner">
-        <div className="auth-card">
-          <h2>Regisztracio</h2>
-          <p className="small">Regisztracio valodi adatbazis kapcsolat mellett.</p>
-
-          {hibaUzenet && (
-            <p
-              className="small"
-              style={{ color: "#f97316", marginTop: 8, marginBottom: 4 }}
-            >
-              {hibaUzenet}
-            </p>
-          )}
-
-          <form onSubmit={kezelRegisztracio}>
-            <div className="form-row">
-              <label className="small" htmlFor="vezeteknev">
-                Vezeteknev *
-              </label>
-              <input className="input" id="vezeteknev" name="vezeteknev" />
-            </div>
-
-            <div className="form-row">
-              <label className="small" htmlFor="keresztnev">
-                Keresztnev *
-              </label>
-              <input className="input" id="keresztnev" name="keresztnev" />
-            </div>
-
-            <div className="form-row">
-              <label className="small" htmlFor="becenev">
-                Becenev (opcionalis)
-              </label>
-              <input
-                className="input"
-                id="becenev"
-                name="becenev"
-                placeholder="Pl. xZokniHUN"
-              />
-            </div>
-
-            <div className="form-row">
-              <label className="small" htmlFor="email">
-                E-mail *
-              </label>
-              <input
-                className="input"
-                id="email"
-                name="email"
-                type="email"
-                placeholder="te@pelda.hu"
-              />
-            </div>
-
-            <div className="form-row">
-              <label className="small" htmlFor="jelszo">
-                Jelszo * (min. 6 karakter)
-              </label>
-              <input
-                className="input"
-                id="jelszo"
-                name="jelszo"
-                type="password"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div className="form-row">
-              <label className="small" htmlFor="jelszoUjra">
-                Jelszo ujra *
-              </label>
-              <input
-                className="input"
-                id="jelszoUjra"
-                name="jelszoUjra"
-                type="password"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div className="form-row">
-              <label className="small" htmlFor="kedvencSkala">
-                Kedvenc makett skala
-              </label>
-              <select
-                className="input"
-                id="kedvencSkala"
-                name="kedvencSkala"
-              >
-                <option value="">Nincs megadva</option>
-                <option value="1:35">1:35</option>
-                <option value="1:48">1:48</option>
-                <option value="1:72">1:72</option>
-                <option value="1:700">1:700</option>
-              </select>
-            </div>
-
-            <div className="form-row" style={{ marginTop: 8 }}>
-              <label style={{ fontSize: "0.8rem" }}>
-                <input
-                  type="checkbox"
-                  name="feltetelek"
-                  style={{ marginRight: 6 }}
-                />
-                Elfogadom az adatkezelesi tajekoztatot es a felhasznalasi
-                felteteleket. *
-              </label>
-            </div>
-
-            <div
-              className="form-row"
-              style={{ marginTop: 12, display: "flex", gap: 8 }}
-            >
-              <button className="btn" type="submit">
-                Regisztral
-              </button>
-              <button
-                className="btn"
-                type="button"
-                onClick={() => navigacio(-1)}
-              >
-                Vissza
-              </button>
-            </div>
-
-            <p className="small" style={{ marginTop: 8 }}>
-              Mar van fiokod? <Link to="/bejelentkezes">Bejelentkezes</Link>
-            </p>
-          </form>
-        </div>
-      </div>
+    <section className="page auth-page">
+      <h1>Regisztráció</h1>
+      <form onSubmit={kezeliKuldes} className="card form auth-form">
+        {hiba && <p className="error">{hiba}</p>}
+        <label>
+          Felhasználónév
+          <input
+            type="text"
+            value={felhasznaloNev}
+            onChange={(e) => beallitFelhasznaloNev(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => beallitEmail(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Jelszó
+          <input
+            type="password"
+            value={jelszo}
+            onChange={(e) => beallitJelszo(e.target.value)}
+            required
+          />
+        </label>
+        <button type="submit" className="btn" disabled={betolt}>
+          {betolt ? "Regisztráció..." : "Regisztráció"}
+        </button>
+        <p className="small">
+          Már van fiókod? <Link to="/bejelentkezes">Bejelentkezés</Link>
+        </p>
+      </form>
     </section>
   );
 }
