@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Gép: 127.0.0.1
--- Létrehozás ideje: 2025. Nov 24. 22:03
--- Kiszolgáló verziója: 10.4.32-MariaDB
--- PHP verzió: 8.2.12
+-- Gép: 127.0.0.1:3307
+-- Létrehozás ideje: 2025. Nov 26. 08:43
+-- Kiszolgáló verziója: 10.4.28-MariaDB
+-- PHP verzió: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -37,6 +37,16 @@ CREATE TABLE `epitesi_naplo` (
   `letrehozva` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
 
+--
+-- A tábla adatainak kiíratása `epitesi_naplo`
+--
+
+INSERT INTO `epitesi_naplo` (`id`, `makett_id`, `felhasznalo_id`, `cim`, `leiras`, `kep_url`, `letrehozva`) VALUES
+(1, 4, 3, 'Panther építés 1. lépés', 'Alsótest összeépítése.', NULL, '2025-11-26 08:40:04'),
+(2, 5, 4, 'Tiger I festése', 'Alapszín felhordása.', NULL, '2025-11-26 08:40:04'),
+(3, 7, 5, 'F-14 kabin', 'Részletezés és matrica.', NULL, '2025-11-26 08:40:04'),
+(4, 10, 6, 'HMS Hood törzs', 'Féltestek összeállítása.', NULL, '2025-11-26 08:40:04');
+
 -- --------------------------------------------------------
 
 --
@@ -58,7 +68,12 @@ CREATE TABLE `felhasznalo` (
 
 INSERT INTO `felhasznalo` (`id`, `felhasznalo_nev`, `email`, `jelszo_hash`, `szerepkor_id`, `profil_kep_url`) VALUES
 (1, 'Admin', 'admin@pelda.hu', '$2a$10$2OnElbg0l8LSxiJI/RfhUeabEFSjEyIVWH1qLGF/.V0EEi6PARGwu', 2, NULL),
-(2, 'Demó felhasználó', 'demo@pelda.hu', '$2a$10$n7fWUKsCtFng1h7dwJTRg.l4d3B1ql1F/sF4F.xvkPBJvuMAIS9N6', 1, NULL);
+(2, 'Demó felhasználó', 'demo@pelda.hu', '$2a$10$n7fWUKsCtFng1h7dwJTRg.l4d3B1ql1F/sF4F.xvkPBJvuMAIS9N6', 1, NULL),
+(3, 'Bence', 'bence@pelda.hu', 'hash3', 1, NULL),
+(4, 'Lili', 'lili@pelda.hu', 'hash4', 1, NULL),
+(5, 'Marci', 'marci@pelda.hu', 'hash5', 1, NULL),
+(6, 'Dóri', 'dori@pelda.hu', 'hash6', 1, NULL),
+(7, 'Peti', 'peti@pelda.hu', 'hash7', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -80,7 +95,10 @@ CREATE TABLE `forum_tema` (
 --
 
 INSERT INTO `forum_tema` (`id`, `cim`, `leiras`, `kategoria`, `letrehozva`, `felhasznalo_id`) VALUES
-(1, 'Proba', 'vahsvdvhavdvzvqawzuvdvhvPEHFVVHFVHVDHSA', 'építési napló', '2025-11-24 22:00:14', 1);
+(1, 'Proba', 'vahsvdvhavdvzvqawzuvdvhvPEHFVVHFVHVDHSA', 'építési napló', '2025-11-24 22:00:14', 1),
+(2, 'Repülők panelozása', 'Panelek, wash technikák.', 'repülő', '2025-11-26 08:40:04', 3),
+(3, 'Hajó makettek festése', 'Maszkolás, rétegek.', 'hajó', '2025-11-26 08:40:04', 4),
+(4, 'Dioráma készítés alapjai', 'Terep, víz, hó.', 'dioráma', '2025-11-26 08:40:04', 5);
 
 -- --------------------------------------------------------
 
@@ -96,6 +114,17 @@ CREATE TABLE `forum_uzenet` (
   `letrehozva` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
 
+--
+-- A tábla adatainak kiíratása `forum_uzenet`
+--
+
+INSERT INTO `forum_uzenet` (`id`, `tema_id`, `felhasznalo_id`, `szoveg`, `letrehozva`) VALUES
+(1, 2, 3, 'Érdemes sötét wash-t használni.', '2025-11-26 08:40:04'),
+(2, 2, 4, 'A panelek hangsúlyozása sokat dob a végeredményen.', '2025-11-26 08:40:04'),
+(3, 3, 5, 'Hajóknál nagyon fontos a vékony réteg.', '2025-11-26 08:40:04'),
+(4, 4, 6, 'A diorámához érdemes pigmenteket használni.', '2025-11-26 08:40:04'),
+(5, 4, 7, 'A vízhez jó a kétkomponensű gyanta.', '2025-11-26 08:40:04');
+
 -- --------------------------------------------------------
 
 --
@@ -107,6 +136,17 @@ CREATE TABLE `kedvenc` (
   `makett_id` int(11) NOT NULL,
   `letrehozva` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+
+--
+-- A tábla adatainak kiíratása `kedvenc`
+--
+
+INSERT INTO `kedvenc` (`felhasznalo_id`, `makett_id`, `letrehozva`) VALUES
+(3, 4, '2025-11-26 08:40:04'),
+(4, 7, '2025-11-26 08:40:04'),
+(5, 10, '2025-11-26 08:40:04'),
+(6, 8, '2025-11-26 08:40:04'),
+(7, 12, '2025-11-26 08:40:04');
 
 -- --------------------------------------------------------
 
@@ -132,7 +172,16 @@ CREATE TABLE `makett` (
 INSERT INTO `makett` (`id`, `nev`, `gyarto`, `kategoria`, `skala`, `nehezseg`, `megjelenes_eve`, `kep_url`) VALUES
 (1, 'T-34/85 szovjet közepes harckocsi', 'Zvezda', 'harckocsi', '1:35', 3, 2019, NULL),
 (2, 'Bismarck csatahajó', 'Revell', 'hajó', '1:350', 4, 2015, NULL),
-(3, 'Messerschmitt Bf 109', 'Airfix', 'repülő', '1:72', 2, 2020, NULL);
+(3, 'Messerschmitt Bf 109', 'Airfix', 'repülő', '1:72', 2, 2020, NULL),
+(4, 'Panther Ausf. G', 'Tamiya', 'harckocsi', '1:35', 4, 2017, NULL),
+(5, 'Tiger I Late', 'Rye Field Model', 'harckocsi', '1:35', 5, 2021, NULL),
+(6, 'USS Missouri BB-63', 'Trumpeter', 'hajó', '1:200', 5, 2018, NULL),
+(7, 'F-14 Tomcat', 'Hasegawa', 'repülő', '1:48', 3, 2022, NULL),
+(8, 'P-51 Mustang', 'Tamiya', 'repülő', '1:48', 2, 2019, NULL),
+(9, 'Sherman M4A3', 'Asuka', 'harckocsi', '1:35', 3, 2016, NULL),
+(10, 'HMS Hood', 'Trumpeter', 'hajó', '1:350', 4, 2016, NULL),
+(11, 'KV-2 nehézharckocsi', 'Trumpeter', 'harckocsi', '1:35', 2, 2018, NULL),
+(12, 'Spitfire Mk Vb', 'Airfix', 'repülő', '1:72', 1, 2015, NULL);
 
 -- --------------------------------------------------------
 
@@ -173,8 +222,11 @@ CREATE TABLE `velemeny` (
 --
 
 INSERT INTO `velemeny` (`id`, `makett_id`, `felhasznalo_id`, `szoveg`, `ertekeles`, `letrehozva`) VALUES
-(1, 2, 1, 'pROBA', 5, '2025-11-24 22:01:23'),
-(2, 2, 1, 'PROBA2', 5, '2025-11-24 22:01:44');
+(3, 4, 3, 'Szuper részletek és jó illesztés.', 5, '2025-11-26 08:40:04'),
+(4, 5, 4, 'Kicsit nehéz, de látványos.', 4, '2025-11-26 08:40:04'),
+(5, 7, 5, 'Nagyon jó matricalap.', 5, '2025-11-26 08:40:04'),
+(6, 8, 6, 'Gyorsan összerakható készlet.', 4, '2025-11-26 08:40:04'),
+(7, 10, 7, 'Szép kidolgozás, de időigényes.', 4, '2025-11-26 08:40:04');
 
 --
 -- Indexek a kiírt táblákhoz
@@ -247,31 +299,31 @@ ALTER TABLE `velemeny`
 -- AUTO_INCREMENT a táblához `epitesi_naplo`
 --
 ALTER TABLE `epitesi_naplo`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT a táblához `felhasznalo`
 --
 ALTER TABLE `felhasznalo`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT a táblához `forum_tema`
 --
 ALTER TABLE `forum_tema`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT a táblához `forum_uzenet`
 --
 ALTER TABLE `forum_uzenet`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT a táblához `makett`
 --
 ALTER TABLE `makett`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT a táblához `szerepkor`
@@ -283,7 +335,7 @@ ALTER TABLE `szerepkor`
 -- AUTO_INCREMENT a táblához `velemeny`
 --
 ALTER TABLE `velemeny`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Megkötések a kiírt táblákhoz
