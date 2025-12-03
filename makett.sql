@@ -194,9 +194,9 @@ INSERT INTO `makett` (`id`, `nev`, `gyarto`, `kategoria`, `skala`, `nehezseg`, `
 (22, 'HMS Dreadnought 1907', 'Trumpeter', 'hajó', '1:350', 3, 20, NULL),
 (23, 'HMS Dreadnought 1918', 'Trumpeter', 'hajó', '1:350', 3, 20, NULL),
 (24, 'HMS Abercrombie', 'Trumpeter', 'hajó', '1:350', 6, 20, NULL),
-(25, '', '', '', '', 1, 20, NULL),
-(26, '', '', '', '', 1, 20, NULL),
-(27, '', '', '', '', 1, 20, NULL),
+(25, 'HMS Agincourt', 'FlyHawk', 'hajó', '1:700', 6, 20, NULL),
+(26, 'E-75 Standardpanzer', 'Trumpeter', 'tank', '1:35', 3, 2010, NULL),
+(27, 'Churchil Mk VII', 'Tamiya', 'tank', '1:35', 1, 1996, NULL),
 (28, '', '', '', '', 1, 20, NULL),
 (29, '', '', '', '', 1, 20, NULL),
 (30, '', '', '', '', 1, 20, NULL);
