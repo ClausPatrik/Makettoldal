@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useAdat } from "../context/AdatContext";
 import { Link, useNavigate } from "react-router-dom";
-
+const API_BASE_URL = "http://localhost:3001/api";
 function generalSzin(nev) {
   if (!nev) return "#4b5563";
   let hash = 0;
@@ -59,13 +59,13 @@ export default function Profil() {
   const [ujProfilKep, beallitUjProfilKep] = useState(null);
   const [mentesFolyamatban, beallitMentesFolyamatban] = useState(false);
 
-useEffect(() => {
-  if (!bejelentkezve) {
-    navigate("/bejelentkezes");
-    return;
-  }
-  betoltKedvencek();
-}, [bejelentkezve, navigate]);
+  useEffect(() => {
+    if (!bejelentkezve) {
+      navigate("/bejelentkezes");
+      return;
+    }
+    betoltKedvencek();
+  }, [bejelentkezve, navigate, betoltKedvencek]);
 
 
   useEffect(() => {
@@ -97,11 +97,9 @@ useEffect(() => {
 
       const token = localStorage.getItem("token");
 
-      const valasz = await fetch("http://localhost:3001/api/profil/feltoltes", {
+      const valasz = await fetch(`${API_BASE_URL}/profil/feltoltes`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 

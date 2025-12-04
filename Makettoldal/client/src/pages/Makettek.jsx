@@ -64,8 +64,7 @@ export default function Makettek() {
   const [szerkesztettSzoveg, beallitSzerkesztettSzoveg] = useState("");
   const [szerkesztettErtekeles, beallitSzerkesztettErtekeles] = useState(5);
 
-  const isAdmin =
-    felhasznalo?.szerepkorId === 2 || felhasznalo?.szerepkor_id === 2;
+  const isAdmin = felhasznalo?.szerepkor_id === 2;
 
   // Betöltés első rendernél
   useEffect(() => {
