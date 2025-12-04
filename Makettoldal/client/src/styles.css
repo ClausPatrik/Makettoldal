@@ -90,6 +90,14 @@ body {
 
 /* NAV – profil rész */
 
+/* Jobb oldal – profil + gomb egy vonalban középen */
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;          /* kis távolság a profil és a gomb között */
+}
+
+/* A profil link – ezt már jól csinálod, csak mutatom, hogy fontos az align-items */
 .nav-profile {
   display: flex;
   align-items: center;
@@ -106,12 +114,15 @@ body {
   text-overflow: ellipsis;
 }
 
+/* Avatar kép (img vagy div) méret + kerekítés + ne nyomódjon szét */
 .nav-avatar-img {
   width: 32px;
   height: 32px;
   border-radius: 999px;
   object-fit: cover;
   border: 1px solid rgba(148, 163, 184, 0.6);
+  display: block;        /* ne inline legyen, így nem "ül" a baseline-on */
+  flex-shrink: 0;        /* ne lapuljon össze */
 }
 
 .nav-btn {
@@ -130,6 +141,15 @@ body {
   background: #b91c1c;
   transform: translateY(-1px);
   box-shadow: 0 8px 16px rgba(185, 28, 28, 0.35);
+}
+
+/* Inicialos avatar (ha nincs kép) – középre igazított betűk */
+.avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eb1111;
+  font-weight: 600;
 }
 
 /* MAIN LAYOUT */

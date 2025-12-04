@@ -8,7 +8,7 @@ function AvatarKicsi({ nev, profilKepUrl }) {
       <img
         src={profilKepUrl}
         alt={`${nev || "Felhasználó"} profilképe`}
-        className="avatar-kicsi"
+        className="avatar avatar-small"
       />
     );
   }
@@ -20,12 +20,11 @@ function AvatarKicsi({ nev, profilKepUrl }) {
     .toUpperCase();
 
   return (
-    <div className="avatar-kicsi avatar-initials">
+    <div className="avatar avatar-small">
       {kezdobetuk}
     </div>
   );
 }
-
 export default function NavBar() {
   const { felhasznalo, kijelentkezes } = useAuth();
   const bejelentkezve = !!felhasznalo;
@@ -66,7 +65,7 @@ export default function NavBar() {
             </Link>
 
             <button
-              className="logout-btn"
+              className="nav-btn"
               onClick={kijelentkezes}
             >
               Kijelentkezés
