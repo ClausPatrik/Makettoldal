@@ -1,19 +1,18 @@
 // client/src/components/AiChatWidget.jsx
 import React, { useRef, useState } from "react";
-import { getWebLlmEngine } from "../ai/webllmEngine";
+
+const API_BASE =
+  (import.meta?.env?.VITE_API_URL || "http://localhost:3001").replace(/\/$/, "");
 
 export default function AiChatWidget() {
   const [nyitva, beallitNyitva] = useState(false);
   const [uzenet, beallitUzenet] = useState("");
   const [uzenetek, beallitUzenetek] = useState([]); // {from:"user"|"bot", text}
   const [betolt, beallitBetolt] = useState(false);
-  const [modellToltes, beallitModellToltes] = useState(false);
-  const [modellProgress, beallitModellProgress] = useState(0);
   const [hiba, beallitHiba] = useState(null);
 
-  const engineRef = useRef(null);
-
-  const nincsWebGPU = typeof navigator !== "undefined" && !("gpu" in navigator);
+  // Ha a user gyorsan többször küld, az előző kérést megszakítjuk
+  const abortRef = useRef(null);
 
   async function kuldUzenet(e) {
     e?.preventDefault();
@@ -22,58 +21,64 @@ export default function AiChatWidget() {
     beallitHiba(null);
 
     const ujUser = { from: "user", text: szoveg };
-    beallitUzenetek((elozo) => [...elozo, ujUser]);
+    const ujLista = [...uzenetek, ujUser];
+
+    // UI: azonnal írjuk ki a user üzenetet
+    beallitUzenetek(ujLista);
     beallitUzenet("");
 
     try {
       beallitBetolt(true);
 
-      // Engine inicializálása, ha még nincs
-      if (!engineRef.current) {
-        if (nincsWebGPU) {
-          throw new Error(
-            "A böngésződ nem támogatja a WebGPU-t. Próbáld meg egy frissebb Chrome/Edge/Brave böngészővel."
-          );
-        }
+      // előző request megszakítása
+      if (abortRef.current) abortRef.current.abort();
+      abortRef.current = new AbortController();
 
-        beallitModellToltes(true);
-        const engine = await getWebLlmEngine((p) => {
-          if (typeof p.progress === "number") {
-            beallitModellProgress(Math.round(p.progress * 100));
-          }
-        });
-        engineRef.current = engine;
-        beallitModellToltes(false);
-      }
+      // Költségcsökkentés: csak az utolsó N üzenetet küldjük fel
+      const MAX_HISTORY = 14;
+      const trimmed = ujLista.slice(Math.max(0, ujLista.length - MAX_HISTORY));
 
-      const vegsoUzenetek = [
-        {
-          role: "system",
-          content:
-"Te egy 'MakettMester AI' nevű segítő vagy. Magyarul válaszolsz, tegezel. " +
-"Kezdő és haladó makettezőknek segítesz: festés, ragasztás, csiszolás, panelvonalak, diorámák. " +
-"Mindig adj konkrét, lépésről lépésre tippeket, említs meg gyakori hibákat és azok elkerülését. " +
-"Válaszaid legyenek rövidek (3–5 mondat), de informatívak. Ha valamiben nem vagy biztos, írd le, hogy bizonytalan vagy."
+      const SYSTEM =
+        "Te egy 'MakettMester AI' nevű segítő vagy. Magyarul válaszolsz, tegezel. " +
+        "Kezdő és haladó makettezőknek segítesz: festés, ragasztás, csiszolás, panelvonalak, diorámák. " +
+        "Mindig adj konkrét, lépésről lépésre tippeket, említs meg gyakori hibákat és azok elkerülését. " +
+        "Válaszaid legyenek rövidek (3–5 mondat), de informatívak. Ha valamiben nem vagy biztos, írd le, hogy bizonytalan vagy.";
 
-        },
-        ...uzenetek.map((m) => ({
+      // A backend a te szervereden hívja az OpenAI-t (gpt-4o-mini)
+      const messages = [
+        { role: "system", content: SYSTEM },
+        ...trimmed.map((m) => ({
           role: m.from === "bot" ? "assistant" : "user",
           content: m.text,
         })),
-        { role: "user", content: szoveg },
       ];
 
-      const reply = await engineRef.current.chat.completions.create({
-        messages: vegsoUzenetek,
+      const res = await fetch(`${API_BASE}/api/ai/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Ha később auth-ot raksz az AI-ra, akkor itt már készen áll:
+          ...(localStorage.getItem("token")
+            ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            : {}),
+        },
+        body: JSON.stringify({ messages }),
+        signal: abortRef.current.signal,
       });
 
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.uzenet || "Hiba az AI híváskor.");
+      }
+
       const valaszSzoveg =
-        reply?.choices?.[0]?.message?.content ||
+        (data?.reply && String(data.reply).trim()) ||
         "Nem sikerült értelmes választ adnom, bocs 😅";
 
       const ujBot = { from: "bot", text: valaszSzoveg };
       beallitUzenetek((elozo) => [...elozo, ujBot]);
     } catch (err) {
+      if (err?.name === "AbortError") return; // ez oké, user újraküldött
       console.error(err);
       beallitHiba(err.message || "Ismeretlen hiba történt az AI híváskor.");
       const ujBot = {
@@ -113,14 +118,9 @@ export default function AiChatWidget() {
           </div>
 
           <div className="ai-chat-body">
-            {nincsWebGPU && (
-              <p className="ai-chat-hint">
-                Úgy tűnik, a böngésződ nem támogatja a WebGPU-t. Próbáld meg
-                egy frissebb Chromium alapú böngészővel (Chrome, Edge, Brave).
-              </p>
-            )}
-
-            {!nincsWebGPU && uzenetek.length === 0 && (
+            {/* Ugyanaz a megjelenés megmarad: a WebGPU figyelmeztetést kivesszük,
+                mert már nem WebLLM-et használunk */}
+            {uzenetek.length === 0 && (
               <p className="ai-chat-hint">
                 Kérdezz bátran makettezésről: festés, ragasztás, alap technikák,
                 mit vegyen egy kezdő, stb. Röviden fogok válaszolni.
@@ -128,13 +128,6 @@ export default function AiChatWidget() {
             )}
 
             {hiba && <p className="error">{hiba}</p>}
-
-            {modellToltes && (
-              <p className="ai-chat-hint">
-                Modell betöltése... {modellProgress}% (első használatkor kicsit
-                hosszabb lehet)
-              </p>
-            )}
 
             {uzenetek.map((m, idx) => (
               <div
@@ -156,12 +149,9 @@ export default function AiChatWidget() {
               placeholder="Írd ide a kérdésed..."
               value={uzenet}
               onChange={(e) => beallitUzenet(e.target.value)}
-              disabled={nincsWebGPU}
+              disabled={betolt}
             />
-            <button
-              type="submit"
-              disabled={betolt || nincsWebGPU || !uzenet.trim()}
-            >
+            <button type="submit" disabled={betolt || !uzenet.trim()}>
               Küldés
             </button>
           </form>

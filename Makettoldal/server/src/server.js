@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import mysql from "mysql2/promise";
@@ -154,6 +155,7 @@ async function inicializalAdatbazis() {
       CONSTRAINT fk_makett_elbiralo FOREIGN KEY (elbiralta_admin_id) REFERENCES felhasznalo(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
 
   // Ha a tábla már korábban létrejött régi szerkezettel, próbáljuk "migrálni" (hibát figyelmen kívül hagyunk)
   const probalSema = async (sql) => {
@@ -315,6 +317,65 @@ app.options("*", cors());
 
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use(express.json());
+
+// --- AI (OpenAI GPT-4o mini) --- //
+// Külön rate limit, hogy ne lehessen spammelni
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 perc
+  max: 20, // 20 kérés / perc / IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { uzenet: "Túl sok AI kérés. Próbáld meg később." },
+});
+
+// Fontos: ez az endpoint NINCS auth-hoz kötve (ne dobjon 401-et)
+app.post("/api/ai/chat", aiLimiter, async (req, res) => {
+  try {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ uzenet: "Nincs OPENAI_API_KEY a server/.env-ben." });
+    }
+
+    const { messages } = req.body || {};
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ uzenet: "Hibás kérés: messages hiányzik." });
+    }
+
+    // Node 18+ esetén van global fetch, régebbin node-fetch kell
+    const fetchFn = globalThis.fetch || (await import("node-fetch")).default;
+
+    // A Chat Completions API közvetlenül tudja a {role, content} formátumot
+    const r = await fetchFn("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: process.env.AI_MODEL || "gpt-4o-mini",
+        messages: messages.map((m) => ({
+          role: m.role,
+          content: typeof m.content === "string" ? m.content : String(m.content ?? ""),
+        })),
+        max_tokens: 400,
+      }),
+    });
+
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      return res.status(r.status).json({
+        uzenet: data?.error?.message || "OpenAI hiba",
+        raw: data,
+      });
+    }
+
+    const reply = data?.choices?.[0]?.message?.content || "";
+    return res.json({ reply });
+  } catch (err) {
+    console.error("AI hiba:", err);
+    return res.status(500).json({ uzenet: err?.message || "AI szerver hiba" });
+  }
+});
 
 // Rate limit az auth végpontokra (brute force ellen)
 const authLimiter = rateLimit({
