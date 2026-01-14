@@ -906,3 +906,277 @@ h3 {
   justify-content: space-between;
   gap: 12px;
 }
+
+
+/* =========================================================
+   TANK THEME OVERRIDES (tedd a meglévő CSS LEGALJÁRA)
+   Cél: "tank belseje" – sötét fém panelek, csavarok, HUD jelleg
+   ========================================================= */
+
+/* 1) Színrendszer – katonai / műszerfal */
+:root {
+  --bg-gradient-from: #070b08;
+  --bg-gradient-to: #0e1410;
+
+  /* panel/fém */
+  --card-bg: rgba(10, 14, 11, 0.86);
+  --card-border: rgba(116, 130, 112, 0.22);
+
+  /* HUD/akcent (lágy zöld + borostyán riasztás) */
+  --accent: #5fbf78;       /* "NVG green" */
+  --accent-soft: #2f8a54;  /* mélyebb zöld */
+  --danger: #e05a2a;       /* borostyán/narancs riasztás */
+  --muted: rgba(214, 224, 210, 0.65);
+
+  --text: rgba(236, 244, 236, 0.92);
+  --text-soft: rgba(208, 225, 208, 0.82);
+
+  /* extra segédek */
+  --steel-1: rgba(255, 255, 255, 0.06);
+  --steel-2: rgba(0, 0, 0, 0.55);
+  --hud-glow: 0 0 18px rgba(95, 191, 120, 0.20);
+  --warning-glow: 0 0 18px rgba(224, 90, 42, 0.20);
+}
+
+/* 2) Alap háttér – "belső tér", fém + finom zaj + rács */
+body {
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(95,191,120,0.10), transparent 55%),
+    radial-gradient(900px 600px at 10% 20%, rgba(255,255,255,0.05), transparent 55%),
+    radial-gradient(900px 600px at 90% 70%, rgba(0,0,0,0.55), transparent 60%),
+    linear-gradient(180deg, var(--bg-gradient-to), var(--bg-gradient-from));
+  color: var(--text);
+}
+
+/* finom "zaj" réteg – tank fém érzet */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255,255,255,0.02),
+      rgba(255,255,255,0.02) 1px,
+      transparent 1px,
+      transparent 6px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.015),
+      rgba(255,255,255,0.015) 1px,
+      transparent 1px,
+      transparent 8px
+    );
+  mix-blend-mode: overlay;
+}
+
+/* 3) NAV – "páncél perem" + HUD fény */
+.nav {
+  background:
+    linear-gradient(180deg, rgba(15, 20, 16, 0.95), rgba(8, 11, 9, 0.90));
+  border-bottom: 1px solid rgba(116, 130, 112, 0.20);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+}
+
+.logo {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(236, 244, 236, 0.95);
+  text-shadow: var(--hud-glow);
+}
+
+/* Nav link – “HUD label” */
+.nav-link {
+  color: rgba(208, 225, 208, 0.80);
+  border: 1px solid transparent;
+  border-radius: 10px; /* kevésbé “gömbölyű”, inkább paneles */
+}
+
+.nav-link:hover {
+  background: rgba(95, 191, 120, 0.10);
+  border-color: rgba(95, 191, 120, 0.25);
+  color: rgba(236, 244, 236, 0.96);
+  box-shadow: var(--hud-glow);
+}
+
+.nav-link.active {
+  background: rgba(95, 191, 120, 0.16);
+  border: 1px solid rgba(95, 191, 120, 0.40);
+  color: rgba(236, 244, 236, 0.98);
+  box-shadow: var(--hud-glow);
+}
+
+/* 4) Kártyák – fém panel + “szegecs” (csavar) sarokban */
+.card {
+  border-radius: 14px;
+  border: 1px solid var(--card-border);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 28%),
+    radial-gradient(800px 260px at 20% 0%, rgba(95,191,120,0.06), transparent 60%),
+    var(--card-bg);
+  box-shadow:
+    0 24px 70px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.35);
+  position: relative;
+}
+
+/* “csavar” jelleg – 2 sarok (nem túl sok, hogy ne legyen giccs) */
+.card::before,
+.card::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255,255,255,0.12), rgba(255,255,255,0.02) 55%, rgba(0,0,0,0.45) 60%);
+  border: 1px solid rgba(116,130,112,0.25);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.65);
+  opacity: 0.8;
+}
+
+.card::before { top: 10px; right: 10px; }
+.card::after  { bottom: 10px; left: 10px; }
+
+.card:hover {
+  border-color: rgba(95, 191, 120, 0.35);
+  box-shadow:
+    0 30px 85px rgba(0,0,0,0.62),
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    inset 0 -1px 0 rgba(0,0,0,0.35);
+}
+
+/* 5) Gombok – “kapcsoló/push button” */
+.btn,
+.nav-btn {
+  border-radius: 12px;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.btn {
+  background:
+    linear-gradient(180deg, rgba(95,191,120,0.26), rgba(95,191,120,0.10)),
+    linear-gradient(135deg, rgba(20, 26, 21, 0.90), rgba(9, 12, 10, 0.96));
+  border: 1px solid rgba(95, 191, 120, 0.35);
+  box-shadow:
+    0 10px 22px rgba(0,0,0,0.42),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  color: rgba(236, 244, 236, 0.95);
+}
+
+.btn:hover {
+  box-shadow:
+    0 14px 34px rgba(0,0,0,0.52),
+    0 0 0 1px rgba(95,191,120,0.20),
+    var(--hud-glow);
+}
+
+.btn.secondary {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 30%),
+    linear-gradient(135deg, rgba(26, 32, 27, 0.90), rgba(10, 12, 11, 0.96));
+  border: 1px solid rgba(116,130,112,0.25);
+}
+
+.btn.danger,
+.nav-btn {
+  background:
+    linear-gradient(180deg, rgba(224,90,42,0.22), rgba(224,90,42,0.08)),
+    linear-gradient(135deg, rgba(26, 18, 14, 0.88), rgba(10, 8, 7, 0.96));
+  border: 1px solid rgba(224, 90, 42, 0.45);
+  box-shadow:
+    0 12px 28px rgba(0,0,0,0.52),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.btn.danger:hover,
+.nav-btn:hover {
+  box-shadow:
+    0 16px 40px rgba(0,0,0,0.60),
+    var(--warning-glow);
+}
+
+/* 6) Inputok – “műszerfal mezők” */
+.form input,
+.form textarea,
+.form select,
+.filters input,
+.filters select {
+  border-radius: 10px;
+  border: 1px solid rgba(116,130,112,0.25);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 35%),
+    rgba(7, 10, 8, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -1px 0 rgba(0,0,0,0.55);
+}
+
+.form input:focus,
+.form textarea:focus,
+.form select:focus,
+.filters input:focus,
+.filters select:focus {
+  border-color: rgba(95, 191, 120, 0.55);
+  box-shadow:
+    0 0 0 2px rgba(95,191,120,0.14),
+    var(--hud-glow);
+}
+
+/* 7) Képek – keretezett “monitor” érzés */
+.makett-kep-wrapper {
+  border-radius: 12px;
+  border: 1px solid rgba(116,130,112,0.25);
+  background: rgba(0,0,0,0.25);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 16px 40px rgba(0,0,0,0.35);
+}
+
+/* 8) Chip/notice – katonai címke */
+.chip {
+  border-radius: 10px;
+  border: 1px solid rgba(116,130,112,0.25);
+  background:
+    linear-gradient(180deg, rgba(95,191,120,0.10), transparent 45%),
+    rgba(10, 14, 11, 0.75);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.chip-wait {
+  border-color: rgba(224, 90, 42, 0.45);
+}
+
+/* 9) AI gomb – átöltöztetés HUD zöldre */
+.ai-fab {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.14), transparent 40%),
+    linear-gradient(135deg, rgba(95,191,120,0.95), rgba(47,138,84,0.85));
+  box-shadow:
+    0 18px 46px rgba(0,0,0,0.55),
+    0 0 0 1px rgba(95,191,120,0.18),
+    var(--hud-glow);
+}
+
+.ai-chat-window {
+  border: 1px solid rgba(116,130,112,0.22);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 30%),
+    rgba(7, 10, 8, 0.92);
+}
+
+/* 10) Kis extra: “HUD felirat” stílus címeknek */
+h1, h2, h3 {
+  letter-spacing: 0.06em;
+}
+
+h1 {
+  text-transform: uppercase;
+  text-shadow: var(--hud-glow);
+}

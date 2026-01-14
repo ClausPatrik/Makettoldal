@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useAdat } from "../context/AdatContext";
-import { getWebLlmEngine } from "../ai/webllmEngine";
+
 
 function CsillagokKicsi({ ertek }) {
   const teljes = Math.round(ertek || 0);
