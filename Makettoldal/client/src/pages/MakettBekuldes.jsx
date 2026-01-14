@@ -111,7 +111,7 @@ export default function MakettBekuldes() {
               <option value="repülő">repülő</option>
               <option value="hajó">hajó</option>
               <option value="mecha">mecha</option>
-              <option value="dioráma">dioráma</option>
+              
             </select>
           </label>
 

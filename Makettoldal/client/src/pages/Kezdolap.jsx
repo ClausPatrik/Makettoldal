@@ -129,7 +129,19 @@ export default function Kezdolap() {
   return (
     <section className="page">
       <h1>Üdv a makettező klub oldalán!</h1>
-
+      <div className="card">
+        <h2>Makettezők tudásbázisa és fóruma</h2>
+  <p>
+    Ez az oldal a makettezés iránt érdeklődők közösségi tere.  
+    Itt különböző maketteket böngészhetsz, értékeléseket és véleményeket
+    olvashatsz, valamint megoszthatod a saját tapasztalataidat is másokkal.
+  </p>
+  <p>
+    A fórumon kérdéseket tehetsz fel, építési naplókat követhetsz,
+    és segítséget kaphatsz festéssel, technikákkal vagy eszközökkel kapcsolatban.
+    Ha elakadnál, a <strong>MakettMester AI</strong> gyors tippekkel is segít.
+  </p>
+</div>
       <div className="card">
         <h2>Összefoglaló</h2>
         <p>
