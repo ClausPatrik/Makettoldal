@@ -819,3 +819,90 @@ h3 {
 .modal-close:hover {
   opacity: 1;
 }
+
+/* ===== Fórum: két oszlopos layout ===== */
+
+.forum-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr; /* bal: témák, jobb: hozzászólások */
+  gap: 16px;
+  align-items: start;
+}
+
+/* Bal oldal sticky, hogy görgetésnél kényelmes legyen (asztalin) */
+.forum-left {
+  position: sticky;
+  top: 76px; /* navbar magassághoz igazítva */
+  max-height: calc(100vh - 96px);
+  overflow: auto;
+}
+
+/* Lista kinézet */
+.forum-topic-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.forum-topic {
+  padding: 10px 10px;
+  border-bottom: 1px solid #111827;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.forum-topic:hover {
+  background: rgba(37, 99, 235, 0.12);
+  transform: translateY(-1px);
+}
+
+.forum-topic.active {
+  background: rgba(37, 99, 235, 0.18);
+  border: 1px solid rgba(37, 99, 235, 0.35);
+}
+
+.forum-topic-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.forum-topic-meta {
+  text-align: right;
+  min-width: 140px;
+}
+
+/* Jobb oldal üzenetek */
+.forum-msg-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.forum-msg {
+  padding: 10px 0;
+  border-bottom: 1px solid #111827;
+}
+
+/* Mobil: egymás alá */
+@media (max-width: 900px) {
+  .forum-layout {
+    grid-template-columns: 1fr;
+  }
+  .forum-left {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+  .forum-topic-meta {
+    text-align: left;
+    min-width: auto;
+  }
+}
+.forum-newtopic-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}

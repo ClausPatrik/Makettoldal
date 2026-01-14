@@ -157,7 +157,7 @@ export default function Makettek() {
             <option value="harckocsi">Harckocsi</option>
             <option value="repülő">Repülő</option>
             <option value="hajó">Hajó</option>
-            <option value="figura">Figura</option>
+            <option value="mecha">mecha</option>
           </select>
 
           <select value={skalaSzuro} onChange={(e) => beallitSkalaSzuro(e.target.value)}>
