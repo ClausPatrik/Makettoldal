@@ -17,8 +17,11 @@ import EpitesiNaplo from "./pages/EpitesiNaplo";
 import MakettBekuldes from "./pages/MakettBekuldes";
 import MakettJovahagyas from "./pages/MakettJovahagyas";
 
+
 import NavBar from "./components/NavBar";
 import AiChatWidget from "./components/AiChatWidget";
+import Footer from "./components/footer";
+
 
 // Vite: automatikusan összeszedi az ikonokat ebből a mappából
 // Ide tedd a fájlokat: src/assets/favicons/  (pl. tank.svg, ship.svg, plane.svg)
@@ -114,7 +117,17 @@ useEffect(() => {
 
 
 
+
+  
+
+
+
+
+
   return (
+
+    
+
     <div className="app">
       <NavBar />
 
@@ -137,8 +150,12 @@ useEffect(() => {
         </Routes>
       </main>
 
+      <Footer />
+
       {/* Lebegő AI chat minden oldalon */}
       <AiChatWidget />
     </div>
+
+    
   );
 }

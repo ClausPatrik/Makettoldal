@@ -1180,3 +1180,125 @@ h1 {
   text-transform: uppercase;
   text-shadow: var(--hud-glow);
 }
+
+
+/* ===========================
+   TANK FOOTER – PÁNCÉLPANEL
+   =========================== */
+
+   .tank-footer {
+    margin-top: 80px;
+    background:
+      linear-gradient(180deg, rgba(15,20,16,0.96), rgba(8,11,9,0.98));
+    border-top: 1px solid rgba(116,130,112,0.25);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+  }
+  
+  .tank-footer-inner {
+    max-width: 1300px;
+    margin: auto;
+    padding: 40px 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+  }
+  
+  /* panel kinézet */
+  .footer-panel {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.05), transparent 30%),
+      rgba(10,14,11,0.85);
+    border: 1px solid rgba(116,130,112,0.22);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      inset 0 -1px 0 rgba(0,0,0,0.45),
+      0 16px 40px rgba(0,0,0,0.45);
+  }
+  
+  /* címek */
+  .footer-title {
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    color: var(--accent);
+    text-shadow: var(--hud-glow);
+  }
+  
+  /* szöveg */
+  .footer-desc {
+    font-size: 14px;
+    color: var(--text-soft);
+    line-height: 1.6;
+  }
+  
+  /* navigáció */
+  .footer-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .footer-nav li {
+    margin-bottom: 10px;
+  }
+  
+  .footer-nav a {
+    color: var(--text-soft);
+    text-decoration: none;
+    font-size: 14px;
+    border-left: 2px solid transparent;
+    padding-left: 8px;
+    transition: 0.2s;
+  }
+  
+  .footer-nav a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    text-shadow: var(--hud-glow);
+  }
+  
+  /* státusz */
+  .footer-status {
+    margin-top: 14px;
+    font-family: monospace;
+    font-size: 13px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(95,191,120,0.8);
+  }
+  
+  .status-dot.online {
+    background: #5fbf78;
+  }
+  
+  /* alsó sáv */
+  .footer-bottom {
+    border-top: 1px solid rgba(116,130,112,0.18);
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    background: rgba(6,8,7,0.95);
+  }
+  
+  .footer-tag {
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(214,224,210,0.5);
+  }
+  
