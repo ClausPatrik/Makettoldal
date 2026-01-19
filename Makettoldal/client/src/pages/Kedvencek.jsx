@@ -14,7 +14,7 @@ export default function Kedvencek() {
   const [makettek, beallitMakettek] = useState([]);
   const [betoltes, beallitBetoltes] = useState(false);
   const [hiba, beallitHiba] = useState(null);
-
+  const [velemenyek, beallitVelemenyek] = useState([]);
   // Modal a kedvenceknél is (kép kattintásra)
   const [modalMakett, setModalMakett] = useState(null);
 
@@ -54,9 +54,11 @@ export default function Kedvencek() {
   }
 
   useEffect(() => {
-    if (bejelentkezve) betoltKedvencek();
+    if (bejelentkezve) {
+      betoltKedvencek();
+      betoltVelemenyek(); // ✅ ÚJ
+    }
   }, [bejelentkezve]);
-
   // Kedvencekből eltávolítás (ugyanaz mint eddig)
   async function kezeliEltavolitas(makettId) {
     if (!window.confirm("Biztosan eltávolítod a kedvencek közül?")) return;
@@ -82,7 +84,22 @@ export default function Kedvencek() {
       alert(err.message);
     }
   }
-
+  function szamolAtlag(makettId) {
+    const lista = velemenyek.filter((v) => Number(v.makett_id) === Number(makettId));
+    if (lista.length === 0) return 0;
+    const osszeg = lista.reduce((s, v) => s + Number(v.ertekeles || 0), 0);
+    return osszeg / lista.length;
+  }
+  async function betoltVelemenyek() {
+    try {
+      const valasz = await fetch(`${API_BASE_URL}/velemenyek`);
+      if (!valasz.ok) throw new Error("Nem sikerült betölteni a véleményeket.");
+      const adat = await valasz.json();
+      beallitVelemenyek(adat);
+    } catch (err) {
+      console.error(err);
+    }
+  }
   if (!bejelentkezve) {
     return (
       <section className="page">
@@ -131,20 +148,62 @@ export default function Kedvencek() {
 
       {/* Kedvencek modal (vélemények nélkül, mert itt nincs hozzá adat) */}
       <MakettModal
-        open={!!modalMakett}
-        makett={modalMakett ? { ...modalMakett, id: modalMakett.id ?? modalMakett.makett_id } : null}
-        onClose={() => setModalMakett(null)}
-        atlag={modalAtlag}
-        velemenyek={[]}
-        kedvenc={true}
-        onToggleKedvenc={(id) => kezeliEltavolitas(id)}
-        showReviews={false}
-        // a props-ok csak azért vannak itt, mert a komponens támogatja – de showReviews=false miatt nem fogja használni
-        bejelentkezve={bejelentkezve}
-        felhasznalo={felhasznalo}
-        isAdmin={isAdmin}
-        formatDatum={formatDatum}
-      />
+  open={!!modalMakett}
+  makett={modalMakett ? { ...modalMakett, id: modalMakett.id ?? modalMakett.makett_id } : null}
+  onClose={() => setModalMakett(null)}
+
+  atlag={modalMakett ? szamolAtlag(modalMakett.id ?? modalMakett.makett_id) : 0}
+  velemenyek={modalMakett
+    ? velemenyek.filter((v) => Number(v.makett_id) === Number(modalMakett.id ?? modalMakett.makett_id))
+    : []
+  }
+
+  kedvenc={true}
+  onToggleKedvenc={(id) => kezeliEltavolitas(id)}
+
+  showReviews={true}   // ✅ ENGEDÉLYEZVE
+
+  bejelentkezve={bejelentkezve}
+  felhasznalo={felhasznalo}
+  isAdmin={isAdmin}
+  formatDatum={formatDatum}
+
+  hozzaadVelemeny={async (makettId, adat) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE_URL}/velemenyek`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ makett_id: makettId, ...adat }),
+    });
+    if (!res.ok) throw new Error("Nem sikerült menteni a véleményt.");
+    const uj = await res.json();
+    beallitVelemenyek((elozo) => [...elozo, uj]);
+  }}
+
+  modositVelemeny={async (id, adat) => {
+    const token = localStorage.getItem("token");
+    await fetch(`${API_BASE_URL}/velemenyek/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(adat),
+    });
+  }}
+
+  torolVelemeny={async (id) => {
+    const token = localStorage.getItem("token");
+    await fetch(`${API_BASE_URL}/velemenyek/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    beallitVelemenyek((elozo) => elozo.filter((v) => v.id !== id));
+  }}
+/>
 
       <div style={{ marginTop: 12 }}>
         <Link to="/makettek" className="btn secondary">
