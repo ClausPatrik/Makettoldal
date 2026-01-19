@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -13,7 +13,7 @@ function AvatarKicsi({ nev, profilKepUrl }) {
     return (
       <img
         src={normalizal(profilKepUrl)}
-        alt={`${nev || "Felhasználó"} profilképe`}
+        alt={`${nev || "Felhasznalo"} profilkepe`}
         className="nav-avatar-img"
       />
     );
@@ -25,72 +25,154 @@ function AvatarKicsi({ nev, profilKepUrl }) {
     .join("")
     .toUpperCase();
 
-  return (
-    <div className="nav-avatar">{kezdobetuk}</div>
-  );
+  return <div className="nav-avatar">{kezdobetuk}</div>;
 }
+
+const linkClass = ({ isActive }) => `nav-link${isActive ? " active" : ""}`;
+
 export default function NavBar() {
   const { felhasznalo, kijelentkezes } = useAuth();
   const bejelentkezve = !!felhasznalo;
   const admin = felhasznalo?.szerepkor_id === 2;
 
+  const [menuNyitva, setMenuNyitva] = useState(false);
+
+  function toggleMenu() {
+    setMenuNyitva((p) => !p);
+  }
+
+  function closeMenu() {
+    setMenuNyitva(false);
+  }
+
+  // ESC bezarja a mobil menut
+  useEffect(() => {
+    if (!menuNyitva) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") closeMenu();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuNyitva]);
+
   return (
-    <header className="nav">
-      <div className="nav-left">
-        <span className="logo">Makettező Klub</span>
+    <>
+      <header className="nav">
+        <div className="nav-left">
+          <span className="logo">MakettMester</span>
+        </div>
 
-        <NavLink to="/" className="nav-link">Kezdőlap</NavLink>
-        <NavLink to="/makettek" className="nav-link">Makettek</NavLink>
-        <NavLink to="/forum" className="nav-link">Fórum</NavLink>
-        <NavLink to="/rolunk" className="nav-link">Rólunk</NavLink>
+        {/* Desktop menu */}
+        <nav className="nav-links-desktop" aria-label="Fo menu">
+          <NavLink to="/" className={linkClass}>Kezdolap</NavLink>
+          <NavLink to="/makettek" className={linkClass}>Makettek</NavLink>
+          <NavLink to="/forum" className={linkClass}>Forum</NavLink>
+          <NavLink to="/rolunk" className={linkClass}>Rolunk</NavLink>
 
-        {bejelentkezve && (
-          <>
-            <NavLink to="/kedvencek" className="nav-link">Kedvenceim</NavLink>
-            <NavLink to="/velemenyeim" className="nav-link">Véleményeim</NavLink>
-            <NavLink to="/epitesinaplo" className="nav-link">Építési napló</NavLink>
-            <NavLink to="/makett-bekuldes" className="nav-link">Makett beküldés</NavLink>
-            {admin && (
-            <NavLink to="/admin/makett-jovahagyas" className="nav-link">Jóváhagyás</NavLink>
-)}
+          {bejelentkezve && (
+            <>
+              <NavLink to="/kedvencek" className={linkClass}>Kedvenceim</NavLink>
+              <NavLink to="/velemenyeim" className={linkClass}>Velemenyeim</NavLink>
+              <NavLink to="/epitesinaplo" className={linkClass}>Epitesi naplo</NavLink>
+              <NavLink to="/makett-bekuldes" className={linkClass}>Makett bekuldes</NavLink>
 
-          </>
-        )}
+              {admin && (
+                <NavLink to="/admin/makett-jovahagyas" className={linkClass}>
+                  Jovahagyas
+                </NavLink>
+              )}
+            </>
+          )}
 
-        {admin && <span className="nav-badge">Admin</span>}
-      </div>
+          {admin && <span className="nav-badge">Admin</span>}
+        </nav>
 
-      <div className="nav-right">
-        {bejelentkezve ? (
-          <>
-            <Link to="/profil" className="nav-profile">
-              <AvatarKicsi
-                nev={felhasznalo.felhasznalo_nev}
-                profilKepUrl={felhasznalo.profil_kep_url}
-              />
-              <span className="nav-user-name">
-                {felhasznalo.felhasznalo_nev}
-              </span>
-            </Link>
+        {/* Desktop right */}
+        <div className="nav-right nav-right-desktop">
+          {bejelentkezve ? (
+            <>
+              <Link to="/profil" className="nav-profile">
+                <AvatarKicsi
+                  nev={felhasznalo.felhasznalo_nev}
+                  profilKepUrl={felhasznalo.profil_kep_url}
+                />
+                <span className="nav-user-name">{felhasznalo.felhasznalo_nev}</span>
+              </Link>
 
-            <button
-              className="nav-btn"
-              onClick={kijelentkezes}
-            >
-              Kijelentkezés
-            </button>
-          </>
-        ) : (
-          <>
-            <NavLink to="/bejelentkezes" className="nav-link">
-              Bejelentkezés
-            </NavLink>
-            <NavLink to="/regisztracio" className="nav-link">
-              Regisztráció
-            </NavLink>
-          </>
-        )}
-      </div>
-    </header>
+              <button className="nav-btn nav-btn-danger" onClick={kijelentkezes}>
+                KIJELENTKEZES
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/bejelentkezes" className={linkClass}>Bejelentkezes</NavLink>
+              <NavLink to="/regisztracio" className={linkClass}>Regisztracio</NavLink>
+            </>
+          )}
+        </div>
+
+        {/* Hamburger (mobile) */}
+        <button
+          className="nav-hamburger"
+          onClick={toggleMenu}
+          aria-label="Menu"
+          aria-expanded={menuNyitva ? "true" : "false"}
+        >
+          {menuNyitva ? "✕" : "☰"}
+        </button>
+      </header>
+
+      {/* Overlay */}
+      {menuNyitva && <div className="nav-overlay" onClick={closeMenu} />}
+
+      {/* Mobile menu */}
+      <nav className={`nav-mobile ${menuNyitva ? "open" : ""}`} aria-label="Mobil menu">
+        <div className="nav-mobile-inner">
+          <NavLink to="/" className={linkClass} onClick={closeMenu}>Kezdolap</NavLink>
+          <NavLink to="/makettek" className={linkClass} onClick={closeMenu}>Makettek</NavLink>
+          <NavLink to="/forum" className={linkClass} onClick={closeMenu}>Forum</NavLink>
+          <NavLink to="/rolunk" className={linkClass} onClick={closeMenu}>Rolunk</NavLink>
+
+          {bejelentkezve ? (
+            <>
+              <NavLink to="/kedvencek" className={linkClass} onClick={closeMenu}>Kedvenceim</NavLink>
+              <NavLink to="/velemenyeim" className={linkClass} onClick={closeMenu}>Velemenyeim</NavLink>
+              <NavLink to="/epitesinaplo" className={linkClass} onClick={closeMenu}>Epitesi naplo</NavLink>
+              <NavLink to="/makett-bekuldes" className={linkClass} onClick={closeMenu}>Makett bekuldes</NavLink>
+
+              {admin && (
+                <NavLink to="/admin/makett-jovahagyas" className={linkClass} onClick={closeMenu}>
+                  Jovahagyas
+                </NavLink>
+              )}
+
+              <Link to="/profil" className="nav-profile nav-profile-mobile" onClick={closeMenu}>
+                <AvatarKicsi
+                  nev={felhasznalo.felhasznalo_nev}
+                  profilKepUrl={felhasznalo.profil_kep_url}
+                />
+                <span className="nav-user-name">{felhasznalo.felhasznalo_nev}</span>
+                {admin && <span className="nav-badge">Admin</span>}
+              </Link>
+
+              <button
+                className="nav-btn nav-btn-danger nav-btn-mobile"
+                onClick={() => {
+                  kijelentkezes();
+                  closeMenu();
+                }}
+              >
+                KIJELENTKEZES
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/bejelentkezes" className={linkClass} onClick={closeMenu}>Bejelentkezes</NavLink>
+              <NavLink to="/regisztracio" className={linkClass} onClick={closeMenu}>Regisztracio</NavLink>
+            </>
+          )}
+        </div>
+      </nav>
+    </>
   );
 }

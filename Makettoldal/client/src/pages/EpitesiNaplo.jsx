@@ -1,173 +1,268 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useAdat } from "../context/AdatContext";
 
 const API_BASE_URL = "http://localhost:3001/api";
-const LEPES_MAX = 5;
 
 export default function EpitesiNaplo() {
-  const { bejelentkezve } = useAuth();
-  const { makettek, betoltesFolyamatban, betoltAlapAdatok } = useAdat();
+  const { bejelentkezve, felhasznalo } = useAuth();
+  const { makettek, betoltAlapAdatok, betoltesFolyamatban } = useAdat();
 
-  const [bejegyzesek, beallitBejegyzesek] = useState([]);
-  const [betoltes, beallitBetoltes] = useState(false);
-  const [hiba, beallitHiba] = useState(null);
+  const isAdmin = felhasznalo?.szerepkor_id === 2;
 
-  const [valasztottMakettId, beallitValasztottMakettId] = useState("");
-  const [cim, beallitCim] = useState("");
-  const [leiras, beallitLeiras] = useState("");
-  const [kepUrl, beallitKepUrl] = useState("");
+  const [valasztottMakettId, setValasztottMakettId] = useState("");
 
-  const [lepes, beallitLepes] = useState(1);
-  const [kuldesFolyamatban, beallitKuldesFolyamatban] = useState(false);
+  const [betolt, setBetolt] = useState(false);
+  const [hiba, setHiba] = useState(null);
+
+  const [naplo, setNaplo] = useState(null);
+  const [blokkok, setBlokkok] = useState([]);
+
+  const [ujBlokk, setUjBlokk] = useState({
+    tipus: "osszeepites",
+    cim: "",
+    tippek: "",
+    sorrend: 0,
+  });
+
+  const [szerkId, setSzerkId] = useState(null);
+  const [szerk, setSzerk] = useState({
+    tipus: "osszeepites",
+    cim: "",
+    tippek: "",
+    sorrend: 0,
+  });
 
   useEffect(() => {
     betoltAlapAdatok();
   }, [betoltAlapAdatok]);
 
-  async function betoltBejegyzesek() {
+  const authHeader = useMemo(() => {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, [bejelentkezve]);
+
+  const tudSzerkeszteni = useMemo(() => {
+    if (!bejelentkezve || !naplo) return false;
+    if (isAdmin) return true;
+    return Number(naplo.letrehozo_felhasznalo_id) === Number(felhasznalo?.id);
+  }, [bejelentkezve, naplo, isAdmin, felhasznalo]);
+
+  async function betoltMakettNaplo(makettId) {
+    if (!bejelentkezve || !makettId) return;
+
     try {
-      beallitBetoltes(true);
-      beallitHiba(null);
-      const valasz = await fetch(`${API_BASE_URL}/epitesinaplo`);
-      if (!valasz.ok) {
-        const h = await valasz.json().catch(() => ({}));
-        throw new Error(h.uzenet || "Nem sikerült betölteni az építési naplókat.");
+      setBetolt(true);
+      setHiba(null);
+
+      const res = await fetch(`${API_BASE_URL}/makettek/${makettId}/epitesi-tippek`, {
+        headers: { ...authHeader },
+      });
+
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült betölteni az építési naplót.");
       }
-      const adat = await valasz.json();
-      beallitBejegyzesek(adat);
+
+      const data = await res.json();
+      setNaplo(data.naplo);
+      setBlokkok(Array.isArray(data.blokkok) ? data.blokkok : []);
     } catch (err) {
-      beallitHiba(err.message);
+      setHiba(err.message);
+      setNaplo(null);
+      setBlokkok([]);
     } finally {
-      beallitBetoltes(false);
+      setBetolt(false);
     }
   }
 
   useEffect(() => {
-    betoltBejegyzesek();
-  }, []);
-
-  function lepesHibaUzenet() {
-    if (!bejelentkezve) return "Bejegyzés írásához előbb jelentkezz be.";
-    if (lepes === 1 && !valasztottMakettId) return "Válassz makettet.";
-    if (lepes === 2 && cim.trim().length < 3) return "A cím legyen legalább 3 karakter.";
-    if (lepes === 3 && leiras.trim().length < 10) return "A leírás legyen legalább 10 karakter.";
-    if (lepes === 4 && kepUrl.trim() && !/^https?:\/\/.+/i.test(kepUrl.trim()))
-      return "A kép URL-nek http(s)://-el kell kezdődnie.";
-    return null;
-  }
-
-  function tovabb() {
-    const err = lepesHibaUzenet();
-    if (err) {
-      alert(err);
-      return;
+    if (valasztottMakettId) betoltMakettNaplo(valasztottMakettId);
+    else {
+      setNaplo(null);
+      setBlokkok([]);
     }
-    beallitLepes((x) => Math.min(LEPES_MAX, x + 1));
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [valasztottMakettId]);
 
-  function vissza() {
-    beallitLepes((x) => Math.max(1, x - 1));
-  }
+  async function naploLetrehoz() {
+    if (!valasztottMakettId) return;
 
-  async function kezeliUjBejegyzesKuldes(e) {
-    e.preventDefault();
+    try {
+      setBetolt(true);
+      setHiba(null);
 
-    if (lepes !== LEPES_MAX) {
-      alert("Előbb lépj a végére (Ellenőrzés) a beküldéshez.");
-      return;
+      const res = await fetch(`${API_BASE_URL}/makettek/${valasztottMakettId}/epitesi-tippek`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify({ cim: "Építési napló" }),
+      });
+
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült létrehozni a naplót.");
+      }
+
+      const created = await res.json();
+      setNaplo(created);
+      setBlokkok([]);
+    } catch (err) {
+      setHiba(err.message);
+    } finally {
+      setBetolt(false);
     }
+  }
 
-    if (!bejelentkezve) {
-      alert("Építési napló írásához jelentkezz be.");
+  async function ujBlokkMent() {
+    if (!naplo) return;
+    if (!ujBlokk.cim.trim() || !ujBlokk.tippek.trim()) {
+      alert("A blokk címe és tippek mezője kötelező.");
       return;
     }
 
     try {
-      beallitKuldesFolyamatban(true);
-      const token = localStorage.getItem("token");
-      const valasz = await fetch(`${API_BASE_URL}/epitesinaplo`, {
+      setBetolt(true);
+      setHiba(null);
+
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek/${naplo.id}/blokkok`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({
-          makett_id: valasztottMakettId,
-          cim,
-          leiras,
-          kep_url: kepUrl || null,
+          tipus: ujBlokk.tipus,
+          cim: ujBlokk.cim,
+          tippek: ujBlokk.tippek,
+          sorrend: Number(ujBlokk.sorrend || 0),
         }),
       });
 
-      if (!valasz.ok) {
-        const h = await valasz.json().catch(() => ({}));
-        throw new Error(h.uzenet || "Hiba az építési napló mentésekor.");
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült létrehozni a blokkot.");
       }
 
-      const uj = await valasz.json();
-      beallitBejegyzesek((elozo) => [uj, ...elozo]);
-
-      // reset
-      beallitValasztottMakettId("");
-      beallitCim("");
-      beallitLeiras("");
-      beallitKepUrl("");
-      beallitLepes(1);
+      const created = await res.json();
+      setBlokkok((prev) =>
+        [...prev, created].sort((a, b) => (a.sorrend ?? 0) - (b.sorrend ?? 0) || a.id - b.id)
+      );
+      setUjBlokk({ tipus: "osszeepites", cim: "", tippek: "", sorrend: 0 });
     } catch (err) {
-      alert(err.message);
+      setHiba(err.message);
     } finally {
-      beallitKuldesFolyamatban(false);
+      setBetolt(false);
     }
   }
 
-  const valasztottMakett = makettek.find(
-    (m) => String(m.id) === String(valasztottMakettId)
-  );
+  function szerkesztMegnyit(blokk) {
+    setSzerkId(blokk.id);
+    setSzerk({
+      tipus: blokk.tipus ?? "osszeepites",
+      cim: blokk.cim ?? "",
+      tippek: blokk.tippek ?? "",
+      sorrend: Number(blokk.sorrend ?? 0),
+    });
+  }
+
+  async function szerkMent(blokkId) {
+    if (!szerk.cim.trim() || !szerk.tippek.trim()) {
+      alert("A blokk címe és tippek mezője kötelező.");
+      return;
+    }
+
+    try {
+      setBetolt(true);
+      setHiba(null);
+
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek-blokk/${blokkId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify({
+          tipus: szerk.tipus,
+          cim: szerk.cim,
+          tippek: szerk.tippek,
+          sorrend: Number(szerk.sorrend ?? 0),
+        }),
+      });
+
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült menteni a blokkot.");
+      }
+
+      const updated = await res.json();
+      setBlokkok((prev) =>
+        prev
+          .map((b) => (b.id === blokkId ? updated : b))
+          .sort((a, b) => (a.sorrend ?? 0) - (b.sorrend ?? 0) || a.id - b.id)
+      );
+      setSzerkId(null);
+    } catch (err) {
+      setHiba(err.message);
+    } finally {
+      setBetolt(false);
+    }
+  }
+
+  async function blokkTorol(blokkId) {
+    if (!window.confirm("Biztosan törlöd ezt a blokkot?")) return;
+
+    try {
+      setBetolt(true);
+      setHiba(null);
+
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek-blokk/${blokkId}`, {
+        method: "DELETE",
+        headers: { ...authHeader },
+      });
+
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült törölni a blokkot.");
+      }
+
+      setBlokkok((prev) => prev.filter((b) => b.id !== blokkId));
+      if (szerkId === blokkId) setSzerkId(null);
+    } catch (err) {
+      setHiba(err.message);
+    } finally {
+      setBetolt(false);
+    }
+  }
+
+  function tipusFelirat(t) {
+    switch (t) {
+      case "osszeepites":
+        return "Összeépítés";
+      case "festes":
+        return "Festés";
+      case "matricazas":
+        return "Matricázás";
+      case "lakkozas":
+        return "Lakkozás";
+      case "koszolas":
+        return "Koszolás";
+      default:
+        return "Egyéb";
+    }
+  }
 
   return (
     <section className="page">
-      <h1>Építési naplók</h1>
-      <p className="small">
-        Oszd meg, hogyan haladsz a makettek építésével – képekkel és leírással.
-      </p>
+      <h1>Építési napló</h1>
+      <p className="small">Blokkokból álló építési tippek makettenként (csak bejelentkezve).</p>
 
-      {betoltesFolyamatban && <p>Makett adatok betöltése...</p>}
-      {hiba && <p className="error">{hiba}</p>}
-
-      {/* Új bejegyzés – lépésenként */}
-      <div className="card form">
-        <h2>Új építési napló (lépésenként)</h2>
-
-        {!bejelentkezve && (
-          <p className="small">Bejegyzés írásához előbb jelentkezz be.</p>
-        )}
-
-        {/* Progress */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
-          <div className="chip">LÉPÉS: {lepes}/{LEPES_MAX}</div>
-          <div className="chip">
-            {lepes === 1 && "Makett kiválasztása"}
-            {lepes === 2 && "Cím megadása"}
-            {lepes === 3 && "Leírás megadása"}
-            {lepes === 4 && "Kép (opcionális)"}
-            {lepes === 5 && "Ellenőrzés + Küldés"}
-          </div>
+      {!bejelentkezve ? (
+        <div className="card">
+          <p>Az oldal megtekintéséhez jelentkezz be.</p>
         </div>
+      ) : (
+        <>
+          {betoltesFolyamatban && <p>Makettek betöltése...</p>}
 
-        <form onSubmit={kezeliUjBejegyzesKuldes}>
-
-          {/* 1. LÉPÉS */}
-          {lepes === 1 && (
+          <div className="card form">
             <label>
-              Makett
-              <select
-                value={valasztottMakettId}
-                onChange={(e) => beallitValasztottMakettId(e.target.value)}
-                required
-                disabled={!bejelentkezve}
-              >
-                <option value="">Válassz makettet...</option>
+              Makett kiválasztása
+              <select value={valasztottMakettId} onChange={(e) => setValasztottMakettId(e.target.value)}>
+                <option value="">Válassz...</option>
                 {makettek.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.nev} ({m.gyarto}, {m.skala})
@@ -175,172 +270,152 @@ export default function EpitesiNaplo() {
                 ))}
               </select>
             </label>
-          )}
 
-          {/* 2. LÉPÉS */}
-          {lepes === 2 && (
-            <label>
-              Cím
-              <input
-                type="text"
-                value={cim}
-                onChange={(e) => beallitCim(e.target.value)}
-                placeholder="Pl.: Alapozás + első festés"
-                required
-                disabled={!bejelentkezve}
-              />
-            </label>
-          )}
+            {hiba && <p className="error">{hiba}</p>}
+            {betolt && <p className="small">Betöltés...</p>}
 
-          {/* 3. LÉPÉS */}
-          {lepes === 3 && (
-            <label>
-              Leírás
-              <textarea
-                value={leiras}
-                onChange={(e) => beallitLeiras(e.target.value)}
-                rows={6}
-                placeholder="Írd le részletesen, mit csináltál..."
-                required
-                disabled={!bejelentkezve}
-              />
-            </label>
-          )}
-
-          {/* 4. LÉPÉS */}
-          {lepes === 4 && (
-            <label>
-              Kép URL (opcionális)
-              <input
-                type="url"
-                placeholder="https://..."
-                value={kepUrl}
-                onChange={(e) => beallitKepUrl(e.target.value)}
-                disabled={!bejelentkezve}
-              />
-
-              {kepUrl?.trim() && (
-                <div className="makett-kep-wrapper" style={{ marginTop: 10 }}>
-                  <img src={kepUrl} alt="Előnézet" className="makett-kep" />
-                </div>
-              )}
-            </label>
-          )}
-
-          {/* 5. LÉPÉS */}
-          {lepes === 5 && (
-            <div className="card" style={{ marginTop: 10 }}>
-              <h3>Előnézet</h3>
-              <p className="small">
-                Makett:{" "}
-                <strong>
-                  {valasztottMakett
-                    ? `${valasztottMakett.nev} (${valasztottMakett.gyarto}, ${valasztottMakett.skala})`
-                    : "-"}
-                </strong>
-              </p>
-              <p><strong>{cim}</strong></p>
-              <p>{leiras}</p>
-
-              {kepUrl?.trim() && (
-                <div className="makett-kep-wrapper" style={{ marginTop: 10 }}>
-                  <img src={kepUrl} alt={cim} className="makett-kep" />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Gombok */}
-          <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
-            <button
-              type="button"
-              className="btn secondary"
-              onClick={vissza}
-              disabled={lepes === 1 || kuldesFolyamatban}
-            >
-              Vissza
-            </button>
-
-            {lepes < LEPES_MAX ? (
-              <button
-                type="button"
-                className="btn"
-                onClick={tovabb}
-                disabled={kuldesFolyamatban}
-              >
-                Tovább
-              </button>
+            {!valasztottMakettId ? (
+              <p className="small">Válassz egy makettet a napló kezeléséhez.</p>
+            ) : !naplo ? (
+              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <p className="small" style={{ margin: 0 }}>
+                  Ehhez a maketthez még nincs napló.
+                </p>
+                <button className="btn" onClick={naploLetrehoz} disabled={betolt}>
+                  Napló létrehozása
+                </button>
+              </div>
             ) : (
-              <button
-                type="submit"
-                className="btn"
-                disabled={kuldesFolyamatban}
-              >
-                {kuldesFolyamatban ? "Mentés..." : "Bejegyzés mentése"}
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
+              <>
+                <div className="card" style={{ marginTop: 10 }}>
+                  <h3>Blokkok</h3>
 
-      {/* Bejegyzések listája */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <h2>Összes bejegyzés</h2>
-        {betoltes && <p>Betöltés...</p>}
-        {bejegyzesek.length === 0 && !betoltes ? (
-          <p>Még nincs egyetlen építési napló bejegyzés sem.</p>
-        ) : (
-          <ul style={{ listStyle: "none", paddingLeft: 0, margin: 0 }}>
-            {bejegyzesek.map((b) => {
-              const datum = b.letrehozva
-                ? new Date(b.letrehozva).toLocaleString("hu-HU")
-                : "";
-              return (
-                <li
-                  key={b.id}
-                  style={{
-                    borderBottom: "1px solid rgba(116,130,112,0.22)",
-                    padding: "8px 0",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 8,
-                    }}
-                  >
-                    <div>
-                      <strong>{b.cim}</strong>
-                      <p className="small" style={{ margin: 0 }}>
-                        {b.makett_nev} ({b.gyarto}, {b.skala})
-                      </p>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <p className="small" style={{ margin: 0 }}>
-                        {b.felhasznalo_nev}
-                      </p>
-                      <p className="small" style={{ margin: 0 }}>
-                        {datum}
-                      </p>
-                    </div>
-                  </div>
-                  <p style={{ marginTop: 4 }}>{b.leiras}</p>
-                  {b.kep_url && (
-                    <div className="makett-kep-wrapper" style={{ marginTop: 4 }}>
-                      <img
-                        src={b.kep_url}
-                        alt={b.cim}
-                        className="makett-kep"
-                      />
+                  {blokkok.length === 0 ? (
+                    <p className="small">Még nincs blokk.</p>
+                  ) : (
+                    <div style={{ display: "grid", gap: 10 }}>
+                      {blokkok.map((b) => (
+                        <div key={b.id} className="card" style={{ margin: 0 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                            <div>
+                              <div className="chip">{tipusFelirat(b.tipus)}</div>
+                              <h4 style={{ margin: "8px 0 0 0" }}>
+                                {b.sorrend ?? 0}. {b.cim}
+                              </h4>
+                            </div>
+
+                            {tudSzerkeszteni && (
+                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                                {szerkId !== b.id ? (
+                                  <button className="btn secondary" onClick={() => szerkesztMegnyit(b)}>
+                                    Szerkesztés
+                                  </button>
+                                ) : (
+                                  <button className="btn secondary" onClick={() => setSzerkId(null)}>
+                                    Mégse
+                                  </button>
+                                )}
+                                <button className="btn danger" onClick={() => blokkTorol(b.id)}>
+                                  Törlés
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {szerkId !== b.id ? (
+                            <pre style={{ whiteSpace: "pre-wrap", marginTop: 10 }}>{b.tippek}</pre>
+                          ) : (
+                            <div className="form" style={{ marginTop: 10 }}>
+                              <label>
+                                Típus
+                                <select value={szerk.tipus} onChange={(e) => setSzerk((p) => ({ ...p, tipus: e.target.value }))}>
+                                  <option value="osszeepites">Összeépítés</option>
+                                  <option value="festes">Festés</option>
+                                  <option value="matricazas">Matricázás</option>
+                                  <option value="lakkozas">Lakkozás</option>
+                                  <option value="koszolas">Koszolás</option>
+                                  <option value="egyeb">Egyéb</option>
+                                </select>
+                              </label>
+
+                              <label>
+                                Sorrend
+                                <input type="number" value={szerk.sorrend} onChange={(e) => setSzerk((p) => ({ ...p, sorrend: Number(e.target.value) }))} />
+                              </label>
+
+                              <label>
+                                Cím
+                                <input value={szerk.cim} onChange={(e) => setSzerk((p) => ({ ...p, cim: e.target.value }))} />
+                              </label>
+
+                              <label>
+                                Tippek
+                                <textarea rows={6} value={szerk.tippek} onChange={(e) => setSzerk((p) => ({ ...p, tippek: e.target.value }))} />
+                              </label>
+
+                              <div className="button-row">
+                                <button className="btn" onClick={() => szerkMent(b.id)} disabled={betolt}>
+                                  Mentés
+                                </button>
+                                <button className="btn secondary" onClick={() => setSzerkId(null)} disabled={betolt}>
+                                  Mégse
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+                </div>
+
+                {tudSzerkeszteni && (
+                  <div className="card form" style={{ marginTop: 10 }}>
+                    <h3>Új blokk</h3>
+
+                    <label>
+                      Típus
+                      <select value={ujBlokk.tipus} onChange={(e) => setUjBlokk((p) => ({ ...p, tipus: e.target.value }))}>
+                        <option value="osszeepites">Összeépítés</option>
+                        <option value="festes">Festés</option>
+                        <option value="matricazas">Matricázás</option>
+                        <option value="lakkozas">Lakkozás</option>
+                        <option value="koszolas">Koszolás</option>
+                        <option value="egyeb">Egyéb</option>
+                      </select>
+                    </label>
+
+                    <label>
+                      Sorrend
+                      <input type="number" value={ujBlokk.sorrend} onChange={(e) => setUjBlokk((p) => ({ ...p, sorrend: Number(e.target.value) }))} />
+                    </label>
+
+                    <label>
+                      Cím
+                      <input value={ujBlokk.cim} onChange={(e) => setUjBlokk((p) => ({ ...p, cim: e.target.value }))} />
+                    </label>
+
+                    <label>
+                      Tippek
+                      <textarea rows={6} value={ujBlokk.tippek} onChange={(e) => setUjBlokk((p) => ({ ...p, tippek: e.target.value }))} />
+                    </label>
+
+                    <button className="btn" onClick={ujBlokkMent} disabled={betolt}>
+                      Blokk mentése
+                    </button>
+                  </div>
+                )}
+
+                {!tudSzerkeszteni && (
+                  <p className="small" style={{ marginTop: 10 }}>
+                    Ezt a naplót csak a létrehozója vagy az admin szerkesztheti.
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </>
+      )}
     </section>
   );
 }

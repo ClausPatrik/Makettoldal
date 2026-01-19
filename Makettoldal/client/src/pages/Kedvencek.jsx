@@ -126,7 +126,7 @@ export default function Kedvencek() {
       {makettek.length === 0 && !betoltes ? (
         <p>Még nincs egyetlen kedvenc maketted sem.</p>
       ) : (
-        <section className="card-grid">
+        <section className="card-grid card-grid-5">
           {makettek.map((m) => (
             <MakettCard
               key={m.makett_id}
