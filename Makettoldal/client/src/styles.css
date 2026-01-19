@@ -742,7 +742,7 @@ h3 {
 /* A modal legyen "card" jellegű */
 .modal {
   width: min(920px, 100%);
-  max-height: min(85vh, 720px);
+  max-height: min(95vh, 820px);
   overflow: auto;
 
   /* Ha a .card nálad ad árnyékot/kerekitést, ez szépen illeszkedik */
