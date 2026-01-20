@@ -79,7 +79,7 @@ export default function Footer() {
       <div className="tank-footer-inner">
         {/* Brand panel */}
         <div className="footer-panel footer-brand">
-          <h3 className="footer-title">MAKETT PARANCSNOKSÁG</h3>
+          <h3 className="footer-title">MakettMester</h3>
           <p className="footer-desc">
             Makettek véleményezése, építési naplók, technikák és közösségi tudásbázis.
           </p>
@@ -95,7 +95,6 @@ export default function Footer() {
           <ul>
             <li><a href="/">Főoldal</a></li>
             <li><a href="/makettek">Makettek</a></li>
-            <li><a href="/feltoltes">Feltöltés</a></li>
             <li><a href="/forum">Fórum</a></li>
           </ul>
         </div>
@@ -103,7 +102,7 @@ export default function Footer() {
         {/* Kapcsolat */}
         <div className="footer-panel footer-contact">
           <h3 className="footer-title">KAPCSOLAT</h3>
-          <p>Email: support@makettparancsnoksag.hu</p>
+          <p>Email: makettkluboldal@gmail.com</p>
           <p>Verzió: v1.0.0</p>
 
           <button
@@ -118,8 +117,7 @@ export default function Footer() {
 
       {/* Alsó sáv */}
       <div className="footer-bottom">
-        <span>© 2026 Makett Parancsnokság — Minden jog fenntartva</span>
-        <span className="footer-tag">TACTICAL MODELING SYSTEM</span>
+        <span>© 2026 MakettMester — Minden jog fenntartva</span>
       </div>
 
       {/* Modal */}

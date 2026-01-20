@@ -9,6 +9,7 @@ import VelemenyekSection from "./VelemenyekSection";
  * - Admin: szerkesztés + törlés
  * - Vélemények
  * - ÚJ: Építési tippek (építési napló blokkokkal) -> CSAK bejelentkezve látható
+ * - ÚJ: Makett leírás + vásárlási link (megjelenítés + admin szerkesztés)
  */
 export default function MakettModal({
   open,
@@ -63,6 +64,8 @@ export default function MakettModal({
     nehezseg: 1,
     megjelenes_eve: "",
     kep_url: "",
+    leiras: "",
+    vasarlasi_link: "",
   });
 
   useEffect(() => {
@@ -78,11 +81,22 @@ export default function MakettModal({
       nehezseg: Number(makett.nehezseg ?? 1),
       megjelenes_eve: makett.megjelenes_eve ?? "",
       kep_url: makett.kep_url ?? "",
+      leiras: makett.leiras ?? "",
+      vasarlasi_link: makett.vasarlasi_link ?? "",
     });
   }, [open, makett]);
 
   function setField(name, value) {
     setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function normalizalLink(url) {
+    if (!url) return "";
+    const u = String(url).trim();
+    if (!u) return "";
+    if (u.startsWith("http://") || u.startsWith("https://")) return u;
+    // ha csak "www..." vagy domain, legyen belőle https
+    return "https://" + u;
   }
 
   async function kezeliAdminMentes() {
@@ -101,6 +115,8 @@ export default function MakettModal({
         nehezseg: Number(form.nehezseg),
         megjelenes_eve: form.megjelenes_eve,
         kep_url: form.kep_url,
+        leiras: form.leiras,
+        vasarlasi_link: form.vasarlasi_link,
       };
 
       await onAdminUpdate(makettId, payload);
@@ -173,10 +189,9 @@ export default function MakettModal({
         setTippekBetolt(true);
         setTippekHiba(null);
 
-        const res = await fetch(
-          `${API_BASE_URL}/makettek/${makettId}/epitesi-tippek`,
-          { headers: { ...authHeader } }
-        );
+        const res = await fetch(`${API_BASE_URL}/makettek/${makettId}/epitesi-tippek`, {
+          headers: { ...authHeader },
+        });
 
         if (!res.ok) {
           const h = await res.json().catch(() => ({}));
@@ -212,14 +227,11 @@ export default function MakettModal({
       setTippekBetolt(true);
       setTippekHiba(null);
 
-      const res = await fetch(
-        `${API_BASE_URL}/makettek/${makettId}/epitesi-tippek`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...authHeader },
-          body: JSON.stringify({ cim: "Építési napló" }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/makettek/${makettId}/epitesi-tippek`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify({ cim: "Építési napló" }),
+      });
 
       if (!res.ok) {
         const h = await res.json().catch(() => ({}));
@@ -247,19 +259,16 @@ export default function MakettModal({
       setTippekBetolt(true);
       setTippekHiba(null);
 
-      const res = await fetch(
-        `${API_BASE_URL}/epitesi-tippek/${tippekNaplo.id}/blokkok`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...authHeader },
-          body: JSON.stringify({
-            tipus: ujBlokk.tipus,
-            cim: ujBlokk.cim,
-            tippek: ujBlokk.tippek,
-            sorrend: Number(ujBlokk.sorrend || 0),
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek/${tippekNaplo.id}/blokkok`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify({
+          tipus: ujBlokk.tipus,
+          cim: ujBlokk.cim,
+          tippek: ujBlokk.tippek,
+          sorrend: Number(ujBlokk.sorrend || 0),
+        }),
+      });
 
       if (!res.ok) {
         const h = await res.json().catch(() => ({}));
@@ -301,19 +310,16 @@ export default function MakettModal({
       setTippekBetolt(true);
       setTippekHiba(null);
 
-      const res = await fetch(
-        `${API_BASE_URL}/epitesi-tippek-blokk/${szerkesztBlokkId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", ...authHeader },
-          body: JSON.stringify({
-            tipus: szerkesztBlokk.tipus,
-            cim: szerkesztBlokk.cim,
-            tippek: szerkesztBlokk.tippek,
-            sorrend: Number(szerkesztBlokk.sorrend ?? 0),
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek-blokk/${szerkesztBlokkId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify({
+          tipus: szerkesztBlokk.tipus,
+          cim: szerkesztBlokk.cim,
+          tippek: szerkesztBlokk.tippek,
+          sorrend: Number(szerkesztBlokk.sorrend ?? 0),
+        }),
+      });
 
       if (!res.ok) {
         const h = await res.json().catch(() => ({}));
@@ -341,13 +347,10 @@ export default function MakettModal({
       setTippekBetolt(true);
       setTippekHiba(null);
 
-      const res = await fetch(
-        `${API_BASE_URL}/epitesi-tippek-blokk/${blokkId}`,
-        {
-          method: "DELETE",
-          headers: { ...authHeader },
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek-blokk/${blokkId}`, {
+        method: "DELETE",
+        headers: { ...authHeader },
+      });
 
       if (!res.ok) {
         const h = await res.json().catch(() => ({}));
@@ -382,6 +385,8 @@ export default function MakettModal({
 
   if (!open || !makett) return null;
 
+  const vasarloLink = normalizalLink(makett.vasarlasi_link);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal card" onClick={(e) => e.stopPropagation()}>
@@ -405,12 +410,11 @@ export default function MakettModal({
           </button>
         </div>
 
-{makett.kep_url && (
-  <div className="modal-kep-wrap">
-    <img className="modal-kep" src={makett.kep_url} alt={makett.nev} />
-  </div>
-)}
-
+        {makett.kep_url && (
+          <div className="modal-kep-wrap">
+            <img className="modal-kep" src={makett.kep_url} alt={makett.nev} />
+          </div>
+        )}
 
         <div className="modal-grid">
           <p className="small">
@@ -421,6 +425,43 @@ export default function MakettModal({
             <strong>Megjelenés éve:</strong> {makett.megjelenes_eve}
           </p>
         </div>
+
+        {/* ÚJ: leírás + vásárlási link */}
+        {(makett.leiras || vasarloLink) && (
+          <section className="card" style={{ marginTop: 12 }}>
+            {makett.leiras && (
+              <>
+                <h3 style={{ marginTop: 0 }}>Leírás</h3>
+                <p className="small" style={{ whiteSpace: "pre-wrap", marginBottom: 10 }}>
+                  {makett.leiras}
+                </p>
+              </>
+            )}
+
+            {vasarloLink && (
+              <div className="button-row" style={{ marginTop: 0 }}>
+                <a
+                  className="btn"
+                  href={vasarloLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Megvásárlás
+                </a>
+
+                <a
+                  className="btn secondary"
+                  href={vasarloLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={vasarloLink}
+                >
+                  Link megnyitása
+                </a>
+              </div>
+            )}
+          </section>
+        )}
 
         <div className="button-row">
           <button
@@ -469,7 +510,10 @@ export default function MakettModal({
 
             <label>
               Gyártó
-              <input value={form.gyarto} onChange={(e) => setField("gyarto", e.target.value)} />
+              <input
+                value={form.gyarto}
+                onChange={(e) => setField("gyarto", e.target.value)}
+              />
             </label>
 
             <label>
@@ -506,7 +550,30 @@ export default function MakettModal({
 
             <label>
               Kép URL
-              <input value={form.kep_url} onChange={(e) => setField("kep_url", e.target.value)} />
+              <input
+                value={form.kep_url}
+                onChange={(e) => setField("kep_url", e.target.value)}
+              />
+            </label>
+
+            {/* ÚJ mezők */}
+            <label>
+              Leírás
+              <textarea
+                rows={5}
+                value={form.leiras}
+                onChange={(e) => setField("leiras", e.target.value)}
+                placeholder="Írj rövid leírást a makettről…"
+              />
+            </label>
+
+            <label>
+              Vásárlási link
+              <input
+                value={form.vasarlasi_link}
+                onChange={(e) => setField("vasarlasi_link", e.target.value)}
+                placeholder="https://..."
+              />
             </label>
 
             <div className="button-row">

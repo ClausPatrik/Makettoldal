@@ -37,7 +37,7 @@ const upload = multer({ storage });
 
 // --- ADATBÁZIS KAPCSOLAT --- //
 const DB_HOST = process.env.DB_HOST || "localhost";
-const DB_PORT = Number(process.env.DB_PORT || 3306);
+const DB_PORT = Number(process.env.DB_PORT || 3307);
 const DB_USER = process.env.DB_USER || "root";
 const DB_PASSWORD = process.env.DB_PASSWORD || "";
 const DB_NAME = process.env.DB_NAME || "makett";
@@ -142,6 +142,9 @@ async function inicializalAdatbazis() {
       nehezseg INT NOT NULL,
       megjelenes_eve INT NOT NULL,
       kep_url VARCHAR(255) NULL,
+      leiras TEXT NULL,
+      vasarlasi_link VARCHAR(500) NULL,
+
 
       -- jóváhagyásos feltöltés mezők
       allapot ENUM('jovahagyva','varakozik','elutasitva') NOT NULL DEFAULT 'jovahagyva',
@@ -182,6 +185,8 @@ async function inicializalAdatbazis() {
   await probalSema("ALTER TABLE makett ADD COLUMN allapot ENUM('jovahagyva','varakozik','elutasitva') NOT NULL DEFAULT 'jovahagyva'");
   await probalSema("ALTER TABLE makett ADD COLUMN bekuldo_felhasznalo_id INT NULL");
   await probalSema("ALTER TABLE makett ADD COLUMN bekuldve DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
+  await probalSema("ALTER TABLE makett ADD COLUMN leiras TEXT NULL");
+await probalSema("ALTER TABLE makett ADD COLUMN vasarlasi_link VARCHAR(500) NULL");
   await probalSema("ALTER TABLE makett ADD COLUMN elbiralta_admin_id INT NULL");
   await probalSema("ALTER TABLE makett ADD COLUMN elbiralva DATETIME NULL");
   await probalSema("ALTER TABLE makett ADD COLUMN elutasitas_ok VARCHAR(255) NULL");
@@ -772,7 +777,7 @@ app.post("/api/makettek", authMiddleware, adminMiddleware, async (req, res) => {
       `INSERT INTO makett
         (nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve, kep_url, allapot, elbiralta_admin_id, elbiralva)
        VALUES (?, ?, ?, ?, ?, ?, ?, 'jovahagyva', ?, NOW())`,
-      [
+       [
         nev.trim(),
         gyarto.trim(),
         kategoria.trim(),
@@ -780,8 +785,11 @@ app.post("/api/makettek", authMiddleware, adminMiddleware, async (req, res) => {
         nehezsegSzam,
         evSzam,
         kep_url || null,
-        req.felhasznalo.id,
+        leiras || null,
+        vasarlasi_link || null,
+        makettId,
       ]
+      
     );
 
     const ujId = eredmeny.insertId;
@@ -843,16 +851,21 @@ app.put(
         `UPDATE makett
          SET nev = ?, gyarto = ?, kategoria = ?, skala = ?, nehezseg = ?, megjelenes_eve = ?, kep_url = ?
          WHERE id = ?`,
-        [
-          nev.trim(),
-          gyarto.trim(),
-          kategoria.trim(),
-          skala.trim(),
-          nehezsegSzam,
-          evSzam,
-          kep_url || null,
-          makettId,
-        ]
+        
+          [
+            nev.trim(),
+            gyarto.trim(),
+            kategoria.trim(),
+            skala.trim(),
+            nehezsegSzam,
+            evSzam,
+            kep_url || null,
+            leiras || null,
+            vasarlasi_link || null,
+            makettId,
+          ]
+          
+        
       );
 
       const [uj] = await adatbazisLekeres(
@@ -876,7 +889,11 @@ app.put(
 // Felhasználó beküld új makettet jóváhagyásra
 app.post("/api/makett-javaslatok", authMiddleware, async (req, res) => {
   try {
-    let { nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve, kep_url } = req.body;
+    let {
+      nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve, kep_url,
+      leiras, vasarlasi_link
+    } = req.body;
+    
 
     if (!nev || !gyarto || !kategoria || !skala) {
       return res.status(400).json({ uzenet: "Név, gyártó, kategória és skála kötelező." });

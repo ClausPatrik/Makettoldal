@@ -128,7 +128,7 @@ export default function Kezdolap() {
 
   return (
     <section className="page">
-      <h1>Üdv a makettező klub oldalán!</h1>
+      <h1>Üdv a MakettMester oldalán!</h1>
       <div className="card">
         <h2>Makettezők tudásbázisa és fóruma</h2>
   <p>
