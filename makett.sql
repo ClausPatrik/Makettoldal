@@ -244,7 +244,7 @@ INSERT INTO `makett` (`id`, `nev`, `gyarto`, `kategoria`, `skala`, `nehezseg`, `
 (11, 'KV-2 nehézharckocsi', 'Trumpeter', 'harckocsi', '1:35', 2, 2018, 'https://www.super-hobby.com/zdjecia/3/4/2/367_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
 (12, 'Spitfire Mk Vb', 'Airfix', 'repülő', '1:72', 1, 2015, 'https://www.super-hobby.com/zdjecia/9/6/9/3093_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
 (13, 'Gundam Aerial HG', 'Bandai', 'mecha', '1:144', 1, 2022, 'https://www.super-hobby.com/zdjecia/3/0/2/51774_rd.png', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
-(14, 'Gunda Aerial Rebuild HG', 'Bandai', 'mecha', '1:144', 1, 2023, 'https://www.super-hobby.com/zdjecia/4/4/5/60142_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
+(14, 'Gundam Aerial Rebuild HG', 'Bandai', 'mecha', '1:144', 1, 2023, 'https://www.super-hobby.com/zdjecia/4/4/5/60142_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
 (15, 'Gundam 00 Seven Sword/G HG', 'Bandai', 'mecha', '1:144', 1, 2010, 'https://www.super-hobby.com/zdjecia/2/3/8/32064_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
 (16, 'Gundam 00 Seven Sword/G MG', 'Bandai', 'mecha', '1:100', 2, 2011, 'https://www.super-hobby.com/zdjecia/7/2/6/31999_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
 (17, 'Gundam Virtue', 'Bandai', 'mecha', '1:144', 1, 2007, 'https://www.super-hobby.com/zdjecia/0/4/9/36187_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
