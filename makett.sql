@@ -285,7 +285,7 @@ INSERT INTO `makett` (`id`, `nev`, `gyarto`, `kategoria`, `skala`, `nehezseg`, `
 (52, 'Mobile Suit F71', 'Bandai', 'mecha', '1:144', 5, 1990, 'https://tse2.mm.bing.net/th/id/OIP.Y2rDqx9ehMQS9FN1icDG6AHaHa?rs=1&pid=ImgDetMain&o=7&rm=3', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
 (53, 'AMX-107 Bawoo HG', 'Bandai', 'mecha', '1:144', 2, 2002, 'https://www.super-hobby.com/zdjecia/8/4/0/32732_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
 (54, 'M4A3 75(W) ETO', 'Dragon', 'harckocsi', '1:35', 4, 2024, 'https://www.super-hobby.com/zdjecia/5/3/2/2154_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
-(55, 'Churchill Mk.III', 'Italeri', 'harckocsi', '1:72', 5, 2021, 'https://www.super-hobby.com/zdjecia/6/5/5/39702_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
+(55, 'Churchill Mk.III', 'Italeri', 'harckocsi', '1:72', 5, 2021, 'https://www.super-hobby.com/zdjecia/6/5/5/39702_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 

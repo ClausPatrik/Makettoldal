@@ -482,7 +482,7 @@ export default function Forum() {
       {/* Két oszlopos elrendezés */}
       <div className="forum-layout" style={{ marginTop: 16 }}>
         {/* BAL: témák */}
-        <div className="forum-left card">
+        <div className="forum-right card">
           <h2>Témák</h2>
 
           <input
@@ -525,13 +525,13 @@ export default function Forum() {
         </div>
 
         {/* JOBB: hozzászólások */}
-        <div className="forum-right card">
+        <div className="forum-left card">
           {!kivalasztottTema ? (
             <p className="small">Válassz egy témát bal oldalon.</p>
           ) : (
             <>
               {/* Téma fejléc + admin szerkesztés gomb */}
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+              <div className="forum-topic-header">
                 <div>
                   <h2 style={{ marginBottom: 4 }}>{kivalasztottTema.cim}</h2>
                   <p className="small" style={{ marginTop: 0 }}>
@@ -543,9 +543,8 @@ export default function Forum() {
                 {isAdmin && (
                   <button
                     type="button"
-                    className="btn secondary"
+                    className="btn secondary forum-admin-btn"
                     onClick={() => setTemaEditNyitva((p) => !p)}
-                    style={{ height: 40 }}
                   >
                     {temaEditNyitva ? "Szerkesztés bezárása" : "Téma szerkesztése"}
                   </button>
@@ -620,7 +619,7 @@ export default function Forum() {
 
                     return (
                       <li key={u.id} className="forum-msg">
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                        <div className="forum-msg-header">
                           <div>
                             <strong>{u.felhasznalo_nev || "Felhasználó"}</strong>
                             <p className="small" style={{ margin: 0 }}>
@@ -632,9 +631,8 @@ export default function Forum() {
                           {isAdmin && !szerkeszt && (
                             <button
                               type="button"
-                              className="btn secondary"
+                              className="btn secondary forum-admin-btn"
                               onClick={() => adminUzenetEditStart(u)}
-                              style={{ height: 36 }}
                             >
                               Szerkesztés
                             </button>
