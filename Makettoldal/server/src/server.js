@@ -1776,7 +1776,152 @@ async function kuldEmailErtesitesFejlesztonek({ kuldoNev, kuldoEmail, targy, uze
   });
 }
 
+// Fórum – téma módosítása (admin vagy szerző)
+app.put("/api/forum/temak/:id", authMiddleware, async (req, res) => {
+  try {
+    const temaId = Number(req.params.id);
+    const { cim, leiras, kategoria } = req.body;
+    const userId = req.felhasznalo.id;
+    const admin = req.felhasznalo.szerepkor_id === 2;
 
+    const [tema] = await adatbazisLekeres(
+      "SELECT * FROM forum_tema WHERE id = ?",
+      [temaId]
+    );
+
+    if (!tema) {
+      return res.status(404).json({ uzenet: "A téma nem található." });
+    }
+
+    if (!admin && tema.felhasznalo_id !== userId) {
+      return res.status(403).json({
+        uzenet: "Nincs jogosultságod a téma módosításához.",
+      });
+    }
+
+    await adatbazisLekeres(
+      `UPDATE forum_tema
+       SET cim = ?, leiras = ?, kategoria = ?
+       WHERE id = ?`,
+      [cim, leiras || null, kategoria || null, temaId]
+    );
+
+    const [friss] = await adatbazisLekeres(
+      "SELECT * FROM forum_tema WHERE id = ?",
+      [temaId]
+    );
+
+    res.json(friss);
+  } catch (err) {
+    console.error("Fórum téma módosítás hiba:", err);
+    res.status(500).json({ uzenet: "Szerver hiba." });
+  }
+});
+// Fórum – téma törlése (admin vagy szerző)
+app.delete("/api/forum/temak/:id", authMiddleware, async (req, res) => {
+  try {
+    const temaId = Number(req.params.id);
+    const userId = req.felhasznalo.id;
+    const admin = req.felhasznalo.szerepkor_id === 2;
+
+    const [tema] = await adatbazisLekeres(
+      "SELECT * FROM forum_tema WHERE id = ?",
+      [temaId]
+    );
+
+    if (!tema) {
+      return res.status(404).json({ uzenet: "A téma nem található." });
+    }
+
+    if (!admin && tema.felhasznalo_id !== userId) {
+      return res.status(403).json({
+        uzenet: "Nincs jogosultságod a téma törléséhez.",
+      });
+    }
+
+    await adatbazisLekeres(
+      "DELETE FROM forum_tema WHERE id = ?",
+      [temaId]
+    );
+
+    res.json({ uzenet: "Téma törölve." });
+  } catch (err) {
+    console.error("Fórum téma törlés hiba:", err);
+    res.status(500).json({ uzenet: "Szerver hiba." });
+  }
+});
+// Fórum – hozzászólás módosítása
+app.put("/api/forum/uzenetek/:id", authMiddleware, async (req, res) => {
+  try {
+    const uzenetId = Number(req.params.id);
+    const { szoveg } = req.body;
+    const userId = req.felhasznalo.id;
+    const admin = req.felhasznalo.szerepkor_id === 2;
+
+    const [uzenet] = await adatbazisLekeres(
+      "SELECT * FROM forum_uzenet WHERE id = ?",
+      [uzenetId]
+    );
+
+    if (!uzenet) {
+      return res.status(404).json({ uzenet: "Hozzászólás nem található." });
+    }
+
+    if (!admin && uzenet.felhasznalo_id !== userId) {
+      return res.status(403).json({
+        uzenet: "Nincs jogosultságod a hozzászólás módosításához.",
+      });
+    }
+
+    await adatbazisLekeres(
+      "UPDATE forum_uzenet SET szoveg = ? WHERE id = ?",
+      [szoveg, uzenetId]
+    );
+
+    const [friss] = await adatbazisLekeres(
+      "SELECT * FROM forum_uzenet WHERE id = ?",
+      [uzenetId]
+    );
+
+    res.json(friss);
+  } catch (err) {
+    console.error("Fórum üzenet módosítás hiba:", err);
+    res.status(500).json({ uzenet: "Szerver hiba." });
+  }
+});
+// Fórum – hozzászólás törlése
+app.delete("/api/forum/uzenetek/:id", authMiddleware, async (req, res) => {
+  try {
+    const uzenetId = Number(req.params.id);
+    const userId = req.felhasznalo.id;
+    const admin = req.felhasznalo.szerepkor_id === 2;
+
+    const [uzenet] = await adatbazisLekeres(
+      "SELECT * FROM forum_uzenet WHERE id = ?",
+      [uzenetId]
+    );
+
+    if (!uzenet) {
+      return res.status(404).json({ uzenet: "Hozzászólás nem található." });
+    }
+
+    if (!admin && uzenet.felhasznalo_id !== userId) {
+      return res.status(403).json({
+        uzenet: "Nincs jogosultságod a hozzászólás törléséhez.",
+      });
+    }
+
+    await adatbazisLekeres(
+      "DELETE FROM forum_uzenet WHERE id = ?",
+      [uzenetId]
+    );
+
+    res.json({ uzenet: "Hozzászólás törölve." });
+  } catch (err) {
+    console.error("Fórum üzenet törlés hiba:", err);
+    res.status(500).json({ uzenet: "Szerver hiba." });
+  }
+});
 
 // --- GYÖKÉR ENDPOINT --- //
 app.get("/", (req, res) => {
