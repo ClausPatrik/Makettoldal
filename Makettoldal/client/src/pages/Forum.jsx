@@ -535,8 +535,9 @@ export default function Forum() {
                 {canEditTema && (
                   <button
                     type="button"
-                    className="btn secondary forum-admin-btn"
+                    className="btn secondary"
                     onClick={() => setTemaEditNyitva((p) => !p)}
+                    style={{ height: 40 }}
                   >
                     {temaEditNyitva ? "Szerkesztés bezárása" : "Téma szerkesztése"}
                   </button>
@@ -615,7 +616,7 @@ export default function Forum() {
 
                     return (
                       <li key={u.id} className="forum-msg">
-                        <div className="forum-msg-header">
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                           <div>
                             <strong>{u.felhasznalo_nev || "Felhasználó"}</strong>
                             <p className="small" style={{ margin: 0 }}>
