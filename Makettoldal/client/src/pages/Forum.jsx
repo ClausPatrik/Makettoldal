@@ -472,7 +472,7 @@ export default function Forum() {
       {/* Két oszlopos elrendezés */}
       <div className="forum-layout" style={{ marginTop: 16 }}>
         {/* BAL: témák */}
-        <div className="forum-left card">
+        <div className="forum-right card">
           <h2>Témák</h2>
 
           {/* kereső mező formázott wrapperben */}
@@ -517,7 +517,7 @@ export default function Forum() {
         </div>
 
         {/* JOBB: hozzászólások */}
-        <div className="forum-right card">
+        <div className="forum-left card">
           {!kivalasztottTema ? (
             <p className="small">Válassz egy témát bal oldalon.</p>
           ) : (
