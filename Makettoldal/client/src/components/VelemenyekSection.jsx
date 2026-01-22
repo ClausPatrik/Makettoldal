@@ -1,78 +1,78 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import CsillagValaszto from "./CsillagValaszto";
 
 /**
- * Közös vélemény blokk (kártyában és modalban is ugyanazt használjuk)
+ * Vélemények panel (MakettCard és MakettModal is ezt használja)
+ * - listázza a makettId-hoz tartozó véleményeket
+ * - bejelentkezett user tud új véleményt írni
+ * - a user tudja szerkeszteni (és törölni) a SAJÁT véleményét
+ * - admin bárkiét tudja szerkeszteni/törölni
  */
 export default function VelemenyekSection({
   makettId,
   velemenyek = [],
+
   bejelentkezve,
   felhasznalo,
   isAdmin,
+
   formatDatum,
 
   hozzaadVelemeny,
   modositVelemeny,
   torolVelemeny,
 }) {
-  // Új vélemény state (külön a komponensen belül)
+  // --- Maketthez tartozó vélemények kiszűrése ---
+  const lista = useMemo(() => {
+    const mid = Number(makettId);
+    return (velemenyek || []).filter((v) => Number(v.makett_id) === mid);
+  }, [velemenyek, makettId]);
+
+  // --- Új vélemény state ---
   const [ujSzoveg, setUjSzoveg] = useState("");
   const [ujErtekeles, setUjErtekeles] = useState(5);
 
-  // Szerkesztés state (külön a komponensen belül)
-  const [szerkesztettId, setSzerkesztettId] = useState(null);
-  const [szerkSzoveg, setSzerkSzoveg] = useState("");
-  const [szerkErtekeles, setSzerkErtekeles] = useState(5);
+  // --- Szerkesztés state ---
+  const [editId, setEditId] = useState(null);
+  const [editSzoveg, setEditSzoveg] = useState("");
+  const [editErtekeles, setEditErtekeles] = useState(5);
 
-  function velemenySzerzoSajat(v) {
+  // Saját-e egy vélemény?
+  function sajatVelemeny(v) {
     if (!felhasznalo || !v) return false;
-    return (
-      v.felhasznalo_id === felhasznalo.id ||
-      v.felhasznaloId === felhasznalo.id
-    );
+    const uid = Number(felhasznalo.id);
+    return Number(v.felhasznalo_id ?? v.felhasznaloId) === uid;
   }
 
-  function szerkesztesIndit(v) {
-    setSzerkesztettId(v.id);
-    setSzerkSzoveg(v.szoveg || "");
-    setSzerkErtekeles(v.ertekeles || 5);
+  // Jog: szerkeszthető/törölhető-e
+  function szerkesztheto(v) {
+    return Boolean(isAdmin || sajatVelemeny(v));
   }
 
-  async function szerkesztesMentes(e) {
-    e.preventDefault();
-    if (!szerkesztettId) return;
-
+  // Dátum formázás (ha nincs átadva, ne omoljon össze)
+  function datumKiir(d) {
+    if (formatDatum) return formatDatum(d);
     try {
-      await modositVelemeny(szerkesztettId, {
-        szoveg: szerkSzoveg,
-        ertekeles: Number(szerkErtekeles),
-      });
-      setSzerkesztettId(null);
-    } catch (err) {
-      console.error("Vélemény módosítási hiba:", err);
-      alert("Hiba történt a vélemény módosításakor.");
+      const dd = new Date(d);
+      return dd.toLocaleDateString("hu-HU");
+    } catch {
+      return d || "";
     }
   }
 
-  async function torles(id) {
-    if (!window.confirm("Biztosan törlöd ezt a véleményt?")) return;
-    try {
-      await torolVelemeny(id);
-    } catch (err) {
-      console.error("Vélemény törlési hiba:", err);
-      alert("Hiba történt a vélemény törlésekor.");
-    }
-  }
-
-  async function ujKuldes(e) {
+  // --- Új vélemény küldése ---
+  async function ujVelemenyKuldes(e) {
     e.preventDefault();
+    if (!bejelentkezve) return;
+    if (!hozzaadVelemeny) return;
+
     try {
       await hozzaadVelemeny(makettId, {
         szoveg: ujSzoveg,
         ertekeles: Number(ujErtekeles),
       });
+
       setUjSzoveg("");
       setUjErtekeles(5);
     } catch (err) {
@@ -81,53 +81,105 @@ export default function VelemenyekSection({
     }
   }
 
+  // --- Szerkesztés indítása (gombnyomás) ---
+  function szerkesztesIndit(v) {
+    setEditId(v.id);
+    setEditSzoveg(v.szoveg || "");
+    setEditErtekeles(Number(v.ertekeles) || 5);
+  }
+
+  // --- Szerkesztés mentése ---
+  async function szerkesztesMentes(e) {
+    e.preventDefault();
+    if (!editId) return;
+    if (!modositVelemeny) return;
+
+    try {
+      await modositVelemeny(editId, {
+        szoveg: editSzoveg,
+        ertekeles: Number(editErtekeles),
+      });
+
+      // szerkesztő mód bezárása
+      setEditId(null);
+      setEditSzoveg("");
+      setEditErtekeles(5);
+    } catch (err) {
+      console.error("Vélemény módosítási hiba:", err);
+      alert("Hiba történt a vélemény módosításakor.");
+    }
+  }
+
+  // --- Törlés ---
+  async function velemenyTorles(id) {
+    if (!torolVelemeny) return;
+    if (!window.confirm("Biztosan törlöd ezt a véleményt?")) return;
+
+    try {
+      await torolVelemeny(id);
+    } catch (err) {
+      console.error("Vélemény törlési hiba:", err);
+      alert("Hiba történt a vélemény törlésekor.");
+    }
+  }
+
   return (
-    <section className="velemenyek-szekcio">
+    <section className="velemenyek-szekcio velemeny-panel">
       <h3>Vélemények</h3>
 
-      {velemenyek.length === 0 ? (
+      {lista.length === 0 ? (
         <p>Még nem érkezett vélemény ehhez a maketthez.</p>
       ) : (
         <ul className="velemeny-lista">
-          {velemenyek.map((v) => {
-            const szerzoSajat = velemenySzerzoSajat(v);
-            const szerkesztheto = szerzoSajat || isAdmin;
+          {lista.map((v) => {
+            const canEdit = szerkesztheto(v);
 
-            // Szerkesztő nézet
-            if (szerkesztettId === v.id) {
+            // --- Ha EZT a véleményt szerkesztjük, akkor a helyén form jelenik meg ---
+            if (editId === v.id) {
               return (
                 <li key={v.id} className="card velemeny-card">
-                  <form onSubmit={szerkesztesMentes} className="form">
+                  <form className="form" onSubmit={szerkesztesMentes}>
                     <h4>Vélemény szerkesztése</h4>
 
                     <label>
                       Értékelés (1–5)
                       <CsillagValaszto
-                        value={szerkErtekeles}
-                        onChange={(e) => setSzerkErtekeles(e)}
+                        value={editErtekeles}
+                        onChange={(x) => setEditErtekeles(x)}
                       />
                     </label>
 
                     <label>
                       Vélemény szövege
                       <textarea
-                        value={szerkSzoveg}
-                        onChange={(e) => setSzerkSzoveg(e.target.value)}
                         rows={4}
                         required
+                        value={editSzoveg}
+                        onChange={(e) => setEditSzoveg(e.target.value)}
                       />
                     </label>
 
                     <div className="button-row">
-                      <button type="submit" className="btn">
+                      <button className="btn" type="submit">
                         Mentés
                       </button>
+
+                      {/* “Mégse” bezárja a szerkesztést */}
                       <button
-                        type="button"
                         className="btn secondary"
-                        onClick={() => setSzerkesztettId(null)}
+                        type="button"
+                        onClick={() => setEditId(null)}
                       >
                         Mégse
+                      </button>
+
+                      {/* Itt is ott a törlés (ahogy kérted: szerkesztés után is legyen elérhető) */}
+                      <button
+                        className="btn danger"
+                        type="button"
+                        onClick={() => velemenyTorles(v.id)}
+                      >
+                        Törlés
                       </button>
                     </div>
                   </form>
@@ -135,22 +187,25 @@ export default function VelemenyekSection({
               );
             }
 
-            // Normál nézet
+            // --- Normál (nem szerkesztős) megjelenítés ---
             return (
               <li key={v.id} className="card velemeny-card">
                 <header className="velemeny-fejlec">
                   <div>
-                    <strong>{v.felhasznalo_nev}</strong>
-                    <p className="small">{formatDatum?.(v.letrehozva) || ""}</p>
+                    <strong>{v.felhasznalo_nev || "Ismeretlen"}</strong>
+                    <p className="small">{datumKiir(v.letrehozva)}</p>
                   </div>
+
                   <div>
-                    <CsillagValaszto value={v.ertekeles} readOnly />
+                    {/* Csak megjelenítés (readOnly) */}
+                    <CsillagValaszto value={Number(v.ertekeles) || 0} readOnly />
                   </div>
                 </header>
 
                 <p>{v.szoveg}</p>
 
-                {szerkesztheto && (
+                {/* ✅ EZ A RÉSZ: Szerkesztés gomb csak saját/admin esetén */}
+                {canEdit && (
                   <div className="button-row">
                     <button
                       type="button"
@@ -159,10 +214,11 @@ export default function VelemenyekSection({
                     >
                       Szerkesztés
                     </button>
+
                     <button
                       type="button"
                       className="btn danger"
-                      onClick={() => torles(v.id)}
+                      onClick={() => velemenyTorles(v.id)}
                     >
                       Törlés
                     </button>
@@ -174,23 +230,26 @@ export default function VelemenyekSection({
         </ul>
       )}
 
-      {/* Új vélemény */}
+      {/* Új vélemény írása */}
       {bejelentkezve ? (
-        <form onSubmit={ujKuldes} className="card form">
+        <form className="card form" onSubmit={ujVelemenyKuldes}>
           <h3>Új vélemény írása</h3>
 
           <label>
             Értékelés (1–5)
-            <CsillagValaszto value={ujErtekeles} onChange={setUjErtekeles} />
+            <CsillagValaszto
+              value={ujErtekeles}
+              onChange={(x) => setUjErtekeles(x)}
+            />
           </label>
 
           <label>
             Vélemény szövege
             <textarea
-              value={ujSzoveg}
-              onChange={(e) => setUjSzoveg(e.target.value)}
               rows={4}
               required
+              value={ujSzoveg}
+              onChange={(e) => setUjSzoveg(e.target.value)}
             />
           </label>
 
