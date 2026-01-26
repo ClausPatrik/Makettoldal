@@ -16,6 +16,8 @@ export default function MakettBekuldes() {
     nehezseg: 3,
     megjelenes_eve: new Date().getFullYear(),
     kep_url: "",
+    leiras: "", // ✅ ÚJ mező
+    vasarlasi_link: "",   // ✅ ÚJ
   });
 
   const [hiba, setHiba] = useState("");
@@ -28,7 +30,9 @@ export default function MakettBekuldes() {
         <div className="card">
           <h2>Makett beküldés</h2>
           <p className="small">Ehhez be kell jelentkezned.</p>
-          <Link className="btn" to="/bejelentkezes">Bejelentkezés</Link>
+          <Link className="btn" to="/bejelentkezes">
+            Bejelentkezés
+          </Link>
         </div>
       </div>
     );
@@ -51,7 +55,9 @@ export default function MakettBekuldes() {
         ...form,
         nehezseg: Number(form.nehezseg),
         megjelenes_eve: Number(form.megjelenes_eve),
-        kep_url: form.kep_url?.trim() ? form.kep_url.trim() : null,
+        kep_url: form.kep_url?.trim() || null,
+        leiras: form.leiras?.trim() || null,
+        vasarlasi_link: form.vasarlasi_link?.trim() || null, // ✅ ÚJ
       };
 
       const res = await fetch(`${API}/makett-javaslatok`, {
@@ -91,12 +97,7 @@ export default function MakettBekuldes() {
 
           <label>
             Gyártó
-            <input
-              name="gyarto"
-              value={form.gyarto}
-              onChange={onChange}
-              required
-            />
+            <input name="gyarto" value={form.gyarto} onChange={onChange} required />
           </label>
 
           <label>
@@ -111,7 +112,6 @@ export default function MakettBekuldes() {
               <option value="repülő">repülő</option>
               <option value="hajó">hajó</option>
               <option value="mecha">mecha</option>
-              
             </select>
           </label>
 
@@ -144,23 +144,48 @@ export default function MakettBekuldes() {
             />
           </label>
 
+          {/* ✅ ÚJ: Leírás */}
+          <label>
+            Leírás (opcionális)
+            <textarea
+              name="leiras"
+              value={form.leiras}
+              onChange={onChange}
+              rows={4}
+              placeholder="Rövid leírás a makettről (változat, érdekességek, megjegyzés)"
+            />
+          </label>
+
           <label>
             Kép URL (opcionális)
             <input name="kep_url" value={form.kep_url} onChange={onChange} />
           </label>
+          <label>
+  Webáruház link (opcionális)
+  <input
+    type="url"
+    name="vasarlasi_link"
+    value={form.vasarlasi_link}
+    onChange={onChange}
+    placeholder="https://www.pelda-webshop.hu/makett"
+  />
+</label>
 
           <div className="button-row">
             <button className="btn" type="submit" disabled={loading}>
               {loading ? "Küldés..." : "Beküldés"}
             </button>
-            <Link className="btn secondary" to="/makettek">Mégse</Link>
+            <Link className="btn secondary" to="/makettek">
+              Mégse
+            </Link>
           </div>
 
           {uzenet && <div className="notice success">{uzenet}</div>}
           {hiba && <div className="notice error">{hiba}</div>}
 
           <p className="small" style={{ marginTop: 10 }}>
-            Beküldés után az admin jóváhagyása szükséges, csak utána kerül ki a makettek közé.
+            Beküldés után az admin jóváhagyása szükséges, csak utána kerül ki a
+            makettek közé.
           </p>
         </form>
       </div>

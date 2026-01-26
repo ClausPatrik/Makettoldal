@@ -750,6 +750,7 @@ app.post("/api/makettek", authMiddleware, adminMiddleware, async (req, res) => {
       nehezseg,
       megjelenes_eve,
       kep_url,
+      vasarlasi_link   // ✅ ÚJ
     } = req.body;
 
     if (!nev || !gyarto || !kategoria || !skala) {
@@ -820,6 +821,7 @@ app.put(
         nehezseg,
         megjelenes_eve,
         kep_url,
+        vasarlasi_link   // ✅ ÚJ
       } = req.body;
 
       if (!nev || !gyarto || !kategoria || !skala) {
@@ -889,30 +891,42 @@ app.put(
 // Felhasználó beküld új makettet jóváhagyásra
 app.post("/api/makett-javaslatok", authMiddleware, async (req, res) => {
   try {
-    let {
-      nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve, kep_url,
-      leiras, vasarlasi_link
+    const {
+      nev,
+      gyarto,
+      kategoria,
+      skala,
+      nehezseg,
+      megjelenes_eve,
+      kep_url,
+      leiras,
+      vasarlasi_link
     } = req.body;
-    
 
     if (!nev || !gyarto || !kategoria || !skala) {
-      return res.status(400).json({ uzenet: "Név, gyártó, kategória és skála kötelező." });
+      return res.status(400).json({ uzenet: "Hiányzó kötelező adatok." });
     }
 
     const nehezsegSzam = Number(nehezseg);
     const evSzam = Number(megjelenes_eve);
 
-    if (!Number.isFinite(nehezsegSzam) || nehezsegSzam < 1 || nehezsegSzam > 5) {
-      return res.status(400).json({ uzenet: "A nehézség 1 és 5 közötti szám legyen." });
-    }
-    if (!Number.isFinite(evSzam) || evSzam < 1900 || evSzam > 2100) {
-      return res.status(400).json({ uzenet: "A megjelenés éve 1900 és 2100 közé essen." });
+    if (Number.isNaN(nehezsegSzam) || nehezsegSzam < 1 || nehezsegSzam > 5) {
+      return res.status(400).json({ uzenet: "Érvénytelen nehézség." });
     }
 
-    const eredmeny = await adatbazisLekeres(
-      `INSERT INTO makett
-        (nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve, kep_url, allapot, bekuldo_felhasznalo_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'varakozik', ?)`,
+    if (Number.isNaN(evSzam) || evSzam < 1900 || evSzam > 2100) {
+      return res.status(400).json({ uzenet: "Érvénytelen megjelenési év." });
+    }
+
+    await adatbazisLekeres(
+      `
+      INSERT INTO makett
+        (nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve,
+         kep_url, leiras, vasarlasi_link,
+         allapot, bekuldo_felhasznalo_id)
+      VALUES
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, 'varakozik', ?)
+      `,
       [
         nev.trim(),
         gyarto.trim(),
@@ -920,15 +934,17 @@ app.post("/api/makett-javaslatok", authMiddleware, async (req, res) => {
         skala.trim(),
         nehezsegSzam,
         evSzam,
-        kep_url || null,
+        kep_url?.trim() || null,
+        leiras?.trim() || null,          // ✅ FELHASZNÁLÓ LEÍRÁSA
+        vasarlasi_link?.trim() || null,  // ✅ WEBÁRUHÁZ LINK
         req.felhasznalo.id,
       ]
     );
 
-    return res.status(201).json({ uzenet: "Beküldve jóváhagyásra.", id: eredmeny.insertId });
+    res.status(201).json({ uzenet: "Makett beküldve jóváhagyásra." });
   } catch (err) {
-    console.error("Makett javaslat hiba:", err);
-    return res.status(500).json({ uzenet: "Szerver hiba a makett beküldése során." });
+    console.error("Makett beküldési hiba:", err);
+    res.status(500).json({ uzenet: "Szerver hiba történt." });
   }
 });
 
@@ -937,6 +953,7 @@ app.get("/api/sajat/makett-javaslatok", authMiddleware, async (req, res) => {
   try {
     const sorok = await adatbazisLekeres(
       `SELECT id, nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve, kep_url,
+              leiras, vasarlasi_link,
               allapot, bekuldve, elbiralva, elutasitas_ok
        FROM makett
        WHERE bekuldo_felhasznalo_id = ?
