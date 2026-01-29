@@ -61,15 +61,75 @@ function generalToken(felhasznalo) {
   return jwt.sign(payload, JWT_TITOK, { expiresIn: "7d" });
 }
 
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ uzenet: "Hiányzó vagy érvénytelen token" });
   }
+
   const token = authHeader.split(" ")[1];
+
   try {
     const decoded = jwt.verify(token, JWT_TITOK);
-    req.felhasznalo = decoded;
+
+    // Friss adatok DB-ből (szerepkör + tiltás)
+    const sorok = await adatbazisLekeres(
+      `SELECT id, felhasznalo_nev, email, szerepkor_id, profil_kep_url,
+              tiltva, tilt_eddig, tilt_ok
+       FROM felhasznalo
+       WHERE id = ?`,
+      [decoded.id]
+    );
+
+    if (sorok.length === 0) {
+      return res.status(401).json({ uzenet: "Felhasználó nem található." });
+    }
+
+    const user = sorok[0];
+
+    // Tiltás ellenőrzés (auto feloldás, ha ideiglenes lejárt)
+    if (user.tiltva && user.tiltva !== "nincs") {
+      if (user.tiltva === "ideiglenes" && user.tilt_eddig) {
+        const most = new Date();
+        const eddig = new Date(user.tilt_eddig);
+
+        if (!isNaN(eddig.getTime()) && eddig <= most) {
+          // lejárt -> feloldjuk
+          await adatbazisLekeres(
+            `UPDATE felhasznalo
+             SET tiltva='nincs', tilt_eddig=NULL, tilt_ok=NULL, tiltva_ekkor=NULL, tiltva_admin_id=NULL
+             WHERE id=?`,
+            [user.id]
+          );
+        } else {
+          return res.status(403).json({
+            uzenet: "A fiókod ideiglenesen ki van tiltva.",
+            tiltott: true,
+            tilt_tipus: "ideiglenes",
+            tilt_eddig: user.tilt_eddig,
+            tilt_ok: user.tilt_ok || null,
+          });
+        }
+      } else {
+        return res.status(403).json({
+          uzenet: "A fiókod véglegesen ki van tiltva.",
+          tiltott: true,
+          tilt_tipus: "vegleges",
+          tilt_eddig: null,
+          tilt_ok: user.tilt_ok || null,
+        });
+      }
+    }
+
+    // req.felhasznalo frissítése (ne a tokenben tárolt legyen a szentírás)
+    req.felhasznalo = {
+      id: user.id,
+      felhasznalo_nev: user.felhasznalo_nev,
+      email: user.email,
+      szerepkor_id: user.szerepkor_id,
+      profil_kep_url: user.profil_kep_url || null,
+    };
+
     next();
   } catch (err) {
     console.error("JWT hiba:", err.message);
@@ -128,7 +188,16 @@ async function inicializalAdatbazis() {
       jelszo_hash VARCHAR(255) NOT NULL,
       szerepkor_id INT NOT NULL,
       profil_kep_url VARCHAR(255) NULL,
-      FOREIGN KEY (szerepkor_id) REFERENCES szerepkor(id)
+
+      -- tiltás / moderáció
+      tiltva ENUM('nincs','ideiglenes','vegleges') NOT NULL DEFAULT 'nincs',
+      tilt_eddig DATETIME NULL,
+      tilt_ok VARCHAR(255) NULL,
+      tiltva_ekkor DATETIME NULL,
+      tiltva_admin_id INT NULL,
+
+      FOREIGN KEY (szerepkor_id) REFERENCES szerepkor(id),
+      CONSTRAINT fk_felhasznalo_tiltva_admin FOREIGN KEY (tiltva_admin_id) REFERENCES felhasznalo(id) ON DELETE SET NULL
     )
   `);
 
@@ -182,7 +251,16 @@ async function inicializalAdatbazis() {
     }
   };
 
-  await probalSema("ALTER TABLE makett ADD COLUMN allapot ENUM('jovahagyva','varakozik','elutasitva') NOT NULL DEFAULT 'jovahagyva'");
+  
+  // --- ÚJ: felhasználó tiltás mezők (migráció) ---
+  await probalSema("ALTER TABLE felhasznalo ADD COLUMN tiltva ENUM('nincs','ideiglenes','vegleges') NOT NULL DEFAULT 'nincs'");
+  await probalSema("ALTER TABLE felhasznalo ADD COLUMN tilt_eddig DATETIME NULL");
+  await probalSema("ALTER TABLE felhasznalo ADD COLUMN tilt_ok VARCHAR(255) NULL");
+  await probalSema("ALTER TABLE felhasznalo ADD COLUMN tiltva_ekkor DATETIME NULL");
+  await probalSema("ALTER TABLE felhasznalo ADD COLUMN tiltva_admin_id INT NULL");
+  await probalSema("ALTER TABLE felhasznalo ADD CONSTRAINT fk_felhasznalo_tiltva_admin FOREIGN KEY (tiltva_admin_id) REFERENCES felhasznalo(id) ON DELETE SET NULL");
+
+await probalSema("ALTER TABLE makett ADD COLUMN allapot ENUM('jovahagyva','varakozik','elutasitva') NOT NULL DEFAULT 'jovahagyva'");
   await probalSema("ALTER TABLE makett ADD COLUMN bekuldo_felhasznalo_id INT NULL");
   await probalSema("ALTER TABLE makett ADD COLUMN bekuldve DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP");
   await probalSema("ALTER TABLE makett ADD COLUMN leiras TEXT NULL");
@@ -265,8 +343,9 @@ await adatbazisPool.query(`
 
   await adatbazisPool.query(`
     INSERT IGNORE INTO szerepkor (id, nev)
-    VALUES (1, 'felhasznalo'), (2, 'admin')
+    VALUES (1, 'felhasznalo'), (2, 'admin'), (3, 'moderator')
   `);
+  
 
   // --- ADMIN LÉTREHOZÁSA DUPLIKÁCIÓ NÉLKÜL --- //
   const adminFelhasznaloNev = "Admin";
@@ -496,6 +575,26 @@ app.post("/api/auth/login", async (req, res) => {
     const egyezik = await bcrypt.compare(jelszo, user.jelszo_hash);
     if (!egyezik) {
       return res.status(400).json({ uzenet: "Hibás email vagy jelszó." });
+    }
+
+    // Tiltás ellenőrzés login-nál is
+    if (user.tiltva && user.tiltva !== "nincs") {
+      if (user.tiltva === "ideiglenes") {
+        return res.status(403).json({
+          uzenet: "A fiókod ideiglenesen ki van tiltva.",
+          tiltott: true,
+          tilt_tipus: "ideiglenes",
+          tilt_eddig: user.tilt_eddig,
+          tilt_ok: user.tilt_ok || null,
+        });
+      }
+      return res.status(403).json({
+        uzenet: "A fiókod véglegesen ki van tiltva.",
+        tiltott: true,
+        tilt_tipus: "vegleges",
+        tilt_eddig: null,
+        tilt_ok: user.tilt_ok || null,
+      });
     }
 
     const token = generalToken(user);
@@ -1031,6 +1130,120 @@ app.post("/api/admin/makett-javaslatok/:id/elutasit", authMiddleware, adminMiddl
     return res.status(500).json({ uzenet: "Szerver hiba az elutasítás során." });
   }
 });
+
+
+// --- ADMIN: FELHASZNÁLÓK KEZELÉSE (tiltás + moderátor) --- //
+
+// Lista
+app.get("/api/admin/felhasznalok", authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const sorok = await adatbazisLekeres(
+      `SELECT id, felhasznalo_nev, email, szerepkor_id, profil_kep_url,
+              tiltva, tilt_eddig, tilt_ok, tiltva_ekkor, tiltva_admin_id
+       FROM felhasznalo
+       ORDER BY id ASC`
+    );
+    return res.json(sorok);
+  } catch (err) {
+    console.error("Admin felhasználók lista hiba:", err);
+    return res.status(500).json({ uzenet: "Szerver hiba a felhasználók listázásánál." });
+  }
+});
+
+// Tiltás állítása
+app.put("/api/admin/felhasznalok/:id/tiltas", authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const celId = Number(req.params.id);
+    if (!Number.isFinite(celId)) return res.status(400).json({ uzenet: "Érvénytelen felhasználó ID." });
+
+    // ne tiltsa saját magát
+    if (celId === req.felhasznalo.id) {
+      return res.status(400).json({ uzenet: "Saját magadat nem tilthatod ki." });
+    }
+
+    const { tiltva, tilt_eddig, tilt_ok } = req.body || {};
+
+    const ervenyes = ["nincs", "ideiglenes", "vegleges"];
+    if (!ervenyes.includes(tiltva)) {
+      return res.status(400).json({ uzenet: "Érvénytelen tiltás típus." });
+    }
+
+    // admin felhasználót ne tiltsunk
+    const cel = await adatbazisLekeres("SELECT id, szerepkor_id FROM felhasznalo WHERE id=?", [celId]);
+    if (!cel.length) return res.status(404).json({ uzenet: "Felhasználó nem található." });
+    if (cel[0].szerepkor_id === 2) return res.status(400).json({ uzenet: "Admin felhasználót nem tilthatsz." });
+
+    if (tiltva === "nincs") {
+      await adatbazisLekeres(
+        `UPDATE felhasznalo
+         SET tiltva='nincs', tilt_eddig=NULL, tilt_ok=NULL, tiltva_ekkor=NULL, tiltva_admin_id=NULL
+         WHERE id=?`,
+        [celId]
+      );
+      return res.json({ uzenet: "Tiltás feloldva." });
+    }
+
+    if (tiltva === "ideiglenes") {
+      if (!tilt_eddig) return res.status(400).json({ uzenet: "Ideiglenes tiltáshoz kell tilt_eddig." });
+
+      const eddig = new Date(tilt_eddig);
+      if (isNaN(eddig.getTime())) return res.status(400).json({ uzenet: "Hibás dátum (tilt_eddig)." });
+
+      await adatbazisLekeres(
+        `UPDATE felhasznalo
+         SET tiltva='ideiglenes', tilt_eddig=?, tilt_ok=?, tiltva_ekkor=NOW(), tiltva_admin_id=?
+         WHERE id=?`,
+        [eddig, (tilt_ok || "").trim() || null, req.felhasznalo.id, celId]
+      );
+
+      return res.json({ uzenet: "Ideiglenes tiltás beállítva." });
+    }
+
+    // vegleges
+    await adatbazisLekeres(
+      `UPDATE felhasznalo
+       SET tiltva='vegleges', tilt_eddig=NULL, tilt_ok=?, tiltva_ekkor=NOW(), tiltva_admin_id=?
+       WHERE id=?`,
+      [(tilt_ok || "").trim() || null, req.felhasznalo.id, celId]
+    );
+
+    return res.json({ uzenet: "Végleges tiltás beállítva." });
+  } catch (err) {
+    console.error("Admin tiltás hiba:", err);
+    return res.status(500).json({ uzenet: "Szerver hiba a tiltás mentésekor." });
+  }
+});
+
+// Szerepkör (moderátor) állítása
+app.put("/api/admin/felhasznalok/:id/szerepkor", authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const celId = Number(req.params.id);
+    if (!Number.isFinite(celId)) return res.status(400).json({ uzenet: "Érvénytelen felhasználó ID." });
+
+    if (celId === req.felhasznalo.id) {
+      return res.status(400).json({ uzenet: "Saját magad szerepkörét itt ne módosítsd." });
+    }
+
+    const { szerepkor_id } = req.body || {};
+    const uj = Number(szerepkor_id);
+
+    // csak felhasznalo(1) <-> moderator(3)
+    if (![1, 3].includes(uj)) {
+      return res.status(400).json({ uzenet: "Csak felhasználó/moderátor állítható." });
+    }
+
+    const cel = await adatbazisLekeres("SELECT id, szerepkor_id FROM felhasznalo WHERE id=?", [celId]);
+    if (!cel.length) return res.status(404).json({ uzenet: "Felhasználó nem található." });
+    if (cel[0].szerepkor_id === 2) return res.status(400).json({ uzenet: "Admin szerepkört itt nem módosítunk." });
+
+    await adatbazisLekeres("UPDATE felhasznalo SET szerepkor_id=? WHERE id=?", [uj, celId]);
+    return res.json({ uzenet: "Szerepkör frissítve." });
+  } catch (err) {
+    console.error("Admin szerepkör hiba:", err);
+    return res.status(500).json({ uzenet: "Szerver hiba a szerepkör mentésekor." });
+  }
+});
+
 
 
 // --- VÉLEMÉNYEK --- //

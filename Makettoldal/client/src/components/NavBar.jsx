@@ -32,8 +32,10 @@ const linkClass = ({ isActive }) => `nav-link${isActive ? " active" : ""}`;
 
 export default function NavBar() {
   const { felhasznalo, kijelentkezes } = useAuth();
-  const bejelentkezve = !!felhasznalo;
   const admin = felhasznalo?.szerepkor_id === 2;
+  const moderator = felhasznalo?.szerepkor_id === 3;
+  const bejelentkezve = !!felhasznalo;
+
 
   const [menuNyitva, setMenuNyitva] = useState(false);
 
@@ -77,14 +79,18 @@ export default function NavBar() {
               <NavLink to="/makett-bekuldes" className={linkClass}>Makett bekuldes</NavLink>
 
               {admin && (
-                <NavLink to="/admin/makett-jovahagyas" className={linkClass}>
-                  Jovahagyas
-                </NavLink>
-              )}
+              <>
+              <NavLink to="/admin/makett-jovahagyas" className={linkClass}>Jovahagyas</NavLink>
+    <NavLink to="/admin/felhasznalok" className={linkClass}>Felhasznalok</NavLink>
+  </>
+)}
+
             </>
           )}
 
-          {admin && <span className="nav-badge">Admin</span>}
+{admin && <span className="nav-badge">Admin</span>}
+{!admin && moderator && <span className="nav-badge">Moderátor</span>}
+
         </nav>
 
         {/* Desktop right */}
@@ -141,10 +147,17 @@ export default function NavBar() {
               <NavLink to="/makett-bekuldes" className={linkClass} onClick={closeMenu}>Makett bekuldes</NavLink>
 
               {admin && (
-                <NavLink to="/admin/makett-jovahagyas" className={linkClass} onClick={closeMenu}>
-                  Jovahagyas
-                </NavLink>
-              )}
+  <>
+    <NavLink to="/admin/makett-jovahagyas" className={linkClass} onClick={closeMenu}>
+      Jovahagyas
+    </NavLink>
+    <NavLink to="/admin/felhasznalok" className={linkClass} onClick={closeMenu}>
+      Felhasznalok
+    </NavLink>
+  </>
+)}
+
+             
 
               <Link to="/profil" className="nav-profile nav-profile-mobile" onClick={closeMenu}>
                 <AvatarKicsi
@@ -153,6 +166,8 @@ export default function NavBar() {
                 />
                 <span className="nav-user-name">{felhasznalo.felhasznalo_nev}</span>
                 {admin && <span className="nav-badge">Admin</span>}
+                {!admin && moderator && <span className="nav-badge">Moderátor</span>}
+
               </Link>
 
               <button

@@ -52,8 +52,20 @@ export function AuthProvider({ children }) {
 
     if (!valasz.ok) {
       const hiba = await valasz.json().catch(() => ({}));
-      throw new Error(hiba.uzenet || "Hiba a bejelentkezés során.");
+      const err = new Error(hiba.uzenet || "Hiba a bejelentkezés során.");
+    
+      if (hiba.tiltott) {
+        err.tiltas = {
+          tipus: hiba.tilt_tipus,
+          eddig: hiba.tilt_eddig,
+          ok: hiba.tilt_ok,
+        };
+      }
+    
+      throw err;
     }
+    
+    
 
     const adat = await valasz.json();
     const { token, felhasznalo: f } = adat;

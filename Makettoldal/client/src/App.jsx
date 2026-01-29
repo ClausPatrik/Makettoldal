@@ -22,6 +22,9 @@ import NavBar from "./components/NavBar";
 import AiChatWidget from "./components/AiChatWidget";
 import Footer from "./components/footer";
 
+import AdminFelhasznalok from "./pages/AdminFelhasznalok";
+
+
 
 // Vite: automatikusan összeszedi az ikonokat ebből a mappából
 const favModules = import.meta.glob("./assets/favicons/*.{png,ico}", {
@@ -146,6 +149,8 @@ useEffect(() => {
 
           <Route path="/makett-bekuldes" element={<MakettBekuldes />} />
           <Route path="/admin/makett-jovahagyas" element={<MakettJovahagyas />} />
+          <Route path="/admin/felhasznalok" element={<AdminFelhasznalok />} />
+
         </Routes>
       </main>
 

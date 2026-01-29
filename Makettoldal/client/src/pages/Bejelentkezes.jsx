@@ -9,26 +9,50 @@ export default function Bejelentkezes() {
   const [jelszo, beallitJelszo] = useState("");
   const [betolt, beallitBetolt] = useState(false);
   const [hiba, beallitHiba] = useState(null);
+  const [tiltas, beallitTiltas] = useState(null);
 
   async function kezeliKuldes(e) {
     e.preventDefault();
+  
     try {
       beallitBetolt(true);
       beallitHiba(null);
+      beallitTiltas(null);
+  
       await bejelentkezes(email, jelszo);
       navigate("/");
     } catch (err) {
       beallitHiba(err.message);
+      beallitTiltas(err.tiltas || null);
     } finally {
       beallitBetolt(false);
     }
   }
+  
 
   return (
     <section className="page auth-page">
       <h1>Bejelentkezés</h1>
       <form onSubmit={kezeliKuldes} className="card form auth-form">
         {hiba && <p className="error">{hiba}</p>}
+        {tiltas && (
+  <div className="error" style={{ padding: 10, borderRadius: 8 }}>
+    <div>
+      <b>Tiltás típusa:</b>{" "}
+      {tiltas.tipus === "ideiglenes" ? "Ideiglenes" : "Végleges"}
+    </div>
+    {tiltas.tipus === "ideiglenes" && (
+      <div>
+        <b>Feloldás:</b>{" "}
+        {tiltas.eddig ? new Date(tiltas.eddig).toLocaleString() : "—"}
+      </div>
+    )}
+    <div>
+      <b>Indok:</b> {tiltas.ok || "—"}
+    </div>
+  </div>
+)}
+
         <label>
           Email
           <input
