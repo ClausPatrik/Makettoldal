@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Gép: 127.0.0.1:3307
--- Létrehozás ideje: 2026. Jan 29. 12:16
--- Kiszolgáló verziója: 10.4.28-MariaDB
--- PHP verzió: 8.2.4
+-- Gép: 127.0.0.1
+-- Létrehozás ideje: 2026. Jan 29. 20:34
+-- Kiszolgáló verziója: 10.4.32-MariaDB
+-- PHP verzió: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,6 +20,221 @@ SET time_zone = "+00:00";
 --
 -- Adatbázis: `makett`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `epitesi_naplo`
+--
+
+CREATE TABLE `epitesi_naplo` (
+  `id` int(11) NOT NULL,
+  `makett_id` int(11) NOT NULL,
+  `felhasznalo_id` int(11) NOT NULL,
+  `cim` varchar(200) NOT NULL,
+  `leiras` text NOT NULL,
+  `kep_url` varchar(255) DEFAULT NULL,
+  `letrehozva` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+
+--
+-- A tábla adatainak kiíratása `epitesi_naplo`
+--
+
+INSERT INTO `epitesi_naplo` (`id`, `makett_id`, `felhasznalo_id`, `cim`, `leiras`, `kep_url`, `letrehozva`) VALUES
+(1, 4, 3, 'Panther építés 1. lépés', 'Alsótest összeépítése.', NULL, '2025-11-26 08:40:04'),
+(2, 5, 4, 'Tiger I festése', 'Alapszín felhordása.', NULL, '2025-11-26 08:40:04'),
+(3, 7, 5, 'F-14 kabin', 'Részletezés és matrica.', NULL, '2025-11-26 08:40:04'),
+(4, 10, 6, 'HMS Hood törzs', 'Féltestek összeállítása.', NULL, '2025-11-26 08:40:04');
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `epitesi_tippek_blokk`
+--
+
+CREATE TABLE `epitesi_tippek_blokk` (
+  `id` int(11) NOT NULL,
+  `naplo_id` int(11) NOT NULL,
+  `tipus` varchar(40) NOT NULL,
+  `cim` varchar(120) NOT NULL,
+  `tippek` text NOT NULL,
+  `sorrend` int(11) NOT NULL DEFAULT 0,
+  `letrehozva` timestamp NOT NULL DEFAULT current_timestamp(),
+  `frissitve` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `epitesi_tippek_blokk`
+--
+
+INSERT INTO `epitesi_tippek_blokk` (`id`, `naplo_id`, `tipus`, `cim`, `tippek`, `sorrend`, `letrehozva`, `frissitve`) VALUES
+(1, 1, 'egyeb', 'fdgfd', 'hdfhdf', 1, '2026-01-20 09:22:30', '2026-01-20 09:22:30');
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `epitesi_tippek_naplo`
+--
+
+CREATE TABLE `epitesi_tippek_naplo` (
+  `id` int(11) NOT NULL,
+  `makett_id` int(11) NOT NULL,
+  `letrehozo_felhasznalo_id` int(11) NOT NULL,
+  `cim` varchar(120) NOT NULL DEFAULT 'Építési tippek',
+  `letrehozva` timestamp NOT NULL DEFAULT current_timestamp(),
+  `frissitve` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `epitesi_tippek_naplo`
+--
+
+INSERT INTO `epitesi_tippek_naplo` (`id`, `makett_id`, `letrehozo_felhasznalo_id`, `cim`, `letrehozva`, `frissitve`) VALUES
+(1, 48, 8, 'Építési napló', '2026-01-20 09:22:04', '2026-01-20 09:22:04');
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `felhasznalo`
+--
+
+CREATE TABLE `felhasznalo` (
+  `id` int(11) NOT NULL,
+  `felhasznalo_nev` varchar(100) NOT NULL,
+  `email` varchar(150) NOT NULL,
+  `jelszo_hash` varchar(255) NOT NULL,
+  `szerepkor_id` int(11) NOT NULL,
+  `profil_kep_url` varchar(255) DEFAULT NULL,
+  `csatlakozas_datum` datetime NOT NULL DEFAULT current_timestamp(),
+  `tiltva` enum('nincs','ideiglenes','vegleges') NOT NULL DEFAULT 'nincs',
+  `tilt_eddig` datetime DEFAULT NULL,
+  `tilt_ok` varchar(255) DEFAULT NULL,
+  `tiltva_ekkor` datetime DEFAULT NULL,
+  `tiltva_admin_id` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+
+--
+-- A tábla adatainak kiíratása `felhasznalo`
+--
+
+INSERT INTO `felhasznalo` (`id`, `felhasznalo_nev`, `email`, `jelszo_hash`, `szerepkor_id`, `profil_kep_url`, `csatlakozas_datum`, `tiltva`, `tilt_eddig`, `tilt_ok`, `tiltva_ekkor`, `tiltva_admin_id`) VALUES
+(1, 'Admin', 'admin@pelda.hu', '$2a$10$2OnElbg0l8LSxiJI/RfhUeabEFSjEyIVWH1qLGF/.V0EEi6PARGwu', 2, 'http://localhost:3001/uploads/profil_1_1765825912915.jpg', '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
+(2, 'Demó felhasználó', 'demo@pelda.hu', '$2a$10$n7fWUKsCtFng1h7dwJTRg.l4d3B1ql1F/sF4F.xvkPBJvuMAIS9N6', 1, NULL, '2026-01-29 16:18:23', 'vegleges', NULL, 'fsd', '2026-01-29 20:17:02', 1),
+(3, 'Bence', 'bence@pelda.hu', 'hash3', 1, NULL, '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
+(4, 'Lili', 'lili@pelda.hu', 'hash4', 1, NULL, '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
+(5, 'Marci', 'marci@pelda.hu', 'hash5', 1, NULL, '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
+(6, 'Dóri', 'dori@pelda.hu', 'hash6', 1, NULL, '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
+(7, 'Peti', 'peti@pelda.hu', 'hash7', 1, NULL, '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
+(8, '10', 'proba@gmail.com', '$2a$10$4XScIJlyHRIolmA4Cor3leDgiOx6Dg1qzq99QN9eGw4GBe6Yv9hNG', 1, NULL, '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `felhasznalo_aktivitas`
+--
+
+CREATE TABLE `felhasznalo_aktivitas` (
+  `id` int(11) NOT NULL,
+  `felhasznalo_id` int(11) NOT NULL,
+  `tipus` varchar(80) NOT NULL,
+  `cel_tipus` varchar(80) DEFAULT NULL,
+  `cel_id` int(11) DEFAULT NULL,
+  `szoveg` varchar(255) DEFAULT NULL,
+  `meta_json` text DEFAULT NULL,
+  `ip` varchar(80) DEFAULT NULL,
+  `letrehozva` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+
+--
+-- A tábla adatainak kiíratása `felhasznalo_aktivitas`
+--
+
+INSERT INTO `felhasznalo_aktivitas` (`id`, `felhasznalo_id`, `tipus`, `cel_tipus`, `cel_id`, `szoveg`, `meta_json`, `ip`, `letrehozva`) VALUES
+(1, 1, 'ADMIN_SZEREPKOR', 'felhasznalo', 2, 'szerepkor_id -> 3', NULL, '::1', '2026-01-29 20:16:50'),
+(2, 1, 'ADMIN_SZEREPKOR', 'felhasznalo', 2, 'szerepkor_id -> 1', NULL, '::1', '2026-01-29 20:16:54'),
+(3, 1, 'ADMIN_TILTAS', 'felhasznalo', 2, 'vegleges', '{\"tilt_ok\":\"fsd\"}', '::1', '2026-01-29 20:17:02'),
+(4, 1, 'ADMIN_SZEREPKOR', 'felhasznalo', 4, 'szerepkor_id -> 1', NULL, '::1', '2026-01-29 20:33:27');
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `forum_tema`
+--
+
+CREATE TABLE `forum_tema` (
+  `id` int(11) NOT NULL,
+  `cim` varchar(200) NOT NULL,
+  `leiras` text DEFAULT NULL,
+  `kategoria` varchar(100) DEFAULT NULL,
+  `letrehozva` datetime NOT NULL DEFAULT current_timestamp(),
+  `felhasznalo_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+
+--
+-- A tábla adatainak kiíratása `forum_tema`
+--
+
+INSERT INTO `forum_tema` (`id`, `cim`, `leiras`, `kategoria`, `letrehozva`, `felhasznalo_id`) VALUES
+(1, 'Proba', 'vahsvdvhavdvzvqawzuvdvhvPEHFVVHFVHVDHSA', 'építési napló', '2025-11-24 22:00:14', 1),
+(2, 'Repülők panelozása', 'Panelek, wash technikák.', 'repülő', '2025-11-26 08:40:04', 3),
+(3, 'Hajó makettek festése', 'Maszkolás, rétegek.', 'hajó', '2025-11-26 08:40:04', 4),
+(4, 'Dioráma készítés alapjai', 'Terep, víz, hó.', 'dioráma', '2025-11-26 08:40:04', 5),
+(5, 'fsd', 'fsd', 'általános', '2025-12-15 19:37:06', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `forum_uzenet`
+--
+
+CREATE TABLE `forum_uzenet` (
+  `id` int(11) NOT NULL,
+  `tema_id` int(11) NOT NULL,
+  `felhasznalo_id` int(11) NOT NULL,
+  `szoveg` text NOT NULL,
+  `letrehozva` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+
+--
+-- A tábla adatainak kiíratása `forum_uzenet`
+--
+
+INSERT INTO `forum_uzenet` (`id`, `tema_id`, `felhasznalo_id`, `szoveg`, `letrehozva`) VALUES
+(1, 2, 3, 'Érdemes sötét wash-t használni.', '2025-11-26 08:40:04'),
+(2, 2, 4, 'A panelek hangsúlyozása sokat dob a végeredményen.', '2025-11-26 08:40:04'),
+(3, 3, 5, 'Hajóknál nagyon fontos a vékony réteg.', '2025-11-26 08:40:04'),
+(4, 4, 6, 'A diorámához érdemes pigmenteket használni.', '2025-11-26 08:40:04'),
+(5, 4, 7, 'A vízhez jó a kétkomponensű gyanta.', '2025-11-26 08:40:04'),
+(6, 5, 2, 'fsd', '2025-12-15 19:37:23'),
+(7, 5, 2, 'fsdfsd', '2025-12-15 19:37:43'),
+(8, 2, 2, 'Jó napot', '2026-01-29 17:19:51');
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `kedvenc`
+--
+
+CREATE TABLE `kedvenc` (
+  `felhasznalo_id` int(11) NOT NULL,
+  `makett_id` int(11) NOT NULL,
+  `letrehozva` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+
+--
+-- A tábla adatainak kiíratása `kedvenc`
+--
+
+INSERT INTO `kedvenc` (`felhasznalo_id`, `makett_id`, `letrehozva`) VALUES
+(1, 48, '2025-12-15 20:14:46'),
+(2, 48, '2025-12-15 19:36:23'),
+(3, 4, '2025-11-26 08:40:04'),
+(4, 7, '2025-11-26 08:40:04'),
+(5, 10, '2025-11-26 08:40:04'),
+(6, 8, '2025-11-26 08:40:04'),
+(7, 12, '2025-11-26 08:40:04'),
+(8, 48, '2026-01-20 10:24:01');
 
 -- --------------------------------------------------------
 
@@ -107,9 +322,142 @@ INSERT INTO `makett` (`id`, `nev`, `gyarto`, `kategoria`, `skala`, `nehezseg`, `
 (54, 'M4A3 75(W) ETO', 'Dragon', 'harckocsi', '1:35', 4, 2024, 'https://www.super-hobby.com/zdjecia/5/3/2/2154_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL),
 (55, 'Churchill Mk.III', 'Italeri', 'harckocsi', '1:72', 5, 2021, 'https://www.super-hobby.com/zdjecia/6/5/5/39702_rd.jpg', 'jovahagyva', NULL, '2025-12-15 19:57:10', NULL, NULL, NULL, NULL, NULL);
 
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `szerepkor`
+--
+
+CREATE TABLE `szerepkor` (
+  `id` int(11) NOT NULL,
+  `nev` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+
+--
+-- A tábla adatainak kiíratása `szerepkor`
+--
+
+INSERT INTO `szerepkor` (`id`, `nev`) VALUES
+(2, 'admin'),
+(1, 'felhasznalo'),
+(3, 'moderator');
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `uzenetek`
+--
+
+CREATE TABLE `uzenetek` (
+  `id` int(11) NOT NULL,
+  `kuldo_felhasznalo_id` int(11) NOT NULL,
+  `targy` varchar(120) NOT NULL,
+  `uzenet` text NOT NULL,
+  `letrehozva` timestamp NOT NULL DEFAULT current_timestamp(),
+  `olvasva` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- A tábla adatainak kiíratása `uzenetek`
+--
+
+INSERT INTO `uzenetek` (`id`, `kuldo_felhasznalo_id`, `targy`, `uzenet`, `letrehozva`, `olvasva`) VALUES
+(2, 8, 'rggftgdfdf', 'kgsmkőamksgmkmdskg', '2026-01-20 07:42:45', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `velemeny`
+--
+
+CREATE TABLE `velemeny` (
+  `id` int(11) NOT NULL,
+  `makett_id` int(11) NOT NULL,
+  `felhasznalo_id` int(11) NOT NULL,
+  `szoveg` text NOT NULL,
+  `ertekeles` int(11) NOT NULL,
+  `letrehozva` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_hungarian_ci;
+
+--
+-- A tábla adatainak kiíratása `velemeny`
+--
+
+INSERT INTO `velemeny` (`id`, `makett_id`, `felhasznalo_id`, `szoveg`, `ertekeles`, `letrehozva`) VALUES
+(3, 4, 3, 'Szuper részletek és jó illesztés.', 5, '2025-11-26 08:40:04'),
+(4, 5, 4, 'Kicsit nehéz, de látványos.', 4, '2025-11-26 08:40:04'),
+(5, 7, 5, 'Nagyon jó matricalap.', 5, '2025-11-26 08:40:04'),
+(6, 8, 6, 'Gyorsan összerakható készlet.', 4, '2025-11-26 08:40:04'),
+(7, 10, 7, 'Szép kidolgozás, de időigényes.', 4, '2025-11-26 08:40:04'),
+(8, 48, 2, 'nagyon jó', 5, '2025-12-15 19:38:23');
+
 --
 -- Indexek a kiírt táblákhoz
 --
+
+--
+-- A tábla indexei `epitesi_naplo`
+--
+ALTER TABLE `epitesi_naplo`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_epitesi_makett` (`makett_id`),
+  ADD KEY `fk_epitesi_felhasznalo` (`felhasznalo_id`);
+
+--
+-- A tábla indexei `epitesi_tippek_blokk`
+--
+ALTER TABLE `epitesi_tippek_blokk`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_tippek_blokk_naplo` (`naplo_id`),
+  ADD KEY `idx_tippek_blokk_sorrend` (`naplo_id`,`sorrend`);
+
+--
+-- A tábla indexei `epitesi_tippek_naplo`
+--
+ALTER TABLE `epitesi_tippek_naplo`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `makett_id` (`makett_id`),
+  ADD KEY `letrehozo_felhasznalo_id` (`letrehozo_felhasznalo_id`);
+
+--
+-- A tábla indexei `felhasznalo`
+--
+ALTER TABLE `felhasznalo`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `fk_felhasznalo_szerepkor` (`szerepkor_id`),
+  ADD KEY `fk_felhasznalo_tiltva_admin` (`tiltva_admin_id`),
+  ADD KEY `idx_felhasznalo_csatlakozas` (`csatlakozas_datum`);
+
+--
+-- A tábla indexei `felhasznalo_aktivitas`
+--
+ALTER TABLE `felhasznalo_aktivitas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_aktivitas_user` (`felhasznalo_id`),
+  ADD KEY `idx_aktivitas_date` (`letrehozva`);
+
+--
+-- A tábla indexei `forum_tema`
+--
+ALTER TABLE `forum_tema`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_forumtema_felhasznalo` (`felhasznalo_id`);
+
+--
+-- A tábla indexei `forum_uzenet`
+--
+ALTER TABLE `forum_uzenet`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_forumuzenet_tema` (`tema_id`),
+  ADD KEY `fk_forumuzenet_felhasznalo` (`felhasznalo_id`);
+
+--
+-- A tábla indexei `kedvenc`
+--
+ALTER TABLE `kedvenc`
+  ADD PRIMARY KEY (`felhasznalo_id`,`makett_id`),
+  ADD KEY `fk_kedvenc_makett` (`makett_id`);
 
 --
 -- A tábla indexei `makett`
@@ -122,18 +470,119 @@ ALTER TABLE `makett`
   ADD KEY `idx_makett_bekuldve` (`bekuldve`);
 
 --
+-- A tábla indexei `szerepkor`
+--
+ALTER TABLE `szerepkor`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `nev` (`nev`);
+
+--
+-- A tábla indexei `uzenetek`
+--
+ALTER TABLE `uzenetek`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `kuldo_felhasznalo_id` (`kuldo_felhasznalo_id`);
+
+--
+-- A tábla indexei `velemeny`
+--
+ALTER TABLE `velemeny`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_velemeny_makett` (`makett_id`),
+  ADD KEY `fk_velemeny_felhasznalo` (`felhasznalo_id`);
+
+--
 -- A kiírt táblák AUTO_INCREMENT értéke
 --
+
+--
+-- AUTO_INCREMENT a táblához `epitesi_naplo`
+--
+ALTER TABLE `epitesi_naplo`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT a táblához `epitesi_tippek_blokk`
+--
+ALTER TABLE `epitesi_tippek_blokk`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT a táblához `epitesi_tippek_naplo`
+--
+ALTER TABLE `epitesi_tippek_naplo`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT a táblához `felhasznalo`
+--
+ALTER TABLE `felhasznalo`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT a táblához `felhasznalo_aktivitas`
+--
+ALTER TABLE `felhasznalo_aktivitas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT a táblához `forum_tema`
+--
+ALTER TABLE `forum_tema`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT a táblához `forum_uzenet`
+--
+ALTER TABLE `forum_uzenet`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT a táblához `makett`
 --
 ALTER TABLE `makett`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+
+--
+-- AUTO_INCREMENT a táblához `szerepkor`
+--
+ALTER TABLE `szerepkor`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT a táblához `uzenetek`
+--
+ALTER TABLE `uzenetek`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT a táblához `velemeny`
+--
+ALTER TABLE `velemeny`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- Megkötések a kiírt táblákhoz
 --
+
+--
+-- Megkötések a táblához `epitesi_naplo`
+--
+ALTER TABLE `epitesi_naplo`
+  ADD CONSTRAINT `fk_epitesi_felhasznalo` FOREIGN KEY (`felhasznalo_id`) REFERENCES `felhasznalo` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_epitesi_makett` FOREIGN KEY (`makett_id`) REFERENCES `makett` (`id`) ON DELETE CASCADE;
+
+--
+-- Megkötések a táblához `felhasznalo`
+--
+ALTER TABLE `felhasznalo`
+  ADD CONSTRAINT `fk_felhasznalo_tiltva_admin` FOREIGN KEY (`tiltva_admin_id`) REFERENCES `felhasznalo` (`id`) ON DELETE SET NULL;
+
+--
+-- Megkötések a táblához `felhasznalo_aktivitas`
+--
+ALTER TABLE `felhasznalo_aktivitas`
+  ADD CONSTRAINT `fk_aktivitas_user` FOREIGN KEY (`felhasznalo_id`) REFERENCES `felhasznalo` (`id`) ON DELETE CASCADE;
 
 --
 -- Megkötések a táblához `makett`

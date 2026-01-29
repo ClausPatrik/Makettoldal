@@ -2065,3 +2065,260 @@ html::-webkit-scrollbar-thumb:hover {
   .uzenet-form-actions{ flex-direction: column; }
   .uzenet-btn{ width: 100%; }
 }
+
+
+
+/* =========================
+   ADMIN – Felhasználók kezelése (MakettMester / tank HUD)
+   Tedd a styles.css LEGALJÁRA
+   ========================= */
+
+.admin-page { padding: 10px 0; }
+
+.admin-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.admin-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-title h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.admin-title-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(236,244,236,0.92);
+  border: 1px solid rgba(95,191,120,0.35);
+  background: rgba(95,191,120,0.10);
+  box-shadow: var(--hud-glow);
+}
+
+.admin-sub { margin-top: 8px; }
+
+.admin-toolbar .admin-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-input {
+  width: 100%;
+  max-width: 520px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(116,130,112,0.25);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 35%),
+    rgba(7, 10, 8, 0.92);
+  color: var(--text);
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.admin-input:focus {
+  border-color: rgba(95,191,120,0.55);
+  box-shadow: 0 0 0 2px rgba(95,191,120,0.14), var(--hud-glow);
+}
+
+.admin-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-list {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-user-card { padding: 14px; }
+
+.admin-user-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-user-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+}
+
+.admin-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(116,130,112,0.25);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.admin-avatar-fallback {
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  background: rgba(7,10,8,0.65);
+  text-shadow: var(--hud-glow);
+}
+
+.admin-user-meta { min-width: 0; }
+
+.admin-user-name {
+  font-weight: 900;
+  letter-spacing: .02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: rgba(208,225,208,0.85);
+  opacity: .9;
+}
+
+.admin-user-email {
+  color: var(--text-soft);
+  font-size: 14px;
+  word-break: break-word;
+  margin-top: 2px;
+}
+
+.admin-user-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-pill {
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(116,130,112,0.25);
+  background: rgba(7,10,8,0.55);
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.admin-pill.is-admin {
+  border-color: rgba(224,90,42,0.55);
+  box-shadow: var(--warning-glow);
+}
+
+.admin-pill.is-mod {
+  border-color: rgba(95,191,120,0.45);
+  box-shadow: var(--hud-glow);
+}
+
+.admin-pill.is-user { opacity: .9; }
+
+.admin-row { margin-top: 12px; }
+
+.admin-row-title {
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: rgba(236,244,236,0.92);
+  text-shadow: var(--hud-glow);
+}
+
+.admin-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-divider {
+  margin-top: 14px;
+  height: 1px;
+  background: rgba(116,130,112,0.20);
+}
+
+.admin-ban-grid {
+  display: grid;
+  grid-template-columns: 180px 240px 1fr 140px;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-ban-status { margin-top: 10px; }
+
+@media (max-width: 980px) {
+  .admin-ban-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-input { max-width: 100%; }
+}
+
+.admin-activity {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(116,130,112,0.22);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 30%),
+    rgba(7, 10, 8, 0.70);
+}
+
+.admin-activity-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.admin-activity-head h3 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.admin-activity-list {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-activity-item {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(116,130,112,0.18);
+  background: rgba(2, 6, 23, 0.25);
+}
+
+.admin-activity-type {
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.admin-activity-text { color: rgba(236,244,236,0.90); margin-top: 3px; }
+.admin-activity-time { margin-top: 6px; }

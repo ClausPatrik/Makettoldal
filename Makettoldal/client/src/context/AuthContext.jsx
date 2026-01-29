@@ -4,6 +4,9 @@ const AuthContext = createContext(null);
 
 const API_BASE_URL = "http://localhost:3001/api";
 
+
+
+
 export function AuthProvider({ children }) {
   const [felhasznalo, beallitFelhasznalo] = useState(null);
   const bejelentkezve = !!felhasznalo?.token;
@@ -50,20 +53,25 @@ export function AuthProvider({ children }) {
       body: JSON.stringify({ email, jelszo }),
     });
 
-    if (!valasz.ok) {
-      const hiba = await valasz.json().catch(() => ({}));
-      const err = new Error(hiba.uzenet || "Hiba a bejelentkezés során.");
-    
-      if (hiba.tiltott) {
-        err.tiltas = {
-          tipus: hiba.tilt_tipus,
-          eddig: hiba.tilt_eddig,
-          ok: hiba.tilt_ok,
-        };
-      }
-    
-      throw err;
+if (!valasz.ok) {
+  const hiba = await valasz.json().catch(() => ({}));
+
+  if (hiba.tiltott) {
+    if (hiba.tilt_tipus === "ideiglenes") {
+      throw new Error(
+        `Ideiglenesen ki vagy tiltva eddig: ${hiba.tilt_eddig ? new Date(hiba.tilt_eddig).toLocaleString() : "—"}`
+        + (hiba.tilt_ok ? ` | Ok: ${hiba.tilt_ok}` : "")
+      );
     }
+    throw new Error(
+      `Véglegesen ki vagy tiltva.`
+      + (hiba.tilt_ok ? ` | Ok: ${hiba.tilt_ok}` : "")
+    );
+  }
+
+  throw new Error(hiba.uzenet || "Hiba a bejelentkezés során.");
+}
+
     
     
 
@@ -81,6 +89,8 @@ export function AuthProvider({ children }) {
     mentsLocalStorage(token, felhasznaloAdat);
     beallitFelhasznalo(felhasznaloAdat);
   }
+
+  
 
   async function regisztracio(felhasznalo_nev, email, jelszo) {
     const valasz = await fetch(`${API_BASE_URL}/auth/register`, {
