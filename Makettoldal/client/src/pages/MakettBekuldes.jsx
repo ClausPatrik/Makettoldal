@@ -96,8 +96,8 @@ export default function MakettBekuldes() {
           </label>
 
           <label>
-            Gyártó
-            <input name="gyarto" value={form.gyarto} onChange={onChange} required />
+            Gyártó neve
+            <input placeholder="Fujimi" name="gyarto" value={form.gyarto} onChange={onChange} required />
           </label>
 
           <label>
@@ -138,13 +138,13 @@ export default function MakettBekuldes() {
             <input
               name="megjelenes_eve"
               type="number"
+              placeholder="2026"
               value={form.megjelenes_eve}
               onChange={onChange}
               required
             />
           </label>
 
-          {/* ✅ ÚJ: Leírás */}
           <label>
             Leírás (opcionális)
             <textarea
