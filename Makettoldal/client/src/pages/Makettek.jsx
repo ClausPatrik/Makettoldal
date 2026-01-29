@@ -200,7 +200,7 @@ export default function Makettek() {
           />
 
           <select value={kategoriaSzuro} onChange={(e) => beallitKategoriaSzuro(e.target.value)}>
-            <option value="osszes">Összes kategória</option>
+            <option value="osszes">Jármű Típus</option>
             <option value="harckocsi">Harckocsi</option>
             <option value="repülő">Repülő</option>
             <option value="hajó">Hajó</option>
@@ -217,18 +217,17 @@ export default function Makettek() {
 
           <select
             value={minAtlagErtekeles}
-            onChange={(e) => beallitMinAtlagErtekeles(Number(e.target.value))}
-          >
-            <option value={0}>Bármilyen értékelés</option>
+            onChange={(e) => beallitMinAtlagErtekeles(Number(e.target.value))}>
+            <option value={0}>Értékelés</option>
             <option value={3}>Min. 3★</option>
             <option value={4}>Min. 4★</option>
             <option value={4.5}>Min. 4.5★</option>
           </select>
 
           <select value={rendezes} onChange={(e) => beallitRendezes(e.target.value)}>
-            <option value="nev">Név szerint</option>
-            <option value="ev">Megjelenés éve szerint</option>
-            <option value="ertekeles">Átlagértékelés szerint</option>
+            <option value="nev">Név szerint sorrend</option>
+            <option value="ev">Megjelenés éve szerint sorrend</option>
+            <option value="ertekeles">Átlagértékelés szerint sorrend</option>
           </select>
         </div>
       </section>
