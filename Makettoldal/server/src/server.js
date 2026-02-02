@@ -621,6 +621,11 @@ app.post("/api/makett-javaslatok", authMiddleware, async (req, res) => {
       return res.status(400).json({ uzenet: "Hiányzó kötelező adatok." });
     }
 
+    if (nev.length > 50) {
+      return res.status(400).json({
+        uzenet: "A makett neve legfeljebb 50 karakter lehet.",
+      });
+    }
     const nehezsegSzam = Number(nehezseg);
     const evSzam = Number(megjelenes_eve);
     if (Number.isNaN(nehezsegSzam) || nehezsegSzam < 1 || nehezsegSzam > 5) {

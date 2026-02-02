@@ -38,9 +38,14 @@ export default function MakettBekuldes() {
     );
   }
 
-  const onChange = (e) =>
-    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
-
+  const onChange = (e) => {
+    const { name, value } = e.target;
+  
+    if (name === "nev" && value.length > 50) return;
+  
+    setForm((p) => ({ ...p, [name]: value }));
+  };
+  
   const onSubmit = async (e) => {
     e.preventDefault();
     setHiba("");
@@ -90,10 +95,20 @@ export default function MakettBekuldes() {
         </div>
 
         <form className="form" onSubmit={onSubmit}>
-          <label>
-            Név
-            <input name="nev" value={form.nev} onChange={onChange} required />
-          </label>
+        <label>
+  Név (max. 50 karakter)
+  <input
+    name="nev"
+    value={form.nev}
+    onChange={onChange}
+    maxLength={50}          // ✅ HTML limit
+    required
+  />
+  <span className="small">
+    {form.nev.length}/50
+  </span>
+</label>
+
 
           <label>
             Gyártó neve
