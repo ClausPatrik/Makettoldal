@@ -42,7 +42,9 @@ export default function MakettCard({
     <article className="card makett-card">
       <div className="makett-fejlec">
         <div>
-          <h2>{makett.nev}</h2>
+          <h2 className="makett-nev" title={makett.nev}>
+  {makett.nev}
+</h2>
           <p className="small">
             {makett.gyarto} • {makett.skala} • {makett.kategoria}
           </p>
