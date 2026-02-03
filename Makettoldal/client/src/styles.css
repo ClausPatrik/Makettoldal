@@ -218,6 +218,12 @@ h3 {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
+/* Ha kevés elem van (pl. 1 db), akkor se nyúljon szét a kártya teljes szélességre */
+.card-grid-fixed{
+  grid-template-columns: repeat(auto-fill, minmax(260px, 320px));
+  justify-content: flex-start;
+}
+
 .makett-nev {
   margin: 0 0 4px 0;
   font-size: 18px;
@@ -2335,3 +2341,54 @@ html::-webkit-scrollbar-thumb:hover {
 .admin-activity-time { margin-top: 6px; }
 
 
+
+
+/* ==============================
+   JÓVÁHAGYÁS (MakettJovahagyas) – ugyanaz a méretezés mint a Makettek oldalon
+   ============================== */
+
+/* A jóváhagyás oldalon az <article> kapja: className="card makett-card approval-card"
+   Itt NEM fixáljuk a magasságot, hogy ugyanúgy viselkedjen, mint a Makettek kártyái. */
+.approval-card{
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Kép helye mindig ugyanakkora legyen (ha nincs kép: placeholder) */
+.makett-kep-wrapper--static{
+  cursor: default;
+}
+
+.makett-kep-placeholder{
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #1f2937;
+  background: rgba(15, 23, 42, 0.45);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* A plusz meta sor ne növelje meg a kártyát (1 sor + ...) */
+.approval-card .approval-meta{
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A jóváhagyásnál 3 gomb van – kis kártyán jobban néz ki egymás alatt, teljes szélességben */
+.approval-card .button-row{
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.approval-card .button-row .btn{
+  width: 100%;
+}
