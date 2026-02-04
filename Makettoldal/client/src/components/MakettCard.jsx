@@ -77,7 +77,16 @@ export default function MakettCard({
       )}
 
       <div className="button-row">
-        {/* Kedvenc gomb mindkét oldalon */}
+                {/* Megtekintés gomb (modal nyitás) */}
+        <button
+          type="button"
+          className="btn secondary"
+          onClick={() => onOpenModal?.(makett)}
+        >
+          Megtekintés
+        </button>
+
+{/* Kedvenc gomb mindkét oldalon */}
         <button
           type="button"
           className={kedvenc ? "btn secondary" : "btn"}

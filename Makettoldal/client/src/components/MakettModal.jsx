@@ -37,6 +37,439 @@ export default function MakettModal({
   const makettId = makett?.id ?? makett?.makett_id;
   const API_BASE_URL = "http://localhost:3001/api";
 
+
+
+function EpitesiNaplokModal({ open, onClose, makettId, bejelentkezve, felhasznalo }) {
+  const authHeader = useMemo(() => {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, [bejelentkezve]);
+
+  const isAdminOrMod = felhasznalo?.szerepkor_id === 2 || felhasznalo?.szerepkor_id === 3;
+
+  const [naplok, setNaplok] = useState([]);
+  const [aktivNaploId, setAktivNaploId] = useState("");
+  const [blokkok, setBlokkok] = useState([]);
+
+  const [betolt, setBetolt] = useState(false);
+  const [hiba, setHiba] = useState(null);
+
+  const [ujNaploCim, setUjNaploCim] = useState("Építési napló");
+  const [ujBlokk, setUjBlokk] = useState({ tipus: "osszeepites", cim: "", tippek: "", sorrend: 0 });
+
+  const [szerkId, setSzerkId] = useState(null);
+  const [szerk, setSzerk] = useState({ tipus: "osszeepites", cim: "", tippek: "", sorrend: 0 });
+
+  const aktivNaplo = useMemo(() => naplok.find((n) => String(n.id) === String(aktivNaploId)) || null, [naplok, aktivNaploId]);
+
+  const tudSzerkeszteni = useMemo(() => {
+    if (!bejelentkezve || !aktivNaplo) return false;
+    if (isAdminOrMod) return true;
+    return Number(aktivNaplo.letrehozo_felhasznalo_id) === Number(felhasznalo?.id);
+  }, [bejelentkezve, aktivNaplo, isAdminOrMod, felhasznalo]);
+
+  function parseNaplok(data) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data.naplok)) return data.naplok;
+    if (data.naplo) return [data.naplo];
+    // fallback: ha egy napló objektum jön vissza közvetlenül
+    if (data.id && (data.makett_id || data.letrehozo_felhasznalo_id)) return [data];
+    return [];
+  }
+
+  async function betoltNaplok() {
+    if (!open || !bejelentkezve || !makettId) return;
+    try {
+      setBetolt(true);
+      setHiba(null);
+
+      const res = await fetch(`${API_BASE_URL}/makettek/${makettId}/epitesi-tippek`, { headers: { ...authHeader } });
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült betölteni az építési naplókat.");
+      }
+      const data = await res.json();
+
+      const list = parseNaplok(data);
+      setNaplok(list);
+
+      const firstId = list[0]?.id ? String(list[0].id) : "";
+      setAktivNaploId((prev) => (prev ? prev : firstId));
+
+      // ha a régi endpoint rögtön blokkokat is ad, használjuk
+      if (data.blokkok && (data.naplo || (Array.isArray(data.naplok) && data.naplok.length === 1))) {
+        setBlokkok(Array.isArray(data.blokkok) ? data.blokkok : []);
+      } else {
+        setBlokkok([]);
+      }
+    } catch (e) {
+      setHiba(e.message);
+      setNaplok([]);
+      setAktivNaploId("");
+      setBlokkok([]);
+    } finally {
+      setBetolt(false);
+    }
+  }
+
+  async function betoltBlokkok(naploId) {
+    if (!open || !bejelentkezve || !naploId) return;
+    try {
+      setBetolt(true);
+      setHiba(null);
+
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek/${naploId}/blokkok`, { headers: { ...authHeader } });
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült betölteni a blokkokat.");
+      }
+      const data = await res.json();
+      setBlokkok(Array.isArray(data) ? data : (Array.isArray(data.blokkok) ? data.blokkok : []));
+    } catch (e) {
+      setHiba(e.message);
+      setBlokkok([]);
+    } finally {
+      setBetolt(false);
+    }
+  }
+
+  useEffect(() => {
+    if (open) {
+      setHiba(null);
+      setNaplok([]);
+      setAktivNaploId("");
+      setBlokkok([]);
+      setSzerkId(null);
+      setUjBlokk({ tipus: "osszeepites", cim: "", tippek: "", sorrend: 0 });
+      betoltNaplok();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, makettId, bejelentkezve]);
+
+  useEffect(() => {
+    if (open && aktivNaploId) {
+      // ha már vannak blokkok (régi endpoint), ne töltsük újra feleslegesen
+      if (blokkok.length === 0) betoltBlokkok(aktivNaploId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aktivNaploId]);
+
+  async function naploLetrehoz() {
+    if (!bejelentkezve || !makettId) return;
+    try {
+      setBetolt(true);
+      setHiba(null);
+
+      const res = await fetch(`${API_BASE_URL}/makettek/${makettId}/epitesi-tippek`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify({ cim: ujNaploCim || "Építési napló" }),
+      });
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült létrehozni a naplót.");
+      }
+
+      // frissítjük a listát
+      await betoltNaplok();
+    } catch (e) {
+      setHiba(e.message);
+    } finally {
+      setBetolt(false);
+    }
+  }
+
+  async function ujBlokkMentes() {
+    if (!tudSzerkeszteni || !aktivNaploId) return;
+    try {
+      setBetolt(true);
+      setHiba(null);
+
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek/${aktivNaploId}/blokkok`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify(ujBlokk),
+      });
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült létrehozni a blokkot.");
+      }
+      setUjBlokk({ tipus: "osszeepites", cim: "", tippek: "", sorrend: 0 });
+      await betoltBlokkok(aktivNaploId);
+    } catch (e) {
+      setHiba(e.message);
+    } finally {
+      setBetolt(false);
+    }
+  }
+
+  function szerkesztMegnyit(b) {
+    setSzerkId(b.id);
+    setSzerk({ tipus: b.tipus, cim: b.cim, tippek: b.tippek, sorrend: b.sorrend ?? 0 });
+  }
+
+  async function blokkMent(blokkId) {
+    if (!tudSzerkeszteni || !blokkId) return;
+    try {
+      setBetolt(true);
+      setHiba(null);
+
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek-blokk/${blokkId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeader },
+        body: JSON.stringify(szerk),
+      });
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült menteni a blokkot.");
+      }
+      setSzerkId(null);
+      await betoltBlokkok(aktivNaploId);
+    } catch (e) {
+      setHiba(e.message);
+    } finally {
+      setBetolt(false);
+    }
+  }
+
+  async function blokkTorol(blokkId) {
+    if (!tudSzerkeszteni || !blokkId) return;
+    if (!window.confirm("Biztosan törlöd a blokkot?")) return;
+
+    try {
+      setBetolt(true);
+      setHiba(null);
+
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek-blokk/${blokkId}`, {
+        method: "DELETE",
+        headers: { ...authHeader },
+      });
+      if (!res.ok) {
+        const h = await res.json().catch(() => ({}));
+        throw new Error(h.uzenet || "Nem sikerült törölni a blokkot.");
+      }
+      await betoltBlokkok(aktivNaploId);
+    } catch (e) {
+      setHiba(e.message);
+    } finally {
+      setBetolt(false);
+    }
+  }
+
+  function tipusFelirat(tipus) {
+    switch (tipus) {
+      case "osszeepites": return "Összeépítés";
+      case "festes": return "Festés";
+      case "matricazas": return "Matricázás";
+      case "lakkozas": return "Lakkozás";
+      case "koszolas": return "Koszolás";
+      default: return "Egyéb";
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <div className="modal-overlay naplo-overlay" onClick={onClose}>
+      <div className="modal card" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 style={{ margin: 0 }}>Építési naplók</h2>
+          <button className="modal-close" onClick={onClose} aria-label="Bezárás">✕</button>
+        </div>
+
+        {hiba && <p className="error">{hiba}</p>}
+        {betolt && <p className="small">Betöltés...</p>}
+
+        <section className="card" style={{ marginTop: 10 }}>
+          <h3 style={{ marginTop: 0 }}>Napló kiválasztása</h3>
+
+          {naplok.length === 0 ? (
+            <p className="small">Még nincs napló ehhez a maketthez.</p>
+          ) : (
+            <label>
+              Elérhető naplók
+              <select
+                value={aktivNaploId}
+                onChange={(e) => {
+                  setBlokkok([]);
+                  setSzerkId(null);
+                  setAktivNaploId(e.target.value);
+                }}
+              >
+                {naplok.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.cim} (#{n.id})
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          <div className="card" style={{ marginTop: 10 }}>
+            <h4 style={{ marginTop: 0 }}>Új napló létrehozása</h4>
+            <div className="button-row">
+              <input
+                style={{ flex: 1, minWidth: 180 }}
+                value={ujNaploCim}
+                onChange={(e) => setUjNaploCim(e.target.value)}
+                placeholder="Napló címe"
+              />
+              <button className="btn" type="button" onClick={naploLetrehoz} disabled={!bejelentkezve || betolt}>
+                Létrehozás
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {aktivNaplo ? (
+          <section className="card" style={{ marginTop: 12 }}>
+            <h3 style={{ marginTop: 0 }}>Blokkok</h3>
+
+            {!tudSzerkeszteni && (
+              <p className="small">
+                Ezeket a blokkokat csak a napló készítője, admin vagy moderátor szerkesztheti.
+              </p>
+            )}
+
+            {blokkok.length === 0 ? (
+              <p className="small">Még nincs blokk ebben a naplóban.</p>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                {blokkok.map((b) => (
+                  <div key={b.id} className="card" style={{ margin: 0 }}>
+                    <div className="makett-fejlec">
+                      <div>
+                        <h4 style={{ margin: 0 }}>{b.cim}</h4>
+                        <p className="small" style={{ margin: 0 }}>
+                          {tipusFelirat(b.tipus)} • Sorrend: {b.sorrend ?? 0}
+                        </p>
+                      </div>
+
+                      {tudSzerkeszteni && (
+                        <div className="button-row" style={{ margin: 0 }}>
+                          <button className="btn secondary" type="button" onClick={() => szerkesztMegnyit(b)}>
+                            Szerkesztés
+                          </button>
+                          <button className="btn danger" type="button" onClick={() => blokkTorol(b.id)}>
+                            Törlés
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <pre className="naplo-pre">{b.tippek}</pre>
+
+                    {szerkId === b.id && tudSzerkeszteni && (
+                      <div className="card" style={{ marginTop: 10 }}>
+                        <h4>Szerkesztés</h4>
+
+                        <label>
+                          Típus
+                          <select
+                            value={szerk.tipus}
+                            onChange={(e) => setSzerk((p) => ({ ...p, tipus: e.target.value }))}
+                          >
+                            <option value="osszeepites">Összeépítés</option>
+                            <option value="festes">Festés</option>
+                            <option value="matricazas">Matricázás</option>
+                            <option value="lakkozas">Lakkozás</option>
+                            <option value="koszolas">Koszolás</option>
+                            <option value="egyeb">Egyéb</option>
+                          </select>
+                        </label>
+
+                        <label>
+                          Cím
+                          <input value={szerk.cim} onChange={(e) => setSzerk((p) => ({ ...p, cim: e.target.value }))} />
+                        </label>
+
+                        <label>
+                          Tippek / leírás
+                          <textarea
+                            rows={6}
+                            value={szerk.tippek}
+                            onChange={(e) => setSzerk((p) => ({ ...p, tippek: e.target.value }))}
+                          />
+                        </label>
+
+                        <label>
+                          Sorrend
+                          <input
+                            type="number"
+                            value={szerk.sorrend}
+                            onChange={(e) => setSzerk((p) => ({ ...p, sorrend: Number(e.target.value) || 0 }))}
+                          />
+                        </label>
+
+                        <div className="button-row">
+                          <button className="btn" type="button" onClick={() => blokkMent(b.id)} disabled={betolt}>
+                            Mentés
+                          </button>
+                          <button className="btn secondary" type="button" onClick={() => setSzerkId(null)}>
+                            Mégse
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {tudSzerkeszteni && (
+              <div className="card" style={{ marginTop: 12 }}>
+                <h4>Új blokk</h4>
+
+                <label>
+                  Típus
+                  <select value={ujBlokk.tipus} onChange={(e) => setUjBlokk((p) => ({ ...p, tipus: e.target.value }))}>
+                    <option value="osszeepites">Összeépítés</option>
+                    <option value="festes">Festés</option>
+                    <option value="matricazas">Matricázás</option>
+                    <option value="lakkozas">Lakkozás</option>
+                    <option value="koszolas">Koszolás</option>
+                    <option value="egyeb">Egyéb</option>
+                  </select>
+                </label>
+
+                <label>
+                  Cím
+                  <input value={ujBlokk.cim} onChange={(e) => setUjBlokk((p) => ({ ...p, cim: e.target.value }))} />
+                </label>
+
+                <label>
+                  Tippek / leírás
+                  <textarea
+                    rows={6}
+                    value={ujBlokk.tippek}
+                    onChange={(e) => setUjBlokk((p) => ({ ...p, tippek: e.target.value }))}
+                  />
+                </label>
+
+                <label>
+                  Sorrend
+                  <input
+                    type="number"
+                    value={ujBlokk.sorrend}
+                    onChange={(e) => setUjBlokk((p) => ({ ...p, sorrend: Number(e.target.value) || 0 }))}
+                  />
+                </label>
+
+                <div className="button-row">
+                  <button className="btn" type="button" onClick={ujBlokkMentes} disabled={betolt}>
+                    Blokk hozzáadása
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
   // ===== Modal UX =====
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -149,245 +582,15 @@ export default function MakettModal({
     }
   }
 
-  // ===== Építési tippek (csak bejelentkezve) =====
-  const authHeader = useMemo(() => {
-    const token = localStorage.getItem("token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }, [bejelentkezve]);
-
-  const [tippekNaplo, setTippekNaplo] = useState(null);
-  const [tippekBlokkok, setTippekBlokkok] = useState([]);
-  const [tippekBetolt, setTippekBetolt] = useState(false);
-  const [tippekHiba, setTippekHiba] = useState(null);
-
-  const [ujBlokk, setUjBlokk] = useState({
-    tipus: "osszeepites",
-    cim: "",
-    tippek: "",
-    sorrend: 0,
-  });
-
-  const [szerkesztBlokkId, setSzerkesztBlokkId] = useState(null);
-  const [szerkesztBlokk, setSzerkesztBlokk] = useState({
-    tipus: "osszeepites",
-    cim: "",
-    tippek: "",
-    sorrend: 0,
-  });
-
-  const tudTippeketSzerkeszteni = useMemo(() => {
-    if (!bejelentkezve || !tippekNaplo) return false;
-    if (isAdmin) return true;
-    return Number(tippekNaplo.letrehozo_felhasznalo_id) === Number(felhasznalo?.id);
-  }, [bejelentkezve, tippekNaplo, isAdmin, felhasznalo]);
-
-  useEffect(() => {
-    async function betoltTippek() {
-      if (!open || !makettId || !bejelentkezve) return;
-
-      try {
-        setTippekBetolt(true);
-        setTippekHiba(null);
-
-        const res = await fetch(`${API_BASE_URL}/makettek/${makettId}/epitesi-tippek`, {
-          headers: { ...authHeader },
-        });
-
-        if (!res.ok) {
-          const h = await res.json().catch(() => ({}));
-          throw new Error(h.uzenet || "Nem sikerült betölteni az építési naplót.");
-        }
-
-        const data = await res.json();
-        setTippekNaplo(data.naplo);
-        setTippekBlokkok(Array.isArray(data.blokkok) ? data.blokkok : []);
-      } catch (err) {
-        setTippekHiba(err.message);
-        setTippekNaplo(null);
-        setTippekBlokkok([]);
-      } finally {
-        setTippekBetolt(false);
-      }
-    }
-
-    // reset modal nyitáskor
-    if (open) {
-      setTippekNaplo(null);
-      setTippekBlokkok([]);
-      setTippekHiba(null);
-      setSzerkesztBlokkId(null);
-      setUjBlokk({ tipus: "osszeepites", cim: "", tippek: "", sorrend: 0 });
-    }
-
-    betoltTippek();
-  }, [open, makettId, bejelentkezve, authHeader]);
-
-  async function tippekNaploLetrehoz() {
-    try {
-      setTippekBetolt(true);
-      setTippekHiba(null);
-
-      const res = await fetch(`${API_BASE_URL}/makettek/${makettId}/epitesi-tippek`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeader },
-        body: JSON.stringify({ cim: "Építési napló" }),
-      });
-
-      if (!res.ok) {
-        const h = await res.json().catch(() => ({}));
-        throw new Error(h.uzenet || "Nem sikerült létrehozni a naplót.");
-      }
-
-      const created = await res.json();
-      setTippekNaplo(created);
-      setTippekBlokkok([]);
-    } catch (err) {
-      setTippekHiba(err.message);
-    } finally {
-      setTippekBetolt(false);
-    }
-  }
-
-  async function ujBlokkMent() {
-    if (!tippekNaplo) return;
-    if (!ujBlokk.cim.trim() || !ujBlokk.tippek.trim()) {
-      alert("A blokk címe és tippek mezője kötelező.");
-      return;
-    }
-
-    try {
-      setTippekBetolt(true);
-      setTippekHiba(null);
-
-      const res = await fetch(`${API_BASE_URL}/epitesi-tippek/${tippekNaplo.id}/blokkok`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeader },
-        body: JSON.stringify({
-          tipus: ujBlokk.tipus,
-          cim: ujBlokk.cim,
-          tippek: ujBlokk.tippek,
-          sorrend: Number(ujBlokk.sorrend || 0),
-        }),
-      });
-
-      if (!res.ok) {
-        const h = await res.json().catch(() => ({}));
-        throw new Error(h.uzenet || "Nem sikerült létrehozni a blokkot.");
-      }
-
-      const created = await res.json();
-      setTippekBlokkok((prev) =>
-        [...prev, created].sort(
-          (a, b) => (a.sorrend ?? 0) - (b.sorrend ?? 0) || a.id - b.id
-        )
-      );
-      setUjBlokk({ tipus: "osszeepites", cim: "", tippek: "", sorrend: 0 });
-    } catch (err) {
-      setTippekHiba(err.message);
-    } finally {
-      setTippekBetolt(false);
-    }
-  }
-
-  function szerkesztMegnyit(blokk) {
-    setSzerkesztBlokkId(blokk.id);
-    setSzerkesztBlokk({
-      tipus: blokk.tipus ?? "osszeepites",
-      cim: blokk.cim ?? "",
-      tippek: blokk.tippek ?? "",
-      sorrend: Number(blokk.sorrend ?? 0),
-    });
-  }
-
-  async function szerkesztMent() {
-    if (!szerkesztBlokkId) return;
-    if (!szerkesztBlokk.cim.trim() || !szerkesztBlokk.tippek.trim()) {
-      alert("A blokk címe és tippek mezője kötelező.");
-      return;
-    }
-
-    try {
-      setTippekBetolt(true);
-      setTippekHiba(null);
-
-      const res = await fetch(`${API_BASE_URL}/epitesi-tippek-blokk/${szerkesztBlokkId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...authHeader },
-        body: JSON.stringify({
-          tipus: szerkesztBlokk.tipus,
-          cim: szerkesztBlokk.cim,
-          tippek: szerkesztBlokk.tippek,
-          sorrend: Number(szerkesztBlokk.sorrend ?? 0),
-        }),
-      });
-
-      if (!res.ok) {
-        const h = await res.json().catch(() => ({}));
-        throw new Error(h.uzenet || "Nem sikerült menteni a blokkot.");
-      }
-
-      const updated = await res.json();
-      setTippekBlokkok((prev) =>
-        prev
-          .map((b) => (b.id === szerkesztBlokkId ? updated : b))
-          .sort((a, b) => (a.sorrend ?? 0) - (b.sorrend ?? 0) || a.id - b.id)
-      );
-      setSzerkesztBlokkId(null);
-    } catch (err) {
-      setTippekHiba(err.message);
-    } finally {
-      setTippekBetolt(false);
-    }
-  }
-
-  async function blokkTorol(blokkId) {
-    if (!window.confirm("Biztosan törlöd ezt a blokkot?")) return;
-
-    try {
-      setTippekBetolt(true);
-      setTippekHiba(null);
-
-      const res = await fetch(`${API_BASE_URL}/epitesi-tippek-blokk/${blokkId}`, {
-        method: "DELETE",
-        headers: { ...authHeader },
-      });
-
-      if (!res.ok) {
-        const h = await res.json().catch(() => ({}));
-        throw new Error(h.uzenet || "Nem sikerült törölni a blokkot.");
-      }
-
-      setTippekBlokkok((prev) => prev.filter((b) => b.id !== blokkId));
-      if (szerkesztBlokkId === blokkId) setSzerkesztBlokkId(null);
-    } catch (err) {
-      setTippekHiba(err.message);
-    } finally {
-      setTippekBetolt(false);
-    }
-  }
-
-  function tipusFelirat(t) {
-    switch (t) {
-      case "osszeepites":
-        return "Összeépítés";
-      case "festes":
-        return "Festés";
-      case "matricazas":
-        return "Matricázás";
-      case "lakkozas":
-        return "Lakkozás";
-      case "koszolas":
-        return "Koszolás";
-      default:
-        return "Egyéb";
-    }
-  }
-
+  
+  // ===== Építési naplók (külön modalban, csak bejelentkezve) =====
+  const [naplokModalOpen, setNaplokModalOpen] = useState(false);
   if (!open || !makett) return null;
 
-  const vasarloLink = normalizalLink(makett.vasarlasi_link);
 
+  const vasarloLink = normalizalLink(makett?.vasarlasi_link);
   return (
+    <>
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
@@ -601,185 +804,15 @@ export default function MakettModal({
         {/* Építési tippek (csak bejelentkezve) */}
         {bejelentkezve && (
           <section className="card" style={{ marginTop: 12 }}>
-            <h3>Építési napló (tippek)</h3>
-
-            {tippekHiba && <p className="error">{tippekHiba}</p>}
-            {tippekBetolt && <p className="small">Betöltés...</p>}
-
-            {!tippekNaplo ? (
-              <div className="button-row">
-                <button className="btn" type="button" onClick={tippekNaploLetrehoz}>
-                  Napló létrehozása
-                </button>
-              </div>
-            ) : (
-              <>
-                {tippekBlokkok.length === 0 ? (
-                  <p className="small">Még nincs blokk ebben a naplóban.</p>
-                ) : (
-                  <div style={{ display: "grid", gap: 10 }}>
-                    {tippekBlokkok.map((b) => (
-                      <div key={b.id} className="card">
-                        <div className="makett-fejlec">
-                          <div>
-                            <h4 style={{ margin: 0 }}>{b.cim}</h4>
-                            <p className="small" style={{ margin: 0 }}>
-                              {tipusFelirat(b.tipus)} • Sorrend: {b.sorrend ?? 0}
-                            </p>
-                          </div>
-
-                          {tudTippeketSzerkeszteni && (
-                            <div className="button-row" style={{ margin: 0 }}>
-                              <button
-                                className="btn secondary"
-                                type="button"
-                                onClick={() => szerkesztMegnyit(b)}
-                              >
-                                Szerkesztés
-                              </button>
-                              <button
-                                className="btn danger"
-                                type="button"
-                                onClick={() => blokkTorol(b.id)}
-                              >
-                                Törlés
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        <pre className="naplo-pre">{b.tippek}</pre>
-
-                        {szerkesztBlokkId === b.id && (
-                          <div className="card" style={{ marginTop: 10 }}>
-                            <h4>Szerkesztés</h4>
-                            <label>
-                              Típus
-                              <select
-                                value={szerkesztBlokk.tipus}
-                                onChange={(e) =>
-                                  setSzerkesztBlokk((p) => ({ ...p, tipus: e.target.value }))
-                                }
-                              >
-                                <option value="osszeepites">Összeépítés</option>
-                                <option value="festes">Festés</option>
-                                <option value="matricazas">Matricázás</option>
-                                <option value="lakkozas">Lakkozás</option>
-                                <option value="koszolas">Koszolás</option>
-                                <option value="egyeb">Egyéb</option>
-                              </select>
-                            </label>
-
-                            <label>
-                              Cím
-                              <input
-                                value={szerkesztBlokk.cim}
-                                onChange={(e) =>
-                                  setSzerkesztBlokk((p) => ({ ...p, cim: e.target.value }))
-                                }
-                              />
-                            </label>
-
-                            <label>
-                              Tippek
-                              <textarea
-                                rows={5}
-                                value={szerkesztBlokk.tippek}
-                                onChange={(e) =>
-                                  setSzerkesztBlokk((p) => ({ ...p, tippek: e.target.value }))
-                                }
-                              />
-                            </label>
-
-                            <label>
-                              Sorrend
-                              <input
-                                type="number"
-                                value={szerkesztBlokk.sorrend}
-                                onChange={(e) =>
-                                  setSzerkesztBlokk((p) => ({
-                                    ...p,
-                                    sorrend: Number(e.target.value || 0),
-                                  }))
-                                }
-                              />
-                            </label>
-
-                            <div className="button-row">
-                              <button className="btn" type="button" onClick={szerkesztMent}>
-                                Mentés
-                              </button>
-                              <button
-                                className="btn secondary"
-                                type="button"
-                                onClick={() => setSzerkesztBlokkId(null)}
-                              >
-                                Mégse
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {tudTippeketSzerkeszteni && (
-                  <div className="card" style={{ marginTop: 10 }}>
-                    <h4>Új blokk</h4>
-
-                    <label>
-                      Típus
-                      <select
-                        value={ujBlokk.tipus}
-                        onChange={(e) => setUjBlokk((p) => ({ ...p, tipus: e.target.value }))}
-                      >
-                        <option value="osszeepites">Összeépítés</option>
-                        <option value="festes">Festés</option>
-                        <option value="matricazas">Matricázás</option>
-                        <option value="lakkozas">Lakkozás</option>
-                        <option value="koszolas">Koszolás</option>
-                        <option value="egyeb">Egyéb</option>
-                      </select>
-                    </label>
-
-                    <label>
-                      Cím
-                      <input
-                        value={ujBlokk.cim}
-                        onChange={(e) => setUjBlokk((p) => ({ ...p, cim: e.target.value }))}
-                      />
-                    </label>
-
-                    <label>
-                      Tippek
-                      <textarea
-                        rows={5}
-                        value={ujBlokk.tippek}
-                        onChange={(e) => setUjBlokk((p) => ({ ...p, tippek: e.target.value }))}
-                      />
-                    </label>
-
-                    <label>
-                      Sorrend
-                      <input
-                        type="number"
-                        value={ujBlokk.sorrend}
-                        onChange={(e) =>
-                          setUjBlokk((p) => ({ ...p, sorrend: Number(e.target.value || 0) }))
-                        }
-                      />
-                    </label>
-
-                    <div className="button-row">
-                      <button className="btn" type="button" onClick={ujBlokkMent}>
-                        Blokk hozzáadása
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+            <h3>Építési naplók</h3>
+            <p className="small" style={{ marginTop: 6 }}>
+              A naplókat külön ablakban tudod megnyitni (blokkok, szerkesztés, új napló).
+            </p>
+            <div className="button-row">
+              <button className="btn" type="button" onClick={() => setNaplokModalOpen(true)}>
+                Megtekintés
+              </button>
+            </div>
           </section>
         )}
 
@@ -799,5 +832,14 @@ export default function MakettModal({
         )}
       </div>
     </div>
+
+      <EpitesiNaplokModal
+        open={naplokModalOpen}
+        onClose={() => setNaplokModalOpen(false)}
+        makettId={makettId}
+        bejelentkezve={bejelentkezve}
+        felhasznalo={felhasznalo}
+      />
+    </>
   );
 }

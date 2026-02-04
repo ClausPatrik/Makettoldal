@@ -2392,3 +2392,8 @@ html::-webkit-scrollbar-thumb:hover {
 .approval-card .button-row .btn{
   width: 100%;
 }
+/* Építési naplók 2. modal legyen a fő modal fölött */
+
+.modal-overlay.naplo-overlay{
+  z-index: 10000;
+}

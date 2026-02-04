@@ -14,7 +14,7 @@ export default function MakettBekuldes() {
     kategoria: "harckocsi",
     skala: "1:35",
     nehezseg: 3,
-    megjelenes_eve: new Date().getFullYear(),
+    megjelenes_eve: String(new Date().getFullYear()),
     kep_url: "",
     leiras: "", // ✅ ÚJ mező
     vasarlasi_link: "",   // ✅ ÚJ
@@ -40,9 +40,23 @@ export default function MakettBekuldes() {
 
   const onChange = (e) => {
     const { name, value } = e.target;
-  
+
+    // 50 karakteres limitek
     if (name === "nev" && value.length > 50) return;
-  
+    if (name === "gyarto" && value.length > 50) return;
+
+    // Skála: csak számok és kettőspont (pl. 1:35)
+    if (name === "skala") {
+      if (!/^[0-9:]*$/.test(value)) return;
+      if (value.length > 10) return;
+    }
+
+    // Megjelenés éve: csak 4 számjegy (YYYY)
+    if (name === "megjelenes_eve") {
+      if (!/^\d*$/.test(value)) return;
+      if (value.length > 4) return;
+    }
+
     setForm((p) => ({ ...p, [name]: value }));
   };
   
@@ -52,6 +66,26 @@ export default function MakettBekuldes() {
     setUzenet("");
     setLoading(true);
 
+    // Frontend ellenőrzések
+    if (!/^\d+:\d+$/.test(form.skala.trim())) {
+      setLoading(false);
+      setHiba('A skála formátuma legyen pl. 1:35 (csak számok és ":").');
+      return;
+    }
+
+    if (!/^\d{4}$/.test(String(form.megjelenes_eve).trim())) {
+      setLoading(false);
+      setHiba("A megjelenés éve 4 számjegyű év legyen (pl. 2026).");
+      return;
+    }
+
+    const ev = Number(String(form.megjelenes_eve).trim());
+    if (ev < 1900 || ev > 2031) {
+      setLoading(false);
+      setHiba("A megjelenés éve nem tűnik érvényesnek.");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Nincs token (jelentkezz be újra).");
@@ -59,7 +93,7 @@ export default function MakettBekuldes() {
       const body = {
         ...form,
         nehezseg: Number(form.nehezseg),
-        megjelenes_eve: Number(form.megjelenes_eve),
+        megjelenes_eve: ev,
         kep_url: form.kep_url?.trim() || null,
         leiras: form.leiras?.trim() || null,
         vasarlasi_link: form.vasarlasi_link?.trim() || null, // ✅ ÚJ
@@ -131,8 +165,17 @@ export default function MakettBekuldes() {
           </label>
 
           <label>
-            Skála
-            <input name="skala" value={form.skala} onChange={onChange} required />
+            Skála (pl. 1:35)
+            <input
+              name="skala"
+              value={form.skala}
+              onChange={onChange}
+              placeholder="1:35"
+              inputMode="numeric"
+              pattern="[0-9]+:[0-9]+"
+              required
+            />
+            <span className="small">Csak számok és kettőspont (pl. 1:35)</span>
           </label>
 
           <label>
@@ -149,15 +192,18 @@ export default function MakettBekuldes() {
           </label>
 
           <label>
-            Megjelenés éve
+            Megjelenés éve (csak év)
             <input
               name="megjelenes_eve"
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]{4}"
               placeholder="2026"
               value={form.megjelenes_eve}
               onChange={onChange}
               required
             />
+            <span className="small">{form.megjelenes_eve.length}/4</span>
           </label>
 
           <label>

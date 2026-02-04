@@ -8,12 +8,15 @@ export default function EpitesiNaplo() {
   const { bejelentkezve, felhasznalo } = useAuth();
   const { makettek, betoltAlapAdatok, betoltesFolyamatban } = useAdat();
 
-  const isAdmin = felhasznalo?.szerepkor_id === 2;
+  const isAdminOrModOrMod = felhasznalo?.szerepkor_id === 2 || felhasznalo?.szerepkor_id === 3;
 
   const [valasztottMakettId, setValasztottMakettId] = useState("");
 
   const [betolt, setBetolt] = useState(false);
   const [hiba, setHiba] = useState(null);
+
+  const [naplok, setNaplok] = useState([]);
+  const [aktivNaploId, setAktivNaploId] = useState("");
 
   const [naplo, setNaplo] = useState(null);
   const [blokkok, setBlokkok] = useState([]);
@@ -44,12 +47,21 @@ export default function EpitesiNaplo() {
 
   const tudSzerkeszteni = useMemo(() => {
     if (!bejelentkezve || !naplo) return false;
-    if (isAdmin) return true;
+    if (isAdminOrModOrMod) return true;
     return Number(naplo.letrehozo_felhasznalo_id) === Number(felhasznalo?.id);
-  }, [bejelentkezve, naplo, isAdmin, felhasznalo]);
+  }, [bejelentkezve, naplo, isAdminOrModOrMod, felhasznalo]);
 
   async function betoltMakettNaplo(makettId) {
     if (!bejelentkezve || !makettId) return;
+
+    const parseNaplok = (data) => {
+      if (!data) return [];
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.naplok)) return data.naplok;
+      if (data.naplo) return [data.naplo];
+      if (data.id && (data.makett_id || data.letrehozo_felhasznalo_id)) return [data];
+      return [];
+    };
 
     try {
       setBetolt(true);
@@ -61,14 +73,33 @@ export default function EpitesiNaplo() {
 
       if (!res.ok) {
         const h = await res.json().catch(() => ({}));
-        throw new Error(h.uzenet || "Nem sikerült betölteni az építési naplót.");
+        throw new Error(h.uzenet || "Nem sikerült betölteni az építési naplókat.");
       }
 
       const data = await res.json();
-      setNaplo(data.naplo);
-      setBlokkok(Array.isArray(data.blokkok) ? data.blokkok : []);
+      const list = parseNaplok(data);
+
+      setNaplok(list);
+
+      const firstId = list[0]?.id ? String(list[0].id) : "";
+      const chosenId = aktivNaploId || firstId;
+
+      setAktivNaploId(chosenId);
+
+      const active = list.find((n) => String(n.id) === String(chosenId)) || null;
+      setNaplo(active);
+
+      // Régi API esetén a blokkok rögtön érkeznek
+      if (data.blokkok && (data.naplo || (Array.isArray(data.naplok) && data.naplok.length === 1))) {
+        setBlokkok(Array.isArray(data.blokkok) ? data.blokkok : []);
+      } else {
+        setBlokkok([]);
+        if (chosenId) await betoltBlokkok(chosenId);
+      }
     } catch (err) {
       setHiba(err.message);
+      setNaplok([]);
+      setAktivNaploId("");
       setNaplo(null);
       setBlokkok([]);
     } finally {
@@ -76,14 +107,46 @@ export default function EpitesiNaplo() {
     }
   }
 
+  async function betoltBlokkok(naploId) {
+    if (!bejelentkezve || !naploId) return;
+
+    const res = await fetch(`${API_BASE_URL}/epitesi-tippek/${naploId}/blokkok`, {
+      headers: { ...authHeader },
+    });
+
+    if (!res.ok) {
+      const h = await res.json().catch(() => ({}));
+      throw new Error(h.uzenet || "Nem sikerült betölteni a blokkokat.");
+    }
+
+    const data = await res.json();
+    setBlokkok(Array.isArray(data) ? data : Array.isArray(data.blokkok) ? data.blokkok : []);
+  }
+
   useEffect(() => {
-    if (valasztottMakettId) betoltMakettNaplo(valasztottMakettId);
-    else {
+    if (valasztottMakettId) {
+      setAktivNaploId("");
+      betoltMakettNaplo(valasztottMakettId);
+    } else {
+      setNaplok([]);
+      setAktivNaploId("");
       setNaplo(null);
       setBlokkok([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valasztottMakettId]);
+
+  useEffect(() => {
+    if (!aktivNaploId) return;
+    const active = naplok.find((n) => String(n.id) === String(aktivNaploId)) || null;
+    setNaplo(active);
+    // ha nincs blokk listánk, töltsük
+    if (active) {
+      betoltBlokkok(aktivNaploId).catch((e) => setHiba(e.message));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aktivNaploId]);
+
 
   async function naploLetrehoz() {
     if (!valasztottMakettId) return;
@@ -103,9 +166,9 @@ export default function EpitesiNaplo() {
         throw new Error(h.uzenet || "Nem sikerült létrehozni a naplót.");
       }
 
-      const created = await res.json();
-      setNaplo(created);
-      setBlokkok([]);
+      // frissítjük a listát
+      setAktivNaploId("");
+      await betoltMakettNaplo(valasztottMakettId);
     } catch (err) {
       setHiba(err.message);
     } finally {
@@ -114,7 +177,7 @@ export default function EpitesiNaplo() {
   }
 
   async function ujBlokkMent() {
-    if (!naplo) return;
+    if (!aktivNaploId) return;
     if (!ujBlokk.cim.trim() || !ujBlokk.tippek.trim()) {
       alert("A blokk címe és tippek mezője kötelező.");
       return;
@@ -124,7 +187,7 @@ export default function EpitesiNaplo() {
       setBetolt(true);
       setHiba(null);
 
-      const res = await fetch(`${API_BASE_URL}/epitesi-tippek/${naplo.id}/blokkok`, {
+      const res = await fetch(`${API_BASE_URL}/epitesi-tippek/${aktivNaploId}/blokkok`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({
@@ -270,6 +333,26 @@ export default function EpitesiNaplo() {
                 ))}
               </select>
             </label>
+
+            {naplok.length > 0 && (
+              <label>
+                Napló kiválasztása
+                <select
+                  value={aktivNaploId}
+                  onChange={(e) => {
+                    setBlokkok([]);
+                    setSzerkId(null);
+                    setAktivNaploId(e.target.value);
+                  }}
+                >
+                  {naplok.map((n) => (
+                    <option key={n.id} value={n.id}>
+                      {n.cim} (#{n.id})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             {hiba && <p className="error">{hiba}</p>}
             {betolt && <p className="small">Betöltés...</p>}
