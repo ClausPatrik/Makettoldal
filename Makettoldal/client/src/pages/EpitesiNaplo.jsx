@@ -166,9 +166,20 @@ export default function EpitesiNaplo() {
         throw new Error(h.uzenet || "Nem sikerült létrehozni a naplót.");
       }
 
-      // frissítjük a listát
-      setAktivNaploId("");
-      await betoltMakettNaplo(valasztottMakettId);
+      // ✅ Új napló létrejött → azonnal állítsuk aktívra, és nyissuk meg
+      const created = await res.json();
+      const createdId = created?.id ? String(created.id) : "";
+
+      // tegyük be a listába (dup nélkül)
+      setNaplok((prev) => {
+        const filtered = prev.filter((n) => String(n.id) !== createdId);
+        return createdId ? [created, ...filtered] : filtered;
+      });
+
+      setSzerkId(null);
+      setBlokkok([]); // új naplónál még nincs blokk
+      setAktivNaploId(createdId);
+      setNaplo(createdId ? created : null);
     } catch (err) {
       setHiba(err.message);
     } finally {
@@ -357,6 +368,15 @@ export default function EpitesiNaplo() {
             {hiba && <p className="error">{hiba}</p>}
             {betolt && <p className="small">Betöltés...</p>}
 
+            {/* Új napló gomb mindig látszódjon, akkor is ha már van napló */}
+            {valasztottMakettId && (
+              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                <button className="btn" onClick={naploLetrehoz} disabled={betolt}>
+                  Új napló hozzáadása
+                </button>
+              </div>
+            )}
+
             {!valasztottMakettId ? (
               <p className="small">Válassz egy makettet a napló kezeléséhez.</p>
             ) : !naplo ? (
@@ -364,9 +384,6 @@ export default function EpitesiNaplo() {
                 <p className="small" style={{ margin: 0 }}>
                   Ehhez a maketthez még nincs napló.
                 </p>
-                <button className="btn" onClick={naploLetrehoz} disabled={betolt}>
-                  Napló létrehozása
-                </button>
               </div>
             ) : (
               <>
