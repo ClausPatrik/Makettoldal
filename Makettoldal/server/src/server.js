@@ -1115,14 +1115,16 @@ app.get("/api/makettek/:makettId/epitesi-tippek", async (req, res) => {
     const makettId = Number(req.params.makettId);
     if (!Number.isFinite(makettId)) return res.status(400).json({ uzenet: "Érvénytelen makett azonosító." });
 
-    const [naplo] = await adatbazisLekeres("SELECT * FROM epitesi_tippek_naplo WHERE makett_id = ?", [makettId]);
-    if (!naplo) return res.json({ naplo: null, blokkok: [] });
-
-    const blokkok = await adatbazisLekeres(
-      "SELECT * FROM epitesi_tippek_blokk WHERE naplo_id = ? ORDER BY sorrend ASC, id ASC",
-      [naplo.id]
+    // Több napló is lehet egy maketthez, ezért listát adunk vissza.
+    const naplok = await adatbazisLekeres(
+      "SELECT * FROM epitesi_tippek_naplo WHERE makett_id = ? ORDER BY id DESC",
+      [makettId]
     );
-    return res.json({ naplo, blokkok });
+
+    // Visszafelé kompatibilitás: ha nincs napló, régi forma szerint is értelmezhető
+    if (!naplok.length) return res.json({ naplok: [] });
+
+    return res.json({ naplok });
   } catch (err) {
     console.error("Építési tippek lekérdezési hiba:", err?.message || err);
     return res.status(500).json({ uzenet: "Szerver hiba az építési tippek lekérdezése során." });
@@ -1135,8 +1137,6 @@ app.post("/api/makettek/:makettId/epitesi-tippek", authMiddleware, async (req, r
     if (!Number.isFinite(makettId)) return res.status(400).json({ uzenet: "Érvénytelen makett azonosító." });
 
     const cim = String(req.body?.cim || "Építési tippek").trim();
-    const [van] = await adatbazisLekeres("SELECT * FROM epitesi_tippek_naplo WHERE makett_id = ?", [makettId]);
-    if (van) return res.status(200).json(van);
 
     const eredmeny = await adatbazisLekeres(
       "INSERT INTO epitesi_tippek_naplo (makett_id, letrehozo_felhasznalo_id, cim) VALUES (?, ?, ?)",
@@ -1152,10 +1152,31 @@ app.post("/api/makettek/:makettId/epitesi-tippek", authMiddleware, async (req, r
 });
 
 function adminVagyTulajTippekNaplo(req, naplo) {
-  const admin = req.felhasznalo?.szerepkor_id === 2;
-  const tulaj = naplo?.letrehozo_felhasznalo_id === req.felhasznalo?.id;
-  return admin || tulaj;
+  const szerep = req.felhasznalo?.szerepkor_id;
+  const admin = szerep === 2;
+  const moderator = szerep === 3;
+  const tulaj = Number(naplo?.letrehozo_felhasznalo_id) === Number(req.felhasznalo?.id);
+  return admin || moderator || tulaj;
 }
+
+app.get("/api/epitesi-tippek/:naploId/blokkok", async (req, res) => {
+  try {
+    const naploId = Number(req.params.naploId);
+    if (!Number.isFinite(naploId)) return res.status(400).json({ uzenet: "Érvénytelen napló azonosító." });
+
+    const [naplo] = await adatbazisLekeres("SELECT * FROM epitesi_tippek_naplo WHERE id = ?", [naploId]);
+    if (!naplo) return res.status(404).json({ uzenet: "A napló nem található." });
+
+    const blokkok = await adatbazisLekeres(
+      "SELECT * FROM epitesi_tippek_blokk WHERE naplo_id = ? ORDER BY sorrend ASC, id ASC",
+      [naploId]
+    );
+    return res.json({ blokkok });
+  } catch (err) {
+    console.error("Építési tippek blokkok lekérdezési hiba:", err?.message || err);
+    return res.status(500).json({ uzenet: "Szerver hiba a blokkok lekérdezése során." });
+  }
+});
 
 app.post("/api/epitesi-tippek/:naploId/blokkok", authMiddleware, async (req, res) => {
   try {
