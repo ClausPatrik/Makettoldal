@@ -16,6 +16,7 @@ import EpitesiNaplo from "./pages/EpitesiNaplo";
 
 import MakettBekuldes from "./pages/MakettBekuldes";
 import MakettJovahagyas from "./pages/MakettJovahagyas";
+import Makettjeim from "./pages/Makettjeim";
 
 
 import NavBar from "./components/NavBar";
@@ -148,6 +149,7 @@ useEffect(() => {
           <Route path="/epitesinaplo" element={<EpitesiNaplo />} />
 
           <Route path="/makett-bekuldes" element={<MakettBekuldes />} />
+          <Route path="/makettjeim" element={<Makettjeim />} />
           <Route path="/admin/makett-jovahagyas" element={<MakettJovahagyas />} />
           <Route path="/admin/felhasznalok" element={<AdminFelhasznalok />} />
 

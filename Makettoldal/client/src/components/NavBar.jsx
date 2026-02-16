@@ -77,6 +77,7 @@ export default function NavBar() {
               <NavLink to="/velemenyeim" className={linkClass}>Velemenyeim</NavLink>
               <NavLink to="/epitesinaplo" className={linkClass}>Epitesi naplo</NavLink>
               <NavLink to="/makett-bekuldes" className={linkClass}>Makett bekuldes</NavLink>
+              <NavLink to="/makettjeim" className={linkClass}>Makettjeim</NavLink>
 
               {admin && (
               <>

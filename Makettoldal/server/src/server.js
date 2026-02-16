@@ -680,6 +680,118 @@ app.get("/api/sajat/makett-javaslatok", authMiddleware, async (req, res) => {
   }
 });
 
+// -------------------- SAJÁT MAKETTJEIM (módosítás -> újra jóváhagyás) --------------------
+// A felhasználó saját (beküldött) makettjei – minden állapotban
+app.get("/api/sajat/makettek", authMiddleware, async (req, res) => {
+  try {
+    const sorok = await adatbazisLekeres(
+      `SELECT id, nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve,
+              kep_url, leiras, vasarlasi_link,
+              allapot, bekuldve, elbiralva, elutasitas_ok
+       FROM makett
+       WHERE bekuldo_felhasznalo_id = ?
+       ORDER BY bekuldve DESC, id DESC`,
+      [req.felhasznalo.id]
+    );
+    return res.json(sorok);
+  } catch (err) {
+    console.error("Saját makettek hiba:", err?.message || err);
+    return res.status(500).json({ uzenet: "Szerver hiba a saját makettek lekérdezése során." });
+  }
+});
+
+// Saját makett módosítása: automatikusan visszakerül jóváhagyásra
+app.put("/api/sajat/makettek/:id", authMiddleware, async (req, res) => {
+  try {
+    const makettId = Number(req.params.id);
+    if (!Number.isFinite(makettId)) return res.status(400).json({ uzenet: "Érvénytelen makett ID." });
+
+    // tulaj ellenőrzés
+    const [mk] = await adatbazisLekeres(
+      `SELECT id, bekuldo_felhasznalo_id
+       FROM makett
+       WHERE id = ?`,
+      [makettId]
+    );
+    if (!mk) return res.status(404).json({ uzenet: "Nincs ilyen makett." });
+
+    const tulaj =
+      mk.bekuldo_felhasznalo_id !== null &&
+      Number(mk.bekuldo_felhasznalo_id) === Number(req.felhasznalo.id);
+    if (!tulaj) return res.status(403).json({ uzenet: "Nincs jogosultságod módosítani ezt a makettet." });
+
+    const {
+      nev,
+      gyarto,
+      kategoria,
+      skala,
+      nehezseg,
+      megjelenes_eve,
+      kep_url,
+      leiras,
+      vasarlasi_link,
+    } = req.body;
+
+    if (!nev || !gyarto || !kategoria || !skala) {
+      return res.status(400).json({ uzenet: "Név, gyártó, kategória és skála kötelező." });
+    }
+
+    if (String(nev).length > 50) {
+      return res.status(400).json({ uzenet: "A makett neve legfeljebb 50 karakter lehet." });
+    }
+
+    const nehezsegSzam = Number(nehezseg);
+    const evSzam = Number(megjelenes_eve);
+
+    if (!Number.isFinite(nehezsegSzam) || nehezsegSzam < 1 || nehezsegSzam > 5) {
+      return res.status(400).json({ uzenet: "A nehézség 1 és 5 közötti szám legyen." });
+    }
+    if (!Number.isFinite(evSzam) || evSzam < 1900 || evSzam > 2100) {
+      return res.status(400).json({ uzenet: "A megjelenés éve 1900 és 2100 közé essen." });
+    }
+
+    await adatbazisLekeres(
+      `UPDATE makett
+       SET nev = ?, gyarto = ?, kategoria = ?, skala = ?, nehezseg = ?, megjelenes_eve = ?,
+           kep_url = ?, leiras = ?, vasarlasi_link = ?,
+           allapot = 'varakozik',
+           elbiralta_admin_id = NULL,
+           elbiralva = NULL,
+           elutasitas_ok = NULL,
+           bekuldve = NOW()
+       WHERE id = ?`,
+      [
+        String(nev).trim(),
+        String(gyarto).trim(),
+        String(kategoria).trim(),
+        String(skala).trim(),
+        nehezsegSzam,
+        evSzam,
+        kep_url?.trim?.() ? kep_url.trim() : (kep_url || null),
+        leiras?.trim?.() ? leiras.trim() : (leiras || null),
+        vasarlasi_link?.trim?.() ? vasarlasi_link.trim() : (vasarlasi_link || null),
+        makettId,
+      ]
+    );
+
+    const [uj] = await adatbazisLekeres(
+      `SELECT id, nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve,
+              kep_url, leiras, vasarlasi_link,
+              allapot, bekuldve, elbiralva, elutasitas_ok
+       FROM makett WHERE id = ?`,
+      [makettId]
+    );
+
+    return res.json({
+      uzenet: "Makett módosítva. A módosítások miatt újra jóvá kell hagyatni (jóváhagyásra visszakerült).",
+      makett: uj,
+    });
+  } catch (err) {
+    console.error("Saját makett módosítás hiba:", err?.message || err);
+    return res.status(500).json({ uzenet: "Szerver hiba a makett módosítása során." });
+  }
+});
+
 app.get("/api/admin/makett-javaslatok", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const sorok = await adatbazisLekeres(
