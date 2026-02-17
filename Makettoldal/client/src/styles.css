@@ -2441,3 +2441,34 @@ html::-webkit-scrollbar-thumb:hover {
 .modal-overlay.naplo-overlay{
   z-index: 10000;
 }
+.card-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-start; /* NEM space-between */
+}
+
+.bal-info{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.ertekeles{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.atlag{
+  font-weight:600;
+  color:#ddd;
+}
+
+.status{
+  background:#b8860b;
+  color:white;
+  padding:2px 8px;
+  border-radius:6px;
+  font-size:12px;
+}

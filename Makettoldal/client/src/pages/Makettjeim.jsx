@@ -225,31 +225,34 @@ export default function Makettjeim() {
             const vList = makettVelemenyek(m.id);
             return (
               <article key={m.id} className="card makett-card">
-                <div className="makett-fejlec">
-                  <div>
-                    <h2 className="makett-nev" title={m.nev}>
-                      {m.nev}
-                    </h2>
-                    <p className="small">
-                      {m.gyarto} • {m.skala} • {m.kategoria}
-                    </p>
-                    <p className="small">
-                      Nehézség: {m.nehezseg}/5 • Megjelenés éve: {m.megjelenes_eve}
-                    </p>
-                  </div>
+               <div className="makett-fejlec">
+  <div>
+    <h2 className="makett-nev" title={m.nev}>
+      {m.nev}
+    </h2>
+    <p className="small">
+      {m.gyarto} • {m.skala} • {m.kategoria}
+    </p>
+    <p className="small">
+      Nehézség: {m.nehezseg}/5 • Megjelenés éve: {m.megjelenes_eve}
+    </p>
+    {/* IDE kerül át a csillag + átlag + státusz */}
+    <div className="makett-bal-meta">
+      <div className="makett-ertekeles">
+        <CsillagValaszto value={atlag} readOnly />
+        <br />
+        <span className="small">
+          Átlag: {Number(atlag).toFixed(1)} ({vList.length} vélemény)
+          
+        </span>
+      </div>
+      <br />
+      <div className={`status-pill ${st.cls}`}>{st.txt}</div>
+    </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-                    {/* Átlag csillagok */}
-                    <div className="makett-ertekeles">
-                      <CsillagValaszto value={atlag} readOnly />
-                      <p className="small" style={{ margin: 0 }}>
-                        Átlag: {Number(atlag).toFixed(1)} ({vList.length} vélemény)
-                      </p>
-                    </div>
-
-                    <div className={`status-pill ${st.cls}`}>{st.txt}</div>
-                  </div>
-                </div>
+    
+  </div>
+</div>
 
                 {m.kep_url && (
                   <div
