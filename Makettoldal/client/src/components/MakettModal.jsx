@@ -33,13 +33,16 @@ export default function MakettModal({
 
   onAdminUpdate,
   onAdminDelete,
+
+  // saját maketteknél: csak jóváhagyott esetén lehessen új naplót létrehozni
+  allowNaploCreate = true,
 }) {
   const makettId = makett?.id ?? makett?.makett_id;
   const API_BASE_URL = "http://localhost:3001/api";
 
 
 
-function EpitesiNaplokModal({ open, onClose, makettId, bejelentkezve, felhasznalo }) {
+function EpitesiNaplokModal({ open, onClose, makettId, bejelentkezve, felhasznalo, allowNaploCreate }) {
   const authHeader = useMemo(() => {
     const token = localStorage.getItem("token");
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -156,7 +159,7 @@ function EpitesiNaplokModal({ open, onClose, makettId, bejelentkezve, felhasznal
   }, [aktivNaploId]);
 
   async function naploLetrehoz() {
-    if (!bejelentkezve || !makettId) return;
+    if (!bejelentkezve || !makettId || !allowNaploCreate) return;
     try {
       setBetolt(true);
       setHiba(null);
@@ -308,17 +311,29 @@ function EpitesiNaplokModal({ open, onClose, makettId, bejelentkezve, felhasznal
 
           <div className="card" style={{ marginTop: 10 }}>
             <h4 style={{ marginTop: 0 }}>Új napló létrehozása</h4>
-            <div className="button-row">
-              <input
-                style={{ flex: 1, minWidth: 180 }}
-                value={ujNaploCim}
-                onChange={(e) => setUjNaploCim(e.target.value)}
-                placeholder="Napló címe"
-              />
-              <button className="btn" type="button" onClick={naploLetrehoz} disabled={!bejelentkezve || betolt}>
-                Létrehozás
-              </button>
-            </div>
+
+            {!allowNaploCreate ? (
+              <div className="alert warn" style={{ margin: 0 }}>
+                Ez a makett még <b>nincs jóváhagyva</b>, ezért új építési naplót csak jóváhagyás után lehet létrehozni.
+              </div>
+            ) : (
+              <div className="button-row">
+                <input
+                  style={{ flex: 1, minWidth: 180 }}
+                  value={ujNaploCim}
+                  onChange={(e) => setUjNaploCim(e.target.value)}
+                  placeholder="Napló címe"
+                />
+                <button
+                  className="btn"
+                  type="button"
+                  onClick={naploLetrehoz}
+                  disabled={!bejelentkezve || betolt}
+                >
+                  Létrehozás
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
@@ -808,6 +823,13 @@ function EpitesiNaplokModal({ open, onClose, makettId, bejelentkezve, felhasznal
             <p className="small" style={{ marginTop: 6 }}>
               A naplókat külön ablakban tudod megnyitni (blokkok, szerkesztés, új napló).
             </p>
+
+            {!allowNaploCreate && (
+              <div className="alert warn" style={{ marginTop: 8 }}>
+                <b>Figyelem:</b> amíg a makett nincs jóváhagyva, <b>új napló létrehozása nem engedélyezett</b>.
+              </div>
+            )}
+
             <div className="button-row">
               <button className="btn" type="button" onClick={() => setNaplokModalOpen(true)}>
                 Megtekintés
@@ -839,6 +861,7 @@ function EpitesiNaplokModal({ open, onClose, makettId, bejelentkezve, felhasznal
         makettId={makettId}
         bejelentkezve={bejelentkezve}
         felhasznalo={felhasznalo}
+        allowNaploCreate={allowNaploCreate}
       />
     </>
   );

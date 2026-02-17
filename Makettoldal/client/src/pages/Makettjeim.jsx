@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import MakettModal from "../MakettModal";
+import { useAdat } from "../context/AdatContext";
+
+import CsillagValaszto from "../components/CsillagValaszto";
+import MakettModal from "../components/MakettModal";
 
 const API_BASE_URL = "http://localhost:3001/api";
 
@@ -12,7 +15,16 @@ function allapotCimke(allapot) {
 }
 
 export default function Makettjeim() {
-  const { bejelentkezve } = useAuth();
+  const { bejelentkezve, felhasznalo } = useAuth();
+  const {
+    velemenyek,
+    szamolAtlagErtekeles,
+    hozzaadVelemeny,
+    modositVelemeny,
+    torolVelemeny,
+  } = useAdat();
+
+  const isAdmin = felhasznalo?.szerepkor_id === 2;
 
   const authHeader = useMemo(() => {
     const token = localStorage.getItem("token");
@@ -24,32 +36,12 @@ export default function Makettjeim() {
   const [hiba, setHiba] = useState(null);
   const [uzenet, setUzenet] = useState(null);
 
+  // Makett megtekintés modal
+  const [modalMakett, setModalMakett] = useState(null);
+
   const [szerkOpen, setSzerkOpen] = useState(false);
   const [szerk, setSzerk] = useState(null);
   const [mentesFut, setMentesFut] = useState(false);
-
-  // Megtekintés modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalMakett, setModalMakett] = useState(null);
-
-  function nyitMegtekintes(m) {
-    setModalMakett(m);
-    setModalOpen(true);
-  }
-
-  function zarMegtekintes() {
-    setModalOpen(false);
-    setModalMakett(null);
-  }
-
-  const formatDatum = (d) => {
-    if (!d) return "";
-    try {
-      return new Date(d).toLocaleString("hu-HU");
-    } catch {
-      return String(d);
-    }
-  };
 
   async function betoltes() {
     if (!bejelentkezve) return;
@@ -151,6 +143,51 @@ export default function Makettjeim() {
     }
   }
 
+  function formatDatum(datumStr) {
+    if (!datumStr) return "";
+    const d = new Date(datumStr);
+    if (Number.isNaN(d.getTime())) return datumStr;
+    return d.toLocaleDateString("hu-HU", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  }
+
+  function makettVelemenyek(makettId) {
+    return (velemenyek || []).filter((v) => Number(v.makett_id) === Number(makettId));
+  }
+
+  async function adminMakettUpdate(id, payload) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE_URL}/makettek/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const h = await res.json().catch(() => ({}));
+      throw new Error(h.uzenet || "Nem sikerült menteni a makettet.");
+    }
+    return await res.json();
+  }
+
+  async function adminMakettDelete(id) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_BASE_URL}/makettek/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const h = await res.json().catch(() => ({}));
+      throw new Error(h.uzenet || "Nem sikerült törölni a makettet.");
+    }
+    return await res.json().catch(() => ({}));
+  }
+
   if (!bejelentkezve) {
     return (
       <section className="container">
@@ -184,6 +221,8 @@ export default function Makettjeim() {
         <div className="card-grid card-grid-fixed">
           {makettek.map((m) => {
             const st = allapotCimke(m.allapot);
+            const atlag = szamolAtlagErtekeles ? szamolAtlagErtekeles(m.id) || 0 : 0;
+            const vList = makettVelemenyek(m.id);
             return (
               <article key={m.id} className="card makett-card">
                 <div className="makett-fejlec">
@@ -199,17 +238,27 @@ export default function Makettjeim() {
                     </p>
                   </div>
 
-                  <div className={`status-pill ${st.cls}`}>{st.txt}</div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                    {/* Átlag csillagok */}
+                    <div className="makett-ertekeles">
+                      <CsillagValaszto value={atlag} readOnly />
+                      <p className="small" style={{ margin: 0 }}>
+                        Átlag: {Number(atlag).toFixed(1)} ({vList.length} vélemény)
+                      </p>
+                    </div>
+
+                    <div className={`status-pill ${st.cls}`}>{st.txt}</div>
+                  </div>
                 </div>
 
                 {m.kep_url && (
                   <div
                     className="makett-kep-wrapper"
-                    onClick={() => nyitMegtekintes(m)}
+                    onClick={() => setModalMakett(m)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") nyitMegtekintes(m);
+                      if (e.key === "Enter" || e.key === " ") setModalMakett(m);
                     }}
                   >
                     <img src={m.kep_url} alt={m.nev} className="makett-kep" />
@@ -217,7 +266,7 @@ export default function Makettjeim() {
                 )}
 
                 <div className="button-row">
-                  <button type="button" className="btn secondary" onClick={() => nyitMegtekintes(m)}>
+                  <button className="btn secondary" onClick={() => setModalMakett(m)}>
                     Megtekintés
                   </button>
                   <button className="btn" onClick={() => nyitSzerkesztes(m)}>
@@ -239,21 +288,30 @@ export default function Makettjeim() {
         </div>
       )}
 
-      {/* Megtekintés modal (kép + gomb) */}
-      <MakettModal
-        open={modalOpen}
-        makett={modalMakett}
-        onClose={zarMegtekintes}
-        // ezen az oldalon elég a megtekintés, nem kell vélemény blokk
-        showReviews={false}
-        atlag={0}
-        velemenyek={[]}
-        kedvenc={false}
-        bejelentkezve={bejelentkezve}
-        felhasznalo={null}
-        isAdmin={false}
-        formatDatum={formatDatum}
-      />
+      {/* Makett modal (vélemények csak jóváhagyottnál, építési napló létrehozás tiltás nem jóváhagyottnál) */}
+      {modalMakett && (
+        <MakettModal
+          open={!!modalMakett}
+          makett={modalMakett}
+          onClose={() => setModalMakett(null)}
+          atlag={szamolAtlagErtekeles ? szamolAtlagErtekeles(modalMakett.id) || 0 : 0}
+          velemenyek={makettVelemenyek(modalMakett.id)}
+          showReviews={modalMakett.allapot === "jovahagyva"}
+          bejelentkezve={bejelentkezve}
+          felhasznalo={felhasznalo}
+          isAdmin={isAdmin}
+          formatDatum={formatDatum}
+          hozzaadVelemeny={hozzaadVelemeny}
+          modositVelemeny={modositVelemeny}
+          torolVelemeny={torolVelemeny}
+          // kedvencek itt nem fontos, de a komponens várja
+          kedvenc={false}
+          onToggleKedvenc={() => {}}
+          onAdminUpdate={isAdmin ? adminMakettUpdate : null}
+          onAdminDelete={isAdmin ? adminMakettDelete : null}
+          allowNaploCreate={modalMakett.allapot === "jovahagyva"}
+        />
+      )}
 
       {/* Szerkesztő modal */}
       {szerkOpen && szerk && (
