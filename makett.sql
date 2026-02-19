@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: 127.0.0.1:3307
--- Létrehozás ideje: 2026. Feb 19. 10:05
+-- Létrehozás ideje: 2026. Feb 19. 10:10
 -- Kiszolgáló verziója: 10.4.28-MariaDB
 -- PHP verzió: 8.2.4
 
@@ -120,7 +120,7 @@ CREATE TABLE `felhasznalo` (
 
 INSERT INTO `felhasznalo` (`id`, `felhasznalo_nev`, `email`, `jelszo_hash`, `szerepkor_id`, `profil_kep_url`, `csatlakozas_datum`, `tiltva`, `tilt_eddig`, `tilt_ok`, `tiltva_ekkor`, `tiltva_admin_id`) VALUES
 (1, 'Admin', 'admin@pelda.hu', '$2a$10$2OnElbg0l8LSxiJI/RfhUeabEFSjEyIVWH1qLGF/.V0EEi6PARGwu', 2, 'http://localhost:3001/uploads/profil_1_1765825912915.jpg', '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
-(2, 'Demó felhasználó', 'demo@pelda.hu', '$2a$10$n7fWUKsCtFng1h7dwJTRg.l4d3B1ql1F/sF4F.xvkPBJvuMAIS9N6', 1, NULL, '2026-01-29 16:18:23', 'vegleges', NULL, 'fsd', '2026-01-29 20:17:02', 1),
+(2, 'Demó felhasználó', 'demo@pelda.hu', '$2a$10$n7fWUKsCtFng1h7dwJTRg.l4d3B1ql1F/sF4F.xvkPBJvuMAIS9N6', 3, NULL, '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
 (3, 'Bence', 'bence@pelda.hu', 'hash3', 1, NULL, '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
 (4, 'Lili', 'lili@pelda.hu', 'hash4', 1, NULL, '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
 (5, 'Marci', 'marci@pelda.hu', 'hash5', 1, NULL, '2026-01-29 16:18:23', 'nincs', NULL, NULL, NULL, NULL),
@@ -154,7 +154,12 @@ INSERT INTO `felhasznalo_aktivitas` (`id`, `felhasznalo_id`, `tipus`, `cel_tipus
 (1, 1, 'ADMIN_SZEREPKOR', 'felhasznalo', 2, 'szerepkor_id -> 3', NULL, '::1', '2026-01-29 20:16:50'),
 (2, 1, 'ADMIN_SZEREPKOR', 'felhasznalo', 2, 'szerepkor_id -> 1', NULL, '::1', '2026-01-29 20:16:54'),
 (3, 1, 'ADMIN_TILTAS', 'felhasznalo', 2, 'vegleges', '{\"tilt_ok\":\"fsd\"}', '::1', '2026-01-29 20:17:02'),
-(4, 1, 'ADMIN_SZEREPKOR', 'felhasznalo', 4, 'szerepkor_id -> 1', NULL, '::1', '2026-01-29 20:33:27');
+(4, 1, 'ADMIN_SZEREPKOR', 'felhasznalo', 4, 'szerepkor_id -> 1', NULL, '::1', '2026-01-29 20:33:27'),
+(5, 1, 'ADMIN_SZEREPKOR', 'felhasznalo', 2, 'szerepkor_id -> 3', NULL, '::1', '2026-02-19 10:10:20'),
+(6, 1, 'ADMIN_TILTAS', 'felhasznalo', 2, 'vegleges', '{\"tilt_ok\":\"fsd\"}', '::1', '2026-02-19 10:10:23'),
+(7, 1, 'ADMIN_TILTAS', 'felhasznalo', 2, 'nincs', '{\"tilt_ok\":\"fsd\",\"tilt_eddig\":null}', '::1', '2026-02-19 10:10:29'),
+(8, 1, 'ADMIN_SZEREPKOR', 'felhasznalo', 2, 'szerepkor_id -> 1', NULL, '::1', '2026-02-19 10:10:32'),
+(9, 1, 'ADMIN_SZEREPKOR', 'felhasznalo', 2, 'szerepkor_id -> 3', NULL, '::1', '2026-02-19 10:10:35');
 
 -- --------------------------------------------------------
 
@@ -523,7 +528,7 @@ ALTER TABLE `felhasznalo`
 -- AUTO_INCREMENT a táblához `felhasznalo_aktivitas`
 --
 ALTER TABLE `felhasznalo_aktivitas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT a táblához `forum_tema`
