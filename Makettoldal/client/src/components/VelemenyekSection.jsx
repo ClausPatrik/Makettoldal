@@ -16,6 +16,7 @@ export default function VelemenyekSection({
   bejelentkezve,
   felhasznalo,
   isAdmin,
+  isModerator,
 
   formatDatum,
 
@@ -48,6 +49,11 @@ export default function VelemenyekSection({
   // Jog: szerkeszthető/törölhető-e
   function szerkesztheto(v) {
     return Boolean(isAdmin || sajatVelemeny(v));
+  }
+
+  function torolheto(v) {
+    // törlés: admin vagy moderátor vagy saját
+    return Boolean(isAdmin || isModerator || sajatVelemeny(v));
   }
 
   // Dátum formázás (ha nincs átadva, ne omoljon össze)
@@ -133,8 +139,8 @@ export default function VelemenyekSection({
         <ul className="velemeny-lista">
           {lista.map((v) => {
             const canEdit = szerkesztheto(v);
+            const canDelete = torolheto(v);
 
-            // --- Ha EZT a véleményt szerkesztjük, akkor a helyén form jelenik meg ---
             if (editId === v.id) {
               return (
                 <li key={v.id} className="card velemeny-card">
@@ -143,10 +149,7 @@ export default function VelemenyekSection({
 
                     <label>
                       Értékelés (1–5)
-                      <CsillagValaszto
-                        value={editErtekeles}
-                        onChange={(x) => setEditErtekeles(x)}
-                      />
+                      <CsillagValaszto value={editErtekeles} onChange={(x) => setEditErtekeles(x)} />
                     </label>
 
                     <label>
@@ -164,30 +167,21 @@ export default function VelemenyekSection({
                         Mentés
                       </button>
 
-                      {/* “Mégse” bezárja a szerkesztést */}
-                      <button
-                        className="btn secondary"
-                        type="button"
-                        onClick={() => setEditId(null)}
-                      >
+                      <button className="btn secondary" type="button" onClick={() => setEditId(null)}>
                         Mégse
                       </button>
 
-                      {/* Itt is ott a törlés (ahogy kérted: szerkesztés után is legyen elérhető) */}
-                      <button
-                        className="btn danger"
-                        type="button"
-                        onClick={() => velemenyTorles(v.id)}
-                      >
-                        Törlés
-                      </button>
+                      {canDelete && (
+                        <button className="btn danger" type="button" onClick={() => velemenyTorles(v.id)}>
+                          Törlés
+                        </button>
+                      )}
                     </div>
                   </form>
                 </li>
               );
             }
 
-            // --- Normál (nem szerkesztős) megjelenítés ---
             return (
               <li key={v.id} className="card velemeny-card">
                 <header className="velemeny-fejlec">
@@ -197,31 +191,25 @@ export default function VelemenyekSection({
                   </div>
 
                   <div>
-                    {/* Csak megjelenítés (readOnly) */}
                     <CsillagValaszto value={Number(v.ertekeles) || 0} readOnly />
                   </div>
                 </header>
 
                 <p>{v.szoveg}</p>
 
-                {/* ✅ EZ A RÉSZ: Szerkesztés gomb csak saját/admin esetén */}
-                {canEdit && (
+                {(canEdit || canDelete) && (
                   <div className="button-row">
-                    <button
-                      type="button"
-                      className="btn secondary"
-                      onClick={() => szerkesztesIndit(v)}
-                    >
-                      Szerkesztés
-                    </button>
+                    {canEdit && (
+                      <button type="button" className="btn secondary" onClick={() => szerkesztesIndit(v)}>
+                        Szerkesztés
+                      </button>
+                    )}
 
-                    <button
-                      type="button"
-                      className="btn danger"
-                      onClick={() => velemenyTorles(v.id)}
-                    >
-                      Törlés
-                    </button>
+                    {canDelete && (
+                      <button type="button" className="btn danger" onClick={() => velemenyTorles(v.id)}>
+                        Törlés
+                      </button>
+                    )}
                   </div>
                 )}
               </li>
@@ -230,27 +218,18 @@ export default function VelemenyekSection({
         </ul>
       )}
 
-      {/* Új vélemény írása */}
       {bejelentkezve ? (
         <form className="card form" onSubmit={ujVelemenyKuldes}>
           <h3>Új vélemény írása</h3>
 
           <label>
             Értékelés (1–5)
-            <CsillagValaszto
-              value={ujErtekeles}
-              onChange={(x) => setUjErtekeles(x)}
-            />
+            <CsillagValaszto value={ujErtekeles} onChange={(x) => setUjErtekeles(x)} />
           </label>
 
           <label>
             Vélemény szövege
-            <textarea
-              rows={4}
-              required
-              value={ujSzoveg}
-              onChange={(e) => setUjSzoveg(e.target.value)}
-            />
+            <textarea rows={4} required value={ujSzoveg} onChange={(e) => setUjSzoveg(e.target.value)} />
           </label>
 
           <button type="submit" className="btn">

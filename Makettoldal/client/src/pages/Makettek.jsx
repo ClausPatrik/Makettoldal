@@ -22,6 +22,7 @@ export default function Makettek() {
 
   const { bejelentkezve, felhasznalo } = useAuth();
   const isAdmin = felhasznalo?.szerepkor_id === 2;
+  const isModerator = felhasznalo?.szerepkor_id === 3;
   const API_BASE_URL = "http://localhost:3001/api";
 
   // Szűrők
@@ -53,7 +54,7 @@ export default function Makettek() {
   }
   async function adminMakettUpdate(id, payload) {
     const token = localStorage.getItem("token");
-  
+
     const res = await fetch(`${API_BASE_URL}/makettek/${id}`, {
       method: "PUT",
       headers: {
@@ -62,42 +63,42 @@ export default function Makettek() {
       },
       body: JSON.stringify(payload),
     });
-  
+
     if (!res.ok) {
       const h = await res.json().catch(() => ({}));
       throw new Error(h.uzenet || "Nem sikerült menteni a makettet.");
     }
-  
+
     const updated = await res.json();
-  
+
     // UX: modal frissüljön az új adatokkal
     setModalMakett(updated);
-  
+
     return updated;
   }
-  
+
   async function adminMakettDelete(id) {
     const token = localStorage.getItem("token");
-  
+
     const res = await fetch(`${API_BASE_URL}/makettek/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-  
+
     if (!res.ok) {
       const h = await res.json().catch(() => ({}));
       throw new Error(h.uzenet || "Nem sikerült törölni a makettet.");
     }
-  
+
     // UX: modal zár
     setModalMakett(null);
-  
+
     // ⚠️ Ha a lista nem frissül magától a contextből,
     // akkor itt kell egy "betoltMakettek()" vagy hasonló hívás.
   }
-  
+
   function makettVelemenyek(makettId) {
     return (velemenyek || []).filter((v) => v.makett_id === makettId);
   }
@@ -264,6 +265,7 @@ export default function Makettek() {
                 bejelentkezve={bejelentkezve}
                 felhasznalo={felhasznalo}
                 isAdmin={isAdmin}
+                isModerator={isModerator}
                 formatDatum={formatDatum}
                 hozzaadVelemeny={hozzaadVelemeny}
                 modositVelemeny={modositVelemeny}
@@ -287,15 +289,14 @@ export default function Makettek() {
         bejelentkezve={bejelentkezve}
         felhasznalo={felhasznalo}
         isAdmin={isAdmin}
+        isModerator={isModerator}
         formatDatum={formatDatum}
         hozzaadVelemeny={hozzaadVelemeny}
         modositVelemeny={modositVelemeny}
         torolVelemeny={torolVelemeny}
         onAdminUpdate={adminMakettUpdate}
         onAdminDelete={adminMakettDelete}
-        
       />
     </section>
-    
   );
 }
