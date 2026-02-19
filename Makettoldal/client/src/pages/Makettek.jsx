@@ -22,6 +22,7 @@ export default function Makettek() {
 
   const { bejelentkezve, felhasznalo } = useAuth();
   const isAdmin = felhasznalo?.szerepkor_id === 2;
+  const isModerator = felhasznalo?.szerepkor_id === 3;
   const API_BASE_URL = "http://localhost:3001/api";
 
   // Szűrők
@@ -264,6 +265,7 @@ export default function Makettek() {
                 bejelentkezve={bejelentkezve}
                 felhasznalo={felhasznalo}
                 isAdmin={isAdmin}
+                isModerator={isModerator}
                 formatDatum={formatDatum}
                 hozzaadVelemeny={hozzaadVelemeny}
                 modositVelemeny={modositVelemeny}
@@ -287,6 +289,7 @@ export default function Makettek() {
         bejelentkezve={bejelentkezve}
         felhasznalo={felhasznalo}
         isAdmin={isAdmin}
+        isModerator={isModerator}
         formatDatum={formatDatum}
         hozzaadVelemeny={hozzaadVelemeny}
         modositVelemeny={modositVelemeny}

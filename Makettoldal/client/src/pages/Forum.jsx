@@ -15,6 +15,9 @@ export default function Forum() {
   // Admin ellenőrzés (nálad: szerepkor_id === 2)
   const isAdmin = felhasznalo?.szerepkor_id === 2;
 
+  // Moderátor ellenőrzés (nálad: szerepkor_id === 3)
+  const isModerator = felhasznalo?.szerepkor_id === 3;
+
   // Aktuális userId (ha nincs belépve, NaN lesz)
   const userId = Number(felhasznalo?.id);
 
@@ -614,6 +617,9 @@ export default function Forum() {
                     const canEditUzenet =
                       isAdmin || (Number.isFinite(userId) && uzenetSzerzoId === userId);
 
+                    const canDeleteUzenet =
+                      isAdmin || isModerator || (Number.isFinite(userId) && uzenetSzerzoId === userId);
+
                     return (
                       <li key={u.id} className="forum-msg">
                         <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
@@ -674,7 +680,7 @@ export default function Forum() {
                               </button>
 
                               {/* törlés csak szerkesztés közben */}
-                              {canEditUzenet && (
+                              {canDeleteUzenet && (
                                 <button
                                   type="button"
                                   className="btn danger"

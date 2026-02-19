@@ -27,6 +27,7 @@ export default function MakettModal({
   felhasznalo,
   isAdmin,
   formatDatum,
+  isModerator,
   hozzaadVelemeny,
   modositVelemeny,
   torolVelemeny,
@@ -846,6 +847,7 @@ function EpitesiNaplokModal({ open, onClose, makettId, bejelentkezve, felhasznal
             bejelentkezve={bejelentkezve}
             felhasznalo={felhasznalo}
             isAdmin={isAdmin}
+            isModerator={isModerator}
             formatDatum={formatDatum}
             hozzaadVelemeny={hozzaadVelemeny}
             modositVelemeny={modositVelemeny}

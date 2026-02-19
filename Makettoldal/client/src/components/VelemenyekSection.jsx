@@ -16,6 +16,7 @@ export default function VelemenyekSection({
   bejelentkezve,
   felhasznalo,
   isAdmin,
+  isModerator,
 
   formatDatum,
 
@@ -48,6 +49,11 @@ export default function VelemenyekSection({
   // Jog: szerkeszthető/törölhető-e
   function szerkesztheto(v) {
     return Boolean(isAdmin || sajatVelemeny(v));
+  }
+
+  // Jog: törölhető-e (admin/moderátor/bárki a sajátját)
+  function torolheto(v) {
+    return Boolean(isAdmin || isModerator || sajatVelemeny(v));
   }
 
   // Dátum formázás (ha nincs átadva, ne omoljon össze)
@@ -133,6 +139,7 @@ export default function VelemenyekSection({
         <ul className="velemeny-lista">
           {lista.map((v) => {
             const canEdit = szerkesztheto(v);
+            const canDelete = torolheto(v);
 
             // --- Ha EZT a véleményt szerkesztjük, akkor a helyén form jelenik meg ---
             if (editId === v.id) {
@@ -173,14 +180,16 @@ export default function VelemenyekSection({
                         Mégse
                       </button>
 
-                      {/* Itt is ott a törlés (ahogy kérted: szerkesztés után is legyen elérhető) */}
-                      <button
-                        className="btn danger"
-                        type="button"
-                        onClick={() => velemenyTorles(v.id)}
-                      >
-                        Törlés
-                      </button>
+                      {/* Törlés */}
+                      {canDelete && (
+                        <button
+                          className="btn danger"
+                          type="button"
+                          onClick={() => velemenyTorles(v.id)}
+                        >
+                          Törlés
+                        </button>
+                      )}
                     </div>
                   </form>
                 </li>
@@ -205,23 +214,27 @@ export default function VelemenyekSection({
                 <p>{v.szoveg}</p>
 
                 {/* ✅ EZ A RÉSZ: Szerkesztés gomb csak saját/admin esetén */}
-                {canEdit && (
+                {(canEdit || canDelete) && (
                   <div className="button-row">
-                    <button
-                      type="button"
-                      className="btn secondary"
-                      onClick={() => szerkesztesIndit(v)}
-                    >
-                      Szerkesztés
-                    </button>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        className="btn secondary"
+                        onClick={() => szerkesztesIndit(v)}
+                      >
+                        Szerkesztés
+                      </button>
+                    )}
 
-                    <button
-                      type="button"
-                      className="btn danger"
-                      onClick={() => velemenyTorles(v.id)}
-                    >
-                      Törlés
-                    </button>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        className="btn danger"
+                        onClick={() => velemenyTorles(v.id)}
+                      >
+                        Törlés
+                      </button>
+                    )}
                   </div>
                 )}
               </li>

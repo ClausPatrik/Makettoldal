@@ -1161,10 +1161,11 @@ app.delete("/api/velemenyek/:id", authMiddleware, async (req, res) => {
     const velemenyId = Number(req.params.id);
     const userId = req.felhasznalo.id;
     const admin = req.felhasznalo.szerepkor_id === 2;
+    const moderator = req.felhasznalo.szerepkor_id === 3;
 
     const eredeti = await adatbazisLekeres("SELECT * FROM velemeny WHERE id = ?", [velemenyId]);
     if (!eredeti.length) return res.status(404).json({ uzenet: "A vélemény nem található." });
-    if (!admin && eredeti[0].felhasznalo_id !== userId) {
+    if (!(admin || moderator) && eredeti[0].felhasznalo_id !== userId) {
       return res.status(403).json({ uzenet: "Nem törölheted más felhasználó véleményét." });
     }
 
@@ -1697,10 +1698,11 @@ app.delete("/api/forum/uzenetek/:id", authMiddleware, async (req, res) => {
     const uzenetId = Number(req.params.id);
     const userId = req.felhasznalo.id;
     const admin = req.felhasznalo.szerepkor_id === 2;
+    const moderator = req.felhasznalo.szerepkor_id === 3;
 
     const [uzenet] = await adatbazisLekeres("SELECT * FROM forum_uzenet WHERE id = ?", [uzenetId]);
     if (!uzenet) return res.status(404).json({ uzenet: "Hozzászólás nem található." });
-    if (!admin && uzenet.felhasznalo_id !== userId) {
+    if (!(admin || moderator) && uzenet.felhasznalo_id !== userId) {
       return res.status(403).json({ uzenet: "Nincs jogosultságod a hozzászólás törléséhez." });
     }
 

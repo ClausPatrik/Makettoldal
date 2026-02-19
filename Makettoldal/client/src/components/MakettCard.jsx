@@ -34,6 +34,7 @@ export default function MakettCard({
   felhasznalo,
   isAdmin,
   formatDatum,
+  isModerator,
   hozzaadVelemeny,
   modositVelemeny,
   torolVelemeny,
@@ -43,13 +44,14 @@ export default function MakettCard({
       <div className="makett-fejlec">
         <div>
           <h2 className="makett-nev" title={makett.nev}>
-  {makett.nev}
-</h2>
+            {makett.nev}
+          </h2>
           <p className="small">
             {makett.gyarto} • {makett.skala} • {makett.kategoria}
           </p>
           <p className="small">
-            Nehézség: {makett.nehezseg}/5 • Megjelenés éve: {makett.megjelenes_eve}
+            Nehézség: {makett.nehezseg}/5 • Megjelenés éve:{" "}
+            {makett.megjelenes_eve}
           </p>
         </div>
 
@@ -77,7 +79,7 @@ export default function MakettCard({
       )}
 
       <div className="button-row">
-                {/* Megtekintés gomb (modal nyitás) */}
+        {/* Megtekintés gomb (modal nyitás) */}
         <button
           type="button"
           className="btn secondary"
@@ -86,7 +88,7 @@ export default function MakettCard({
           Megtekintés
         </button>
 
-{/* Kedvenc gomb mindkét oldalon */}
+        {/* Kedvenc gomb mindkét oldalon */}
         <button
           type="button"
           className={kedvenc ? "btn secondary" : "btn"}
@@ -115,6 +117,7 @@ export default function MakettCard({
           bejelentkezve={bejelentkezve}
           felhasznalo={felhasznalo}
           isAdmin={isAdmin}
+          isModerator={isModerator}
           formatDatum={formatDatum}
           hozzaadVelemeny={hozzaadVelemeny}
           modositVelemeny={modositVelemeny}
