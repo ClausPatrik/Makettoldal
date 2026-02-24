@@ -11,7 +11,7 @@ const API_BASE_URL = "http://localhost:3001/api";
 export default function SajatVelemenyek() {
   const { bejelentkezve, felhasznalo } = useAuth();
   const isAdmin = felhasznalo?.szerepkor_id === 2;
-
+const isModerator = felhasznalo?.szerepkor_id === 3;
   // A meglévő app state (makettek, vélemények, kedvencek, stb.)
   const {
     makettek,
@@ -346,6 +346,7 @@ export default function SajatVelemenyek() {
         bejelentkezve={bejelentkezve}
         felhasznalo={felhasznalo}
         isAdmin={isAdmin}
+        isModerator={isModerator} 
         formatDatum={(d) => formatDatum(d)}
         hozzaadVelemeny={hozzaadVelemeny}
         modositVelemeny={modositVelemeny}

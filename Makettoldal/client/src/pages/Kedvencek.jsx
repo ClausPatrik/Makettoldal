@@ -10,7 +10,7 @@ const API_BASE_URL = "http://localhost:3001/api";
 export default function Kedvencek() {
   const { bejelentkezve, felhasznalo } = useAuth();
   const isAdmin = felhasznalo?.szerepkor_id === 2;
-
+  const isModerator = felhasznalo?.szerepkor_id === 3;
   const [makettek, beallitMakettek] = useState([]);
   const [betoltes, beallitBetoltes] = useState(false);
   const [hiba, beallitHiba] = useState(null);
@@ -166,6 +166,7 @@ export default function Kedvencek() {
   bejelentkezve={bejelentkezve}
   felhasznalo={felhasznalo}
   isAdmin={isAdmin}
+  isModerator={isModerator}
   formatDatum={formatDatum}
 
   hozzaadVelemeny={async (makettId, adat) => {

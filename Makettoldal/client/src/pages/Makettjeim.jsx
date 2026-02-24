@@ -25,7 +25,7 @@ export default function Makettjeim() {
   } = useAdat();
 
   const isAdmin = felhasznalo?.szerepkor_id === 2;
-
+const isModerator = felhasznalo?.szerepkor_id === 3;
   const authHeader = useMemo(() => {
     const token = localStorage.getItem("token");
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -303,6 +303,7 @@ export default function Makettjeim() {
           bejelentkezve={bejelentkezve}
           felhasznalo={felhasznalo}
           isAdmin={isAdmin}
+          isModerator={isModerator}
           formatDatum={formatDatum}
           hozzaadVelemeny={hozzaadVelemeny}
           modositVelemeny={modositVelemeny}
@@ -318,8 +319,8 @@ export default function Makettjeim() {
 
       {/* Szerkesztő modal */}
       {szerkOpen && szerk && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal">
+       <div className="modal-overlay edit-overlay" role="dialog" aria-modal="true">
+          <div className="modal edit-modal">
             <div className="modal-head">
               <h2>Saját makett szerkesztése</h2>
               <button className="icon-btn" onClick={() => setSzerkOpen(false)} aria-label="Bezárás">

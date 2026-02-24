@@ -630,19 +630,32 @@ export default function Forum() {
                             </p>
                           </div>
 
-                          {/* szerkesztés gomb: admin vagy szerző */}
-                          {canEditUzenet && !szerkeszt && (
+                        {!szerkeszt && (
+                        <div style={{ display: "flex", gap: 8 }}>
+                          {canEditUzenet && (
                             <button
-                              type="button"
-                              className="btn secondary forum-admin-btn"
-                              onClick={() => {
-                                setUzenetEditId(u.id);
-                                setUzenetEditSzoveg(u.szoveg || "");
-                              }}
-                            >
-                              Szerkesztés
-                            </button>
-                          )}
+                            type="button"
+                            className="btn secondary forum-admin-btn"
+                          onClick={() => {
+                            setUzenetEditId(u.id);
+                            setUzenetEditSzoveg(u.szoveg || "");
+                          }}
+                          >
+                          Szerkesztés
+                          </button>
+                         )}
+
+                          {canDeleteUzenet && (
+                            <button
+                          type="button"
+                           className="btn danger"
+                          onClick={() => uzenetTorles(u.id)}
+                         >
+                         Törlés
+                        </button>
+                         )}
+                        </div>
+                        )}
                         </div>
 
                         {/* Üzenet tartalom / szerkesztő mód */}

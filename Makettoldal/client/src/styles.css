@@ -2472,3 +2472,140 @@ html::-webkit-scrollbar-thumb:hover {
   border-radius:6px;
   font-size:12px;
 }
+/* =========================================
+   MAKETTJEIM – SZERKESZTŐ MODAL (tank/HUD)
+   csak a szerkesztésre hat: .edit-overlay / .edit-modal
+   Tedd a styles.css LEGALJÁRA!
+========================================= */
+
+.modal-overlay.edit-overlay{
+  background: rgba(0,0,0,0.68);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+}
+
+/* ugyanaz a "card/páncélpanel" érzet mint a .card */
+.modal.edit-modal{
+  width: min(780px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+
+  border-radius: 14px;
+  padding: 16px;
+
+  border: 1px solid rgba(116,130,112,0.22);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 28%),
+    radial-gradient(800px 260px at 20% 0%, rgba(95,191,120,0.06), transparent 60%),
+    rgba(7, 10, 8, 0.92);
+
+  box-shadow:
+    0 30px 85px rgba(0,0,0,0.62),
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    inset 0 -1px 0 rgba(0,0,0,0.35);
+}
+
+/* cím + X: a te JSX-ben .modal-head van (nem .modal-header) */
+.modal.edit-modal .modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(116,130,112,0.20);
+  margin-bottom: 12px;
+}
+
+.modal.edit-modal .modal-head h2{
+  margin:0;
+  font-size: 16px;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: rgba(236,244,236,0.95);
+  text-shadow: var(--hud-glow);
+}
+
+/* X gomb: illeszkedjen a tank UI-hoz */
+.modal.edit-modal .icon-btn{
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(116,130,112,0.25);
+  background: rgba(255,255,255,0.06);
+  color: rgba(236,244,236,0.92);
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.modal.edit-modal .icon-btn:hover{
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(95,191,120,0.35);
+  box-shadow: var(--hud-glow);
+}
+
+/* form címkék: HUD jelleg */
+.modal.edit-modal .form-grid label{
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(214,224,210,0.72);
+}
+
+/* inputok: ugyanaz a “műszerfal” mező mint máshol */
+.modal.edit-modal input,
+.modal.edit-modal select,
+.modal.edit-modal textarea{
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  border: 1px solid rgba(116,130,112,0.25);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 35%),
+    rgba(7,10,8,0.92);
+
+  color: var(--text);
+  outline: none;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -1px 0 rgba(0,0,0,0.55);
+}
+
+.modal.edit-modal input:focus,
+.modal.edit-modal select:focus,
+.modal.edit-modal textarea:focus{
+  border-color: rgba(95,191,120,0.55);
+  box-shadow: 0 0 0 2px rgba(95,191,120,0.14), var(--hud-glow);
+}
+
+/* figyelmeztető doboz (alert warn) legyen panelesebb */
+.modal.edit-modal .alert.warn{
+  border-radius: 14px;
+  border: 1px solid rgba(224,90,42,0.45);
+  background:
+    linear-gradient(180deg, rgba(224,90,42,0.12), transparent 60%),
+    rgba(7,10,8,0.75);
+  box-shadow: var(--warning-glow);
+}
+
+/* gombsor: marad a te .btn stílusod, csak igazítás */
+.modal.edit-modal .button-row{
+  margin-top: 8px;
+}
+
+/* mobil: 1 oszlop + gombok egymás alatt */
+@media (max-width: 760px){
+  .modal.edit-modal .form-grid{
+    grid-template-columns: 1fr;
+  }
+  .modal.edit-modal .form-grid .span-2{
+    grid-column: span 1;
+  }
+  .modal.edit-modal .button-row{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .modal.edit-modal .button-row .btn{
+    width: 100%;
+  }
+}
