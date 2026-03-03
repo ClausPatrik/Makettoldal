@@ -6,7 +6,7 @@ import CsillagValaszto from "../components/CsillagValaszto";
 import MakettModal from "../components/MakettModal";
 
 const API_BASE_URL = "http://localhost:3001/api";
-
+const BACKEND_BASE_URL = "http://localhost:3001";
 function allapotCimke(allapot) {
   if (allapot === "jovahagyva") return { txt: "Jóváhagyva", cls: "status-ok" };
   if (allapot === "varakozik") return { txt: "Jóváhagyásra vár", cls: "status-warn" };
@@ -223,6 +223,10 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
             const st = allapotCimke(m.allapot);
             const atlag = szamolAtlagErtekeles ? szamolAtlagErtekeles(m.id) || 0 : 0;
             const vList = makettVelemenyek(m.id);
+            const kepSrc =
+  m?.kep_url && !String(m.kep_url).startsWith("http")
+    ? `${BACKEND_BASE_URL}${m.kep_url}`
+    : m?.kep_url;
             return (
               <article key={m.id} className="card makett-card">
                <div className="makett-fejlec">
@@ -264,7 +268,7 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
                       if (e.key === "Enter" || e.key === " ") setModalMakett(m);
                     }}
                   >
-                    <img src={m.kep_url} alt={m.nev} className="makett-kep" />
+                    <img src={kepSrc} alt={m.nev} className="makett-kep" />
                   </div>
                 )}
 

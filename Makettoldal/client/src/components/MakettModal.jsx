@@ -41,7 +41,14 @@ export default function MakettModal({
   const makettId = makett?.id ?? makett?.makett_id;
   const API_BASE_URL = "http://localhost:3001/api";
 
+  const BACKEND_BASE = "http://localhost:3001";
 
+  const kepSrc = useMemo(() => {
+    const url = makett?.kep_url;
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    return `${BACKEND_BASE}${url}`; // /uploads/... -> http://localhost:3001/uploads/...
+  }, [makett?.kep_url]);
 
 function EpitesiNaplokModal({ open, onClose, makettId, bejelentkezve, felhasznalo, allowNaploCreate }) {
   const authHeader = useMemo(() => {
@@ -630,10 +637,10 @@ function EpitesiNaplokModal({ open, onClose, makettId, bejelentkezve, felhasznal
         </div>
 
         {makett.kep_url && (
-          <div className="modal-kep-wrap">
-            <img className="modal-kep" src={makett.kep_url} alt={makett.nev} />
-          </div>
-        )}
+  <div className="modal-kep-wrap">
+    <img className="modal-kep" src={kepSrc} alt={makett.nev} />
+  </div>
+)}
 
         <div className="modal-grid">
           <p className="small">

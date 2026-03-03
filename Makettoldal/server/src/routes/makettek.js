@@ -206,19 +206,18 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
-  router.post("/api/makett-javaslatok", authMiddleware, async (req, res) => {
+  router.post("/api/makett-javaslatok", authMiddleware, upload.single("kep"), async (req, res) => {
     try {
       const { nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve, kep_url, leiras, vasarlasi_link } = req.body;
-
+  
       if (!nev || !gyarto || !kategoria || !skala) {
         return res.status(400).json({ uzenet: "Hiányzó kötelező adatok." });
       }
-
+  
       if (nev.length > 50) {
-        return res.status(400).json({
-          uzenet: "A makett neve legfeljebb 50 karakter lehet.",
-        });
+        return res.status(400).json({ uzenet: "A makett neve legfeljebb 50 karakter lehet." });
       }
+  
       const nehezsegSzam = Number(nehezseg);
       const evSzam = Number(megjelenes_eve);
       if (Number.isNaN(nehezsegSzam) || nehezsegSzam < 1 || nehezsegSzam > 5) {
@@ -227,7 +226,10 @@ export default function createMakettekRoutes(ctx) {
       if (Number.isNaN(evSzam) || evSzam < 1900 || evSzam > 2100) {
         return res.status(400).json({ uzenet: "Érvénytelen megjelenési év." });
       }
-
+  
+      const kepUrlFajlbol = req.file ? `/uploads/${req.file.filename}` : null;
+      const vegsoKepUrl = kepUrlFajlbol || (kep_url?.trim?.() ? kep_url.trim() : null);
+  
       await adatbazisLekeres(
         `INSERT INTO makett
           (nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve,
@@ -241,13 +243,13 @@ export default function createMakettekRoutes(ctx) {
           String(skala).trim(),
           nehezsegSzam,
           evSzam,
-          kep_url?.trim?.() ? kep_url.trim() : (kep_url || null),
+          vegsoKepUrl, 
           leiras?.trim?.() ? leiras.trim() : (leiras || null),
           vasarlasi_link?.trim?.() ? vasarlasi_link.trim() : (vasarlasi_link || null),
           req.felhasznalo.id,
         ]
       );
-
+  
       return res.status(201).json({ uzenet: "Makett beküldve jóváhagyásra." });
     } catch (err) {
       console.error("Makett beküldési hiba:", err?.message || err);
