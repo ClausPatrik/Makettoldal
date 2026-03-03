@@ -28,7 +28,19 @@ export default function Kedvencek() {
       day: "2-digit",
     });
   }
-
+  useEffect(() => {
+    if (!modalMakett) return;
+  
+    (async () => {
+      try {
+        const id = modalMakett.id ?? modalMakett.makett_id;
+        const res = await fetch(`${API_BASE_URL}/makettek/${id}/velemenyek`);
+        if (!res.ok) return;
+        const adat = await res.json();
+        beallitVelemenyek(adat); // itt most csak az aktuális makett véleményeit tárolod
+      } catch {}
+    })();
+  }, [modalMakett]);
   async function betoltKedvencek() {
     try {
       beallitBetoltes(true);
@@ -84,6 +96,7 @@ export default function Kedvencek() {
       alert(err.message);
     }
   }
+ 
   function szamolAtlag(makettId) {
     const lista = velemenyek.filter((v) => Number(v.makett_id) === Number(makettId));
     if (lista.length === 0) return 0;
@@ -171,14 +184,15 @@ export default function Kedvencek() {
 
   hozzaadVelemeny={async (makettId, adat) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(`${API_BASE_URL}/velemenyek`, {
+    const res = await fetch(`${API_BASE_URL}/makettek/${makettId}/velemenyek`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ makett_id: makettId, ...adat }),
+      body: JSON.stringify(adat), // ← ne küldj makett_id-t, mert az az URL-ben van
     });
+  
     if (!res.ok) throw new Error("Nem sikerült menteni a véleményt.");
     const uj = await res.json();
     beallitVelemenyek((elozo) => [...elozo, uj]);
