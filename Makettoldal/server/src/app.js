@@ -37,7 +37,9 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     const id = req.felhasznalo?.id || "ismeretlen";
-    cb(null, `profil_${id}_${Date.now()}${ext}`);
+  
+    const prefix = file.fieldname === "kep" ? "makett" : "profil";
+    cb(null, `${prefix}_${id}_${Date.now()}${ext}`);
   },
 });
 

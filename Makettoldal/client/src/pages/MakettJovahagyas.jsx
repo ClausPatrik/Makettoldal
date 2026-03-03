@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import MakettModal from "../components/MakettModal";
 
 const API = "http://localhost:3001/api";
+const BACKEND_BASE_URL = API.replace(/\/api\/?$/, "");
 
 function fmt(d) {
   if (!d) return "—";
@@ -25,15 +26,16 @@ export default function MakettJovahagyas() {
   // ✅ Modal csak gombnyomásra
   const [modalMakett, setModalMakett] = useState(null);
 
-  const token = localStorage.getItem("token");
-
   const betolt = async () => {
     setHiba("");
     setLoading(true);
     try {
+      const token = localStorage.getItem("token");
+
       const res = await fetch(`${API}/admin/makett-javaslatok`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.uzenet || "Hiba a lista betöltésekor.");
       setLista(Array.isArray(data) ? data : []);
@@ -84,6 +86,7 @@ export default function MakettJovahagyas() {
   }
 
   const jovahagy = async (id) => {
+    const token = localStorage.getItem("token");
     await fetch(`${API}/admin/makett-javaslatok/${id}/jovahagy`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -93,6 +96,8 @@ export default function MakettJovahagyas() {
 
   const elutasit = async (id) => {
     const ok = prompt("Elutasítás oka (opcionális):") || "";
+    const token = localStorage.getItem("token");
+
     await fetch(`${API}/admin/makett-javaslatok/${id}/elutasit`, {
       method: "POST",
       headers: {
@@ -126,61 +131,68 @@ export default function MakettJovahagyas() {
           </div>
         ) : (
           <section className="card-grid card-grid-fixed">
-            {lista.map((m) => (
-              <article key={m.id} className="card makett-card approval-card">
-                <div className="makett-fejlec">
-                  <div>
-                    <h2 className="makett-nev" title={m.nev}>
-                      {m.nev}
-                    </h2>
+            {lista.map((m) => {
+              const kepSrc =
+                m?.kep_url && !String(m.kep_url).startsWith("http")
+                  ? `${BACKEND_BASE_URL}${m.kep_url}`
+                  : m?.kep_url;
 
-                    <p className="small">
-                      {m.gyarto} • {m.skala} • {m.kategoria}
-                    </p>
+              return (
+                <article key={m.id} className="card makett-card approval-card">
+                  <div className="makett-fejlec">
+                    <div>
+                      <h2 className="makett-nev" title={m.nev}>
+                        {m.nev}
+                      </h2>
 
-                    <p className="small">
-                      Nehézség: {m.nehezseg}/5 • Megjelenés éve: {m.megjelenes_eve}
-                    </p>
+                      <p className="small">
+                        {m.gyarto} • {m.skala} • {m.kategoria}
+                      </p>
 
-                    <p className="small approval-meta">
-                      Beküldő: <b>{m.bekuldo_nev || "ismeretlen"}</b> • Beküldve: {fmt(m.bekuldve)}
-                    </p>
+                      <p className="small">
+                        Nehézség: {m.nehezseg}/5 • Megjelenés éve: {m.megjelenes_eve}
+                      </p>
+
+                      <p className="small approval-meta">
+                        Beküldő: <b>{m.bekuldo_nev || "ismeretlen"}</b> • Beküldve:{" "}
+                        {fmt(m.bekuldve)}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="chip chip-wait">várakozik</span>
+                    </div>
                   </div>
 
-                  <div>
-                    <span className="chip chip-wait">várakozik</span>
+                  {/* ✅ Kép fix magassággal, hogy ne ugorjon a kártya */}
+                  {m.kep_url ? (
+                    <div className="makett-kep-wrapper makett-kep-wrapper--static">
+                      <img src={kepSrc} alt={m.nev} className="makett-kep" />
+                    </div>
+                  ) : (
+                    <div className="makett-kep-placeholder">Nincs kép</div>
+                  )}
+
+                  <div className="button-row">
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      onClick={() => setModalMakett(m)}
+                    >
+                      Megtekintés
+                    </button>
+
+                    <button className="btn" onClick={() => jovahagy(m.id)}>
+                      Jóváhagy
+                    </button>
+
+                    <button className="btn danger" onClick={() => elutasit(m.id)}>
+                      Elutasít
+                    </button>
                   </div>
-                </div>
-
-                {/* ✅ Kép csak megjelenítésre (fix magasság), ha nincs: placeholder, hogy ne ugorjon a méret */}
-                {m.kep_url ? (
-                  <div className="makett-kep-wrapper makett-kep-wrapper--static">
-                    <img src={m.kep_url} alt={m.nev} className="makett-kep" />
-                  </div>
-                ) : (
-                  <div className="makett-kep-placeholder">Nincs kép</div>
-                )}
-
-                {/* ✅ Gombnyomásra modal, és előtte legyen a megtekintés */}
-                <div className="button-row">
-                  <button
-                    type="button"
-                    className="btn secondary"
-                    onClick={() => setModalMakett(m)}
-                  >
-                    Megtekintés
-                  </button>
-
-                  <button className="btn" onClick={() => jovahagy(m.id)}>
-                    Jóváhagy
-                  </button>
-
-                  <button className="btn danger" onClick={() => elutasit(m.id)}>
-                    Elutasít
-                  </button>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </section>
         )}
       </div>
@@ -197,7 +209,7 @@ export default function MakettJovahagyas() {
         showReviews={false}
         bejelentkezve={true}
         felhasznalo={felhasznalo}
-        isAdmin={false}         // ✅ itt ne admin-szerkesztős modal legyen
+        isAdmin={false} // itt ne admin-szerkesztős modal legyen
         formatDatum={fmt}
       />
     </div>

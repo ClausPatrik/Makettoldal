@@ -16,14 +16,14 @@ export default function MakettBekuldes() {
     nehezseg: 3,
     megjelenes_eve: String(new Date().getFullYear()),
     kep_url: "",
-    leiras: "", // ✅ ÚJ mező
-    vasarlasi_link: "",   // ✅ ÚJ
+    leiras: "", 
+    vasarlasi_link: "",   
   });
 
   const [hiba, setHiba] = useState("");
   const [uzenet, setUzenet] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [kepFile, setKepFile] = useState(null);
   if (!felhasznalo) {
     return (
       <div className="page">
@@ -96,18 +96,29 @@ export default function MakettBekuldes() {
         megjelenes_eve: ev,
         kep_url: form.kep_url?.trim() || null,
         leiras: form.leiras?.trim() || null,
-        vasarlasi_link: form.vasarlasi_link?.trim() || null, // ✅ ÚJ
+        vasarlasi_link: form.vasarlasi_link?.trim() || null, 
       };
 
-      const res = await fetch(`${API}/makett-javaslatok`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
+      const fd = new FormData();
+fd.append("nev", body.nev);
+fd.append("gyarto", body.gyarto);
+fd.append("kategoria", body.kategoria);
+fd.append("skala", body.skala);
+fd.append("nehezseg", String(body.nehezseg));
+fd.append("megjelenes_eve", String(body.megjelenes_eve));
+fd.append("leiras", body.leiras || "");
+fd.append("vasarlasi_link", body.vasarlasi_link || "");
+fd.append("kep_url", body.kep_url || ""); // ha nem töltesz fel fájlt, még működjön URL-lel
 
+if (kepFile) fd.append("kep", kepFile);
+
+const res = await fetch(`${API}/makett-javaslatok`, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+  body: fd,
+});
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.uzenet || "Hiba a beküldésnél.");
 
@@ -135,7 +146,7 @@ export default function MakettBekuldes() {
     name="nev"
     value={form.nev}
     onChange={onChange}
-    maxLength={50}          // ✅ HTML limit
+    maxLength={50}          
     required
   />
   <span className="small">
@@ -222,6 +233,15 @@ export default function MakettBekuldes() {
             <input name="kep_url" value={form.kep_url} onChange={onChange} />
           </label>
           <label>
+          <label>
+  Kép feltöltés (opcionális)
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => setKepFile(e.target.files?.[0] || null)}
+  />
+  <span className="small">Ha töltesz fel képet, az lesz használva a Kép URL helyett.</span>
+</label>
   Webáruház link (opcionális)
   <input
     type="url"

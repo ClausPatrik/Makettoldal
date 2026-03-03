@@ -1,7 +1,7 @@
 import React from "react";
 import CsillagValaszto from "./CsillagValaszto";
 import VelemenyekSection from "./VelemenyekSection";
-
+const BACKEND_BASE = "http://localhost:3001";
 /**
  * Egy makett kártya
  * - "mode":
@@ -38,7 +38,12 @@ export default function MakettCard({
   hozzaadVelemeny,
   modositVelemeny,
   torolVelemeny,
+  
 }) {
+  const kepSrc =
+  makett?.kep_url && !makett.kep_url.startsWith("http")
+    ? `${BACKEND_BASE}${makett.kep_url}`
+    : makett?.kep_url;
   return (
     <article className="card makett-card">
       <div className="makett-fejlec">
@@ -74,8 +79,8 @@ export default function MakettCard({
             if (e.key === "Enter" || e.key === " ") onOpenModal?.(makett);
           }}
         >
-          <img src={makett.kep_url} alt={makett.nev} className="makett-kep" />
-        </div>
+        <img src={kepSrc} alt={makett.nev} className="makett-kep" />      
+      </div>
       )}
 
       <div className="button-row">
