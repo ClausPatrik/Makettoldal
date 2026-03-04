@@ -84,7 +84,7 @@ export default function AiChatWidget() {
       const ujBot = {
         from: "bot",
         text:
-          "Most valamiért nem tudok rendesen válaszolni. " +
+          "Sajnáljuk" +
           (err.message || ""),
       };
       beallitUzenetek((elozo) => [...elozo, ujBot]);

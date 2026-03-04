@@ -19,12 +19,12 @@ export default function createAiRoutes(ctx) {
     try {
       const apiKey = process.env.OPENAI_API_KEY;
       if (!apiKey) {
-        return res.status(500).json({ uzenet: "Nincs OPENAI_API_KEY a server/.env-ben." });
+        return res.status(500).json({ uzenet: "Ez a funkció jelenleg még nem működik." });
       }
 
       const { messages } = req.body || {};
       if (!Array.isArray(messages) || messages.length === 0) {
-        return res.status(400).json({ uzenet: "Hibás kérés: messages hiányzik." });
+        return res.status(400).json({ uzenet: "Hibás kérés: Üzenet hiányzik." });
       }
 
       const fetchFn = globalThis.fetch || (await import("node-fetch")).default;
