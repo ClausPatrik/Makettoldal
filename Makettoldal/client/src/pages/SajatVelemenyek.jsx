@@ -6,13 +6,25 @@ import { useAdat } from "../context/AdatContext";
 import MakettModal from "../components/MakettModal";
 import CsillagValaszto from "../components/CsillagValaszto";
 
+/**
+ * Backend API bázis URL (REST végpontok).
+ * Megjegyzés: lokális fejlesztés; éles környezetben jellemzően env-ből érkezik.
+ */
 const API_BASE_URL = "http://localhost:3001/api";
 
 export default function SajatVelemenyek() {
   const { bejelentkezve, felhasznalo } = useAuth();
+
+  // Jogosultság jelzők (MakettModal-ban admin/moderátor műveletek feltételeihez)
   const isAdmin = felhasznalo?.szerepkor_id === 2;
-const isModerator = felhasznalo?.szerepkor_id === 3;
-  // A meglévő app state (makettek, vélemények, kedvencek, stb.)
+  const isModerator = felhasznalo?.szerepkor_id === 3;
+
+  /**
+   * AdatContext:
+   * - `makettek`: makettek listája (a Megtekintés gomb innen keres makett objektumot)
+   * - `mindenVelemeny`: globális véleménylista (MakettModal-hoz szűrjük belőle a makett véleményeit)
+   * - CRUD műveletek véleményhez + kedvencek kezelése
+   */
   const {
     makettek,
     velemenyek: mindenVelemeny,
@@ -25,27 +37,40 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     valtKedvenc,
   } = useAdat();
 
-  // Saját vélemények lista (API-ból)
+  /**
+   * Saját vélemények listája:
+   * - külön endpointból jön (GET /sajat/velemenyek)
+   * - elkülönítjük a globális `mindenVelemeny` listától
+   */
   const [velemenyek, setVelemenyek] = useState([]);
   const [betoltes, setBetoltes] = useState(false);
   const [hiba, setHiba] = useState(null);
 
-  // --- Makett megtekintés modal state ---
+  // Makett megtekintés modal: kiválasztott makett objektum (null => zárva)
   const [modalMakett, setModalMakett] = useState(null);
 
-  // --- Vélemény szerkesztő modal state ---
+  // Vélemény szerkesztő modal állapotai
   const [editModalNyitva, setEditModalNyitva] = useState(false);
   const [aktivVelemeny, setAktivVelemeny] = useState(null);
   const [editErtekeles, setEditErtekeles] = useState(5);
   const [editSzoveg, setEditSzoveg] = useState("");
 
   // ---------------------------------------------------------------------------
-  // Helpers
+  // Helper függvények
   // ---------------------------------------------------------------------------
+
+  /**
+   * JWT token lekérése LocalStorage-ból.
+   * Megjegyzés: a token kezelés/élettartam a bejelentkezési logikától függ.
+   */
   function token() {
     return localStorage.getItem("token");
   }
 
+  /**
+   * Dátum/idő formázás (hu-HU).
+   * Hibás dátum esetén az eredeti stringet adja vissza.
+   */
   function formatDatum(datumStr) {
     if (!datumStr) return "";
     const d = new Date(datumStr);
@@ -53,7 +78,10 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     return d.toLocaleString("hu-HU");
   }
 
-  // Csillag megjelenítő (nem kattintható)
+  /**
+   * Csillag megjelenítő komponens (read-only).
+   * - Nem kattintható (pointerEvents: none), csak vizuális kijelzés a listában.
+   */
   function CsillagKijelzo({ value }) {
     const v = Math.max(0, Math.min(5, Number(value) || 0));
     return (
@@ -74,21 +102,27 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     );
   }
 
+  /**
+   * Makett azonosító kinyerése vélemény rekordból.
+   * Megjegyzés: többféle backend/serializer névvel is előfordulhat, ezért fallback-eket kezelünk.
+   */
   function velemenyMakettId(v) {
-    // többféle névvel is előfordulhat
     return Number(v.makett_id ?? v.makettId ?? v.makettID ?? v.makettid ?? 0);
   }
 
+  /**
+   * Kedvenc státusz ellenőrzése:
+   * - kezeli azt is, ha `kedvencek` objektumlista (pl. { makett_id: ... })
+   * - és azt is, ha egyszerű ID-lista
+   */
   function makettKedvenc(makettId) {
     if (!Array.isArray(kedvencek)) return false;
     const mid = Number(makettId);
 
-    // ha objektum lista
     if (kedvencek.length > 0 && typeof kedvencek[0] === "object") {
       return kedvencek.some((k) => Number(k.makett_id ?? k.id) === mid);
     }
 
-    // ha sima ID lista
     return kedvencek.some((id) => Number(id) === mid);
   }
 
@@ -98,6 +132,11 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
   useEffect(() => {
     if (!bejelentkezve) return;
 
+    /**
+     * Saját vélemények lekérése:
+     * - auth headerrel (Bearer token)
+     * - hiba esetén felhasználóbarát üzenet `hiba` state-ben
+     */
     async function betolt() {
       try {
         setBetoltes(true);
@@ -124,7 +163,10 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     betolt();
   }, [bejelentkezve]);
 
-  // Kedvencek betöltése (hogy a MakettModal kedvenc gombja helyesen mutasson)
+  /**
+   * Kedvencek betöltése:
+   * A MakettModal-ban a kedvenc gomb/állapot korrekt megjelenítéséhez szükséges.
+   */
   useEffect(() => {
     if (bejelentkezve && betoltKedvencek) {
       betoltKedvencek();
@@ -134,6 +176,13 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
   // ---------------------------------------------------------------------------
   // Gomb: Megtekintés (MakettModal)
   // ---------------------------------------------------------------------------
+
+  /**
+   * Makett megtekintése:
+   * - a véleményből kinyerjük a makett ID-t
+   * - megpróbáljuk kikeresni a `makettek` context listából
+   * - ha nincs meg, itt csak jelzést adunk (nincs ezen oldalon külön makett-betöltés)
+   */
   function megtekintes(v) {
     const mid = velemenyMakettId(v);
     if (!mid) {
@@ -141,7 +190,6 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
       return;
     }
 
-    // próbáljuk a context makettek listából
     const mk = (makettek || []).find((m) => Number(m.id) === mid);
     if (!mk) {
       alert(
@@ -156,6 +204,11 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
   // ---------------------------------------------------------------------------
   // Gomb: Szerkesztés (csak gomb nyitja a modalt)
   // ---------------------------------------------------------------------------
+
+  /**
+   * Vélemény szerkesztő modal megnyitása:
+   * - a kijelölt vélemény adatait betöltjük a szerkesztő state-ekbe (értékelés + szöveg)
+   */
   function szerkesztesMegnyit(v) {
     setAktivVelemeny(v);
     setEditErtekeles(Number(v.ertekeles) || 5);
@@ -163,11 +216,19 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     setEditModalNyitva(true);
   }
 
+  /**
+   * Szerkesztő modal bezárása + aktív vélemény reset.
+   */
   function szerkesztesBezar() {
     setEditModalNyitva(false);
     setAktivVelemeny(null);
   }
 
+  /**
+   * Vélemény módosítás mentése:
+   * - context `modositVelemeny` hívása
+   * - lokális listában azonnali UI frissítés (optimista jelleggel)
+   */
   async function szerkesztesMentes() {
     if (!aktivVelemeny?.id) return;
 
@@ -177,7 +238,7 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
         szoveg: editSzoveg,
       });
 
-      // UI frissítés helyben
+      // UI frissítés helyben (ne kelljen újratölteni az egész listát)
       setVelemenyek((prev) =>
         prev.map((x) =>
           x.id === aktivVelemeny.id
@@ -193,6 +254,11 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     }
   }
 
+  /**
+   * Vélemény törlése:
+   * - megerősítés után context `torolVelemeny`
+   * - lokális listából kivesszük a törölt elemet
+   */
   async function szerkesztesTorles() {
     if (!aktivVelemeny?.id) return;
     if (!window.confirm("Biztosan törlöd ezt a véleményt?")) return;
@@ -210,20 +276,33 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
   }
 
   // ---------------------------------------------------------------------------
-  // MakettModal adatok
+  // MakettModal-hoz számolt adatok
   // ---------------------------------------------------------------------------
   const modalMakettId = Number(modalMakett?.id || 0);
 
+  /**
+   * Makett átlagértékelés a modálban:
+   * - a context `szamolAtlagErtekeles` függvényét használjuk
+   * - memoizáljuk, hogy csak releváns változásokkor számoljon újra
+   */
   const modalAtlag = useMemo(() => {
     if (!modalMakettId) return 0;
     return szamolAtlagErtekeles ? szamolAtlagErtekeles(modalMakettId) || 0 : 0;
   }, [modalMakettId, szamolAtlagErtekeles]);
 
+  /**
+   * Makett véleményei a modálhoz:
+   * - a globális `mindenVelemeny` listából szűrjük az adott makett véleményeit
+   */
   const modalVelemenyek = useMemo(() => {
     if (!modalMakettId) return [];
     return (mindenVelemeny || []).filter((v) => Number(v.makett_id) === modalMakettId);
   }, [modalMakettId, mindenVelemeny]);
 
+  /**
+   * Kedvenc státusz a modálban (szív gomb állapotához).
+   * Megjegyzés: a memo függ a `kedvencek` változásától is, mert attól lesz naprakész.
+   */
   const modalKedvenc = useMemo(() => {
     if (!modalMakettId) return false;
     return makettKedvenc(modalMakettId);
@@ -247,9 +326,7 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
   return (
     <section className="page">
       <h1>Saját véleményeim</h1>
-      <p className="small">
-        Itt látod az összes véleményt, amit makettekről írtál.
-      </p>
+      <p className="small">Itt látod az összes véleményt, amit makettekről írtál.</p>
 
       {betoltes && <p>Betöltés...</p>}
       {hiba && <p className="error">{hiba}</p>}
@@ -286,14 +363,14 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
                         {v.skala} • {v.kategoria}
                       </p>
 
-                      {/* ✅ értékelés helyett csillagok (nem kattintható) */}
+                      {/* Lista nézet: értékelés csak kijelzés (nem szerkeszthető) */}
                       <div style={{ marginTop: 6 }}>
                         <CsillagKijelzo value={v.ertekeles} />{" "}
                         <span className="small">{Number(v.ertekeles) || 0}/5</span>
                       </div>
                     </div>
 
-                    {/* ✅ Gombok: előbb Megtekintés, utána Szerkesztés */}
+                    {/* Műveletek: megtekintés (makett modal) + szerkesztés (vélemény modal) */}
                     <div className="button-row" style={{ justifyContent: "flex-end" }}>
                       <button
                         type="button"
@@ -333,7 +410,7 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
         </Link>
       </div>
 
-      {/* ✅ Makett megtekintés modal (Megtekintés gomb nyitja) */}
+      {/* Makett megtekintés modal: a "Megtekintés" gomb nyitja, teljes vélemény funkcióval */}
       <MakettModal
         open={Boolean(modalMakett)}
         makett={modalMakett}
@@ -346,14 +423,14 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
         bejelentkezve={bejelentkezve}
         felhasznalo={felhasznalo}
         isAdmin={isAdmin}
-        isModerator={isModerator} 
+        isModerator={isModerator}
         formatDatum={(d) => formatDatum(d)}
         hozzaadVelemeny={hozzaadVelemeny}
         modositVelemeny={modositVelemeny}
         torolVelemeny={torolVelemeny}
       />
 
-      {/* ✅ Vélemény szerkesztő modal (csak Szerkesztés gomb nyitja) */}
+      {/* Vélemény szerkesztő modal: csak a "Szerkesztés" gomb nyitja */}
       {editModalNyitva && aktivVelemeny && (
         <div className="modal-overlay" onClick={szerkesztesBezar}>
           <div className="modal card" onClick={(e) => e.stopPropagation()}>
@@ -361,8 +438,7 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
               <div>
                 <h2 style={{ marginBottom: 4 }}>Vélemény szerkesztése</h2>
                 <p className="small" style={{ margin: 0 }}>
-                  {aktivVelemeny.makett_nev} • {aktivVelemeny.gyarto} •{" "}
-                  {aktivVelemeny.skala}
+                  {aktivVelemeny.makett_nev} • {aktivVelemeny.gyarto} • {aktivVelemeny.skala}
                 </p>
               </div>
 
@@ -374,7 +450,7 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
             <div className="form" style={{ marginTop: 10 }}>
               <label>
                 Értékelés (1–5)
-                {/* ✅ csak itt kattintható */}
+                {/* Itt szerkeszthető a csillag értékelés */}
                 <CsillagValaszto value={editErtekeles} onChange={setEditErtekeles} />
               </label>
 

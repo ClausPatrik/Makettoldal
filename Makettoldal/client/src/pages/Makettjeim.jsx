@@ -5,8 +5,22 @@ import { useAdat } from "../context/AdatContext";
 import CsillagValaszto from "../components/CsillagValaszto";
 import MakettModal from "../components/MakettModal";
 
+/**
+ * Backend API bázis URL (REST végpontok).
+ * Megjegyzés: lokális fejlesztési környezet; élesben jellemzően env változóból jön.
+ */
 const API_BASE_URL = "http://localhost:3001/api";
+
+/**
+ * Backend root URL statikus / relatív képútvonalak feloldásához.
+ * (Ha a `kep_url` nem teljes URL, akkor ehhez fűzzük hozzá.)
+ */
 const BACKEND_BASE_URL = "http://localhost:3001";
+
+/**
+ * Állapot -> UI címke (szöveg + CSS osztály) leképezés.
+ * A visszaadott `cls` értékek a "status-pill" környezetben használt stílusokra épülnek.
+ */
 function allapotCimke(allapot) {
   if (allapot === "jovahagyva") return { txt: "Jóváhagyva", cls: "status-ok" };
   if (allapot === "varakozik") return { txt: "Jóváhagyásra vár", cls: "status-warn" };
@@ -24,25 +38,40 @@ export default function Makettjeim() {
     torolVelemeny,
   } = useAdat();
 
+  // Jogosultság jelzők (a modal és az admin műveletek engedélyezéséhez)
   const isAdmin = felhasznalo?.szerepkor_id === 2;
-const isModerator = felhasznalo?.szerepkor_id === 3;
+  const isModerator = felhasznalo?.szerepkor_id === 3;
+
+  /**
+   * Authorization header előállítása a tokenből.
+   * useMemo: a token lekérdezés (LocalStorage) és az objektum-azonosság stabilizálása miatt.
+   * Megjegyzés: `bejelentkezve` változásakor újraszámoljuk, mert tipikusan ekkor változik a token is.
+   */
   const authHeader = useMemo(() => {
     const token = localStorage.getItem("token");
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, [bejelentkezve]);
 
+  // Saját makettek listája + betöltési és üzenet állapotok
   const [makettek, setMakettek] = useState([]);
   const [betolt, setBetolt] = useState(false);
   const [hiba, setHiba] = useState(null);
   const [uzenet, setUzenet] = useState(null);
 
-  // Makett megtekintés modal
+  // Megtekintés modal: a kiválasztott makett objektuma (null => zárva)
   const [modalMakett, setModalMakett] = useState(null);
 
+  // Szerkesztő modal állapot + szerkesztett űrlap modell + mentés folyamatban jelző
   const [szerkOpen, setSzerkOpen] = useState(false);
   const [szerk, setSzerk] = useState(null);
   const [mentesFut, setMentesFut] = useState(false);
 
+  /**
+   * Saját makettek lekérése (GET /sajat/makettek).
+   * - csak bejelentkezve fut
+   * - hiba esetén `hiba` state-be kerül az üzenet
+   * - `betolt` itt "kész" jelzőként van használva (false: folyamatban / true: kész)
+   */
   async function betoltes() {
     if (!bejelentkezve) return;
     setBetolt(false);
@@ -63,9 +92,16 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
 
   useEffect(() => {
     betoltes();
+    // Megjegyzés: a lint-szabály itt tudatosan ki van kapcsolva, hogy ne kerüljön be minden függőség.
+    // A cél: a betöltés csak a bejelentkezési állapot változásakor fusson.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bejelentkezve]);
 
+  /**
+   * Szerkesztés megnyitása:
+   * - a kiválasztott makett mezőiből feltöltjük a szerkesztő modellt
+   * - null/üres kezelések, alapértékek és típuskonverziók (number mezők)
+   */
   function nyitSzerkesztes(m) {
     setUzenet(null);
     setHiba(null);
@@ -84,6 +120,11 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     setSzerkOpen(true);
   }
 
+  /**
+   * Saját makett mentése (PUT /sajat/makettek/:id).
+   * Megjegyzés: a backend válasza alapján a makett tipikusan "jóváhagyásra visszakerül",
+   * ezért itt a UI külön is jelzi ezt a felhasználónak.
+   */
   async function mentes(e) {
     e?.preventDefault?.();
     if (!szerk?.id) return;
@@ -110,7 +151,7 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
       const data = await r.json();
       if (!r.ok) throw new Error(data?.uzenet || "Hiba mentés közben.");
 
-      // nagyon fontos: tájékoztatás, hogy újra jóvá kell hagyatni
+      // UX: egyértelmű jelzés, hogy módosítás után a makett visszakerül jóváhagyásra
       setUzenet(data?.uzenet || "Makett módosítva (jóváhagyásra visszakerült). ");
 
       setSzerkOpen(false);
@@ -123,6 +164,10 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     }
   }
 
+  /**
+   * Saját makett törlése (DELETE /makettek/:id).
+   * Megjegyzés: megerősítő dialógus után fut, majd újratölti a listát.
+   */
   async function torles(m) {
     const ok = window.confirm(`Biztosan törlöd?\n\n${m.nev}`);
     if (!ok) return;
@@ -143,6 +188,10 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     }
   }
 
+  /**
+   * Dátum formázás (HU formátum) a vélemények/naplók megjelenítéséhez.
+   * Hibás dátum esetén az eredeti stringet adja vissza.
+   */
   function formatDatum(datumStr) {
     if (!datumStr) return "";
     const d = new Date(datumStr);
@@ -154,10 +203,18 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     });
   }
 
+  /**
+   * Adott maketthez tartozó vélemények szűrése.
+   * Itt számmá konvertálunk, hogy a string/number ID eltérések ne okozzanak üres listát.
+   */
   function makettVelemenyek(makettId) {
     return (velemenyek || []).filter((v) => Number(v.makett_id) === Number(makettId));
   }
 
+  /**
+   * Admin: makett módosítás (PUT /makettek/:id).
+   * Ezt a callbacket a MakettModal kapja meg, és csak admin jogosultság esetén adjuk át.
+   */
   async function adminMakettUpdate(id, payload) {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_BASE_URL}/makettek/${id}`, {
@@ -175,6 +232,10 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
     return await res.json();
   }
 
+  /**
+   * Admin: makett törlés (DELETE /makettek/:id).
+   * Megjegyzés: a válasz body opcionális; itt biztonságos fallbackkel olvassuk.
+   */
   async function adminMakettDelete(id) {
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_BASE_URL}/makettek/${id}`, {
@@ -223,40 +284,45 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
             const st = allapotCimke(m.allapot);
             const atlag = szamolAtlagErtekeles ? szamolAtlagErtekeles(m.id) || 0 : 0;
             const vList = makettVelemenyek(m.id);
+
+            /**
+             * Kép forrás feloldása:
+             * - ha a `kep_url` relatív (nem http/https), akkor a backend base URL-t eléfűzzük
+             * - ha teljes URL, változatlanul használjuk
+             */
             const kepSrc =
-  m?.kep_url && !String(m.kep_url).startsWith("http")
-    ? `${BACKEND_BASE_URL}${m.kep_url}`
-    : m?.kep_url;
+              m?.kep_url && !String(m.kep_url).startsWith("http")
+                ? `${BACKEND_BASE_URL}${m.kep_url}`
+                : m?.kep_url;
+
             return (
               <article key={m.id} className="card makett-card">
-               <div className="makett-fejlec">
-  <div>
-    <h2 className="makett-nev" title={m.nev}>
-      {m.nev}
-    </h2>
-    <p className="small">
-      {m.gyarto} • {m.skala} • {m.kategoria}
-    </p>
-    <p className="small">
-      Nehézség: {m.nehezseg}/5 • Megjelenés éve: {m.megjelenes_eve}
-    </p>
-    {/* IDE kerül át a csillag + átlag + státusz */}
-    <div className="makett-bal-meta">
-      <div className="makett-ertekeles">
-        <CsillagValaszto value={atlag} readOnly />
-        <br />
-        <span className="small">
-          Átlag: {Number(atlag).toFixed(1)} ({vList.length} vélemény)
-          
-        </span>
-      </div>
-      <br />
-      <div className={`status-pill ${st.cls}`}>{st.txt}</div>
-    </div>
+                <div className="makett-fejlec">
+                  <div>
+                    <h2 className="makett-nev" title={m.nev}>
+                      {m.nev}
+                    </h2>
+                    <p className="small">
+                      {m.gyarto} • {m.skala} • {m.kategoria}
+                    </p>
+                    <p className="small">
+                      Nehézség: {m.nehezseg}/5 • Megjelenés éve: {m.megjelenes_eve}
+                    </p>
 
-    
-  </div>
-</div>
+                    {/* Meta blokk: átlagos értékelés + véleményszám + státusz címke */}
+                    <div className="makett-bal-meta">
+                      <div className="makett-ertekeles">
+                        <CsillagValaszto value={atlag} readOnly />
+                        <br />
+                        <span className="small">
+                          Átlag: {Number(atlag).toFixed(1)} ({vList.length} vélemény)
+                        </span>
+                      </div>
+                      <br />
+                      <div className={`status-pill ${st.cls}`}>{st.txt}</div>
+                    </div>
+                  </div>
+                </div>
 
                 {m.kep_url && (
                   <div
@@ -265,6 +331,7 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
+                      // A11y: Enter/Space esetén is nyitható legyen a modal (billentyűzettel)
                       if (e.key === "Enter" || e.key === " ") setModalMakett(m);
                     }}
                   >
@@ -295,7 +362,9 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
         </div>
       )}
 
-      {/* Makett modal (vélemények csak jóváhagyottnál, építési napló létrehozás tiltás nem jóváhagyottnál) */}
+      {/* Makett modal:
+          - Vélemények megjelenítése csak jóváhagyott státusznál
+          - Napló létrehozás engedélyezése szintén csak jóváhagyottnál */}
       {modalMakett && (
         <MakettModal
           open={!!modalMakett}
@@ -312,7 +381,7 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
           hozzaadVelemeny={hozzaadVelemeny}
           modositVelemeny={modositVelemeny}
           torolVelemeny={torolVelemeny}
-          // kedvencek itt nem fontos, de a komponens várja
+          // Kedvencek ezen az oldalon nem releváns funkció, de a komponens propként elvárja
           kedvenc={false}
           onToggleKedvenc={() => {}}
           onAdminUpdate={isAdmin ? adminMakettUpdate : null}
@@ -321,13 +390,17 @@ const isModerator = felhasznalo?.szerepkor_id === 3;
         />
       )}
 
-      {/* Szerkesztő modal */}
+      {/* Szerkesztő modal: saját makett adatok módosítása, mentéskor jóváhagyásra visszakerül */}
       {szerkOpen && szerk && (
-       <div className="modal-overlay edit-overlay" role="dialog" aria-modal="true">
+        <div className="modal-overlay edit-overlay" role="dialog" aria-modal="true">
           <div className="modal edit-modal">
             <div className="modal-head">
               <h2>Saját makett szerkesztése</h2>
-              <button className="icon-btn" onClick={() => setSzerkOpen(false)} aria-label="Bezárás">
+              <button
+                className="icon-btn"
+                onClick={() => setSzerkOpen(false)}
+                aria-label="Bezárás"
+              >
                 ✕
               </button>
             </div>

@@ -3,15 +3,34 @@ import { useAuth } from "../context/AuthContext";
 import { useAdat } from "../context/AdatContext";
 import { Link, useNavigate } from "react-router-dom";
 
+/**
+ * Backend API bázis URL (REST végpontok).
+ * Megjegyzés: lokális fejlesztés; éles környezetben jellemzően env-ből jön.
+ */
 const API_BASE_URL = "http://localhost:3001/api";
+
+/**
+ * Fájl/kép kiszolgálás bázisa:
+ * - a backend root URL (API-ból levágjuk az "/api" részt)
+ * - relatív feltöltési útvonalakhoz (pl. "/uploads/...") használjuk
+ */
 const FILE_BASE_URL = API_BASE_URL.replace(/\/api$/, "");
 
+/**
+ * Profilkép URL normalizálása:
+ * - ha az URL relatív feltöltési útvonal ("/uploads/..."), akkor a backend base URL-lel egészítjük ki
+ * - egyébként változatlanul használjuk (pl. teljes https URL)
+ */
 function normalizalKepUrl(url) {
   if (!url) return "";
   if (url.startsWith("/uploads/")) return FILE_BASE_URL + url;
   return url;
 }
 
+/**
+ * Determinisztikus “avatar háttérszín” generálás névből.
+ * Cél: ha nincs profilkép, akkor a fallback avatar mindig ugyanazt a színt kapja az adott névhez.
+ */
 function generalSzin(nev) {
   if (!nev) return "#4b5563";
   let hash = 0;
@@ -22,6 +41,11 @@ function generalSzin(nev) {
   return `hsl(${hue}, 70%, 45%)`;
 }
 
+/**
+ * AvatarNagy
+ * - ha van profilkép URL, akkor képet jelenít meg
+ * - különben fallback “monogram” avatart: első betű + név-alapú háttérszín
+ */
 function AvatarNagy({ nev, profilKepUrl }) {
   if (profilKepUrl) {
     return (
@@ -52,18 +76,37 @@ function AvatarNagy({ nev, profilKepUrl }) {
 }
 
 export default function Profil() {
-  const { felhasznalo, bejelentkezve, kijelentkezes, profilFrissites } =
-    useAuth();
+  /**
+   * AuthContext:
+   * - `felhasznalo`, `bejelentkezve`: auth state
+   * - `kijelentkezes`: session törlése
+   * - `profilFrissites`: profiladatok frissítése (név, profilkép URL)
+   */
+  const { felhasznalo, bejelentkezve, kijelentkezes, profilFrissites } = useAuth();
+
+  /**
+   * AdatContext:
+   * - `makettek`: makettek listája
+   * - `kedvencek`: kedvenc ID-k listája
+   * - `betoltKedvencek`: kedvencek betöltése a backendből
+   */
   const { makettek, kedvencek, betoltKedvencek } = useAdat();
+
   const navigate = useNavigate();
 
+  // Form state: szerkeszthető név + profilkép URL + opcionális feltöltött fájl
   const [nev, beallitNev] = useState(felhasznalo?.felhasznalo_nev || "");
-  const [profilKepUrl, beallitProfilKepUrl] = useState(
-    felhasznalo?.profil_kep_url || ""
-  );
+  const [profilKepUrl, beallitProfilKepUrl] = useState(felhasznalo?.profil_kep_url || "");
   const [ujProfilKep, beallitUjProfilKep] = useState(null);
+
+  // Mentés folyamatban jelző (gomb tiltás / spinner jellegű UX)
   const [mentesFolyamatban, beallitMentesFolyamatban] = useState(false);
 
+  /**
+   * Auth guard + kedvencek betöltése:
+   * - ha nincs bejelentkezve, átirányítjuk
+   * - ha be van, akkor betöltjük a kedvenceket, hogy a lista/statisztika naprakész legyen
+   */
   useEffect(() => {
     if (!bejelentkezve) {
       navigate("/bejelentkezes");
@@ -72,6 +115,10 @@ export default function Profil() {
     betoltKedvencek();
   }, [bejelentkezve, navigate, betoltKedvencek]);
 
+  /**
+   * Ha a felhasználó objektum frissül (pl. belépés után, vagy profil mentése után),
+   * akkor szinkronizáljuk a form state-et is.
+   */
   useEffect(() => {
     if (felhasznalo) {
       beallitNev(felhasznalo.felhasznalo_nev || "");
@@ -79,8 +126,15 @@ export default function Profil() {
     }
   }, [felhasznalo]);
 
+  // UI: amíg nincs bejelentkezve, nem renderelünk profilt (a redirect is lefut)
   if (!bejelentkezve) return null;
 
+  /**
+   * Profil mentése:
+   * 1) alap adatok mentése (név + profilkép URL) a contexten keresztül
+   * 2) opcionális: fájlfeltöltés külön endpointon (multipart/form-data)
+   * 3) feltöltés után a backend által visszaadott URL-t újra elmentjük profilFrissites-sel
+   */
   async function kezeliProfilMentese(e) {
     e.preventDefault();
     try {
@@ -99,6 +153,7 @@ export default function Profil() {
 
         const token = localStorage.getItem("token");
 
+        // Megjegyzés: FormData esetén nem állítunk be manuálisan Content-Type-ot (boundary miatt).
         const valasz = await fetch(`${API_BASE_URL}/profil/feltoltes`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -107,6 +162,7 @@ export default function Profil() {
 
         const data = await valasz.json();
         if (data.kepUrl) {
+          // A kapott URL-t beállítjuk és persistáljuk is a profilban
           beallitProfilKepUrl(data.kepUrl);
           await profilFrissites({
             felhasznalo_nev: nev,
@@ -123,11 +179,21 @@ export default function Profil() {
     }
   }
 
+  /**
+   * Kijelentkezés:
+   * - auth state törlése (tokenek, user state)
+   * - navigáció a főoldalra
+   */
   function kezeliKijelentkezes() {
     kijelentkezes();
     navigate("/");
   }
 
+  /**
+   * Kedvenc makettek kinyerése:
+   * - a makettek listájából kiszűrjük azokat, amelyek ID-ja benne van a `kedvencek` tömbben
+   * Megjegyzés: feltételezi, hogy `kedvencek` ID-lista (nem objektum lista).
+   */
   const kedvencMakettek = makettek.filter((m) => kedvencek.includes(m.id));
 
   return (
@@ -145,7 +211,7 @@ export default function Profil() {
       </div>
 
       <div className="profile-grid">
-        {/* BAL: felhasználó kártya */}
+        {/* BAL: felhasználói összefoglaló kártya (avatar + meta + stat + kijelentkezés) */}
         <aside className="card profile-side">
           <div className="profile-side-top">
             <AvatarNagy nev={nev} profilKepUrl={profilKepUrl} />
@@ -172,17 +238,13 @@ export default function Profil() {
           </div>
 
           <div className="profile-side-actions">
-            <button
-              type="button"
-              className="btn danger"
-              onClick={kezeliKijelentkezes}
-            >
+            <button type="button" className="btn danger" onClick={kezeliKijelentkezes}>
               Kijelentkezés
             </button>
           </div>
         </aside>
 
-        {/* JOBB: szerkesztés */}
+        {/* JOBB: profil szerkesztés (név, profilkép URL, fájlfeltöltés) */}
         <div className="card profile-main">
           <div className="profile-main-head">
             <h2 style={{ margin: 0 }}>Profil beállítások</h2>
@@ -211,44 +273,44 @@ export default function Profil() {
             </label>
 
             <div className="profile-file">
-  <label className="profile-file-label">Profilkép feltöltése</label>
+              <label className="profile-file-label">Profilkép feltöltése</label>
 
-  {/* Rejtett input */}
-  <input
-    type="file"
-    id="profilkep-file"
-    accept="image/*"
-    className="file-hidden-input"
-    onChange={(e) => beallitUjProfilKep(e.target.files[0])}
-  />
+              {/* Rejtett file input: a label gombbal triggereljük (jobb UX) */}
+              <input
+                type="file"
+                id="profilkep-file"
+                accept="image/*"
+                className="file-hidden-input"
+                onChange={(e) => beallitUjProfilKep(e.target.files[0])}
+              />
 
-  {/* Szép gomb */}
-  <label htmlFor="profilkep-file" className="file-btn">
-    📁 Fájl kiválasztása
-  </label>
+              {/* “Szép” gomb: label-ként működik, a rejtett inputot nyitja */}
+              <label htmlFor="profilkep-file" className="file-btn">
+                📁 Fájl kiválasztása
+              </label>
 
-  {/* Fájl neve */}
-  {ujProfilKep && (
-    <div className="file-name">
-      Kiválasztva: <strong>{ujProfilKep.name}</strong>
-    </div>
-  )}
+              {/* Kiválasztott fájl neve */}
+              {ujProfilKep && (
+                <div className="file-name">
+                  Kiválasztva: <strong>{ujProfilKep.name}</strong>
+                </div>
+              )}
 
-  <span className="small file-hint">
-    Tipp: 1–2 MB alatti JPG vagy PNG ajánlott.
-  </span>
-</div>
+              <span className="small file-hint">
+                Tipp: 1–2 MB alatti JPG vagy PNG ajánlott.
+              </span>
+            </div>
 
-{ujProfilKep && (
-  <div className="makett-kep-wrapper" style={{ marginTop: 10 }}>
-    <img
-      src={URL.createObjectURL(ujProfilKep)}
-      alt="Profilkép előnézet"
-      className="makett-kep"
-    />
-  </div>
-)}
-
+            {/* Kép előnézet a kiválasztott fájlról (helyi objektum URL-lel) */}
+            {ujProfilKep && (
+              <div className="makett-kep-wrapper" style={{ marginTop: 10 }}>
+                <img
+                  src={URL.createObjectURL(ujProfilKep)}
+                  alt="Profilkép előnézet"
+                  className="makett-kep"
+                />
+              </div>
+            )}
 
             <div className="profile-form-actions">
               <button type="submit" className="btn" disabled={mentesFolyamatban}>
@@ -263,7 +325,7 @@ export default function Profil() {
         </div>
       </div>
 
-      {/* Kedvencek */}
+      {/* Kedvencek: egyszerű listanézet a profil oldalon */}
       <section className="card" style={{ marginTop: 16 }}>
         <div className="profile-main-head" style={{ marginBottom: 10 }}>
           <h2 style={{ margin: 0 }}>Kedvenc makettjeim</h2>

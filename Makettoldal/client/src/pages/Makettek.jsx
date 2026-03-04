@@ -6,6 +6,14 @@ import MakettCard from "../components/MakettCard";
 import MakettModal from "../components/MakettModal";
 
 export default function Makettek() {
+  /**
+   * AdatContext-ből érkező adatok és műveletek:
+   * - `makettek`, `velemenyek`: lista-adatok (a megjelenítés alapjai)
+   * - `szamolAtlagErtekeles`: helper átlagértékelés számításhoz makett ID alapján
+   * - `hozzaadVelemeny`, `modositVelemeny`, `torolVelemeny`: vélemény CRUD műveletek
+   * - `kedvencek`, `betoltKedvencek`, `valtKedvenc`: kedvencek kezelése (UI + backend szinkron)
+   * - `betoltesFolyamatban`, `hiba`: globális betöltési/hiba állapotok a contextből
+   */
   const {
     makettek,
     velemenyek,
@@ -20,28 +28,49 @@ export default function Makettek() {
     hiba,
   } = useAdat();
 
+  /**
+   * AuthContext:
+   * - `bejelentkezve`: UI döntésekhez (kedvencek, vélemény írás stb.)
+   * - `felhasznalo`: szerepkör azonosítók alapján admin/moderátor jogosultság
+   */
   const { bejelentkezve, felhasznalo } = useAuth();
   const isAdmin = felhasznalo?.szerepkor_id === 2;
   const isModerator = felhasznalo?.szerepkor_id === 3;
+
+  /**
+   * Backend API bázis URL.
+   * Megjegyzés: lokális fejlesztés; éles környezetben jellemzően env változóból jön.
+   */
   const API_BASE_URL = "http://localhost:3001/api";
 
-  // Szűrők
+  // Szűrő és rendezés állapotok (lista UI)
   const [kategoriaSzuro, beallitKategoriaSzuro] = useState("osszes");
   const [skalaSzuro, beallitSkalaSzuro] = useState("osszes");
   const [kereses, beallitKereses] = useState("");
   const [minAtlagErtekeles, beallitMinAtlagErtekeles] = useState(0);
   const [rendezes, beallitRendezes] = useState("nev");
 
-  // Kártyán belüli vélemény nyitás (csak a listában)
+  /**
+   * Kártyán belüli “vélemény” rész nyitásának állapota a listában.
+   * Itt csak egyetlen makett ID lehet nyitva egyszerre.
+   */
   const [kivalasztottMakettId, beallitKivalasztottMakettId] = useState(null);
 
-  // Modal
+  // Modalban megnyitott makett (objektum); null esetén zárva
   const [modalMakett, setModalMakett] = useState(null);
 
+  /**
+   * Bejelentkezés után betöltjük a kedvencek listáját, hogy a csillag/ikon állapota helyes legyen.
+   * A függőségek közt szerepel a `betoltKedvencek`, mert contextből jön (stabil referencia esetén is korrekt).
+   */
   useEffect(() => {
     if (bejelentkezve) betoltKedvencek();
   }, [bejelentkezve, betoltKedvencek]);
 
+  /**
+   * Dátum formázás megjelenítéshez (HU formátum).
+   * Ha a dátum nem parse-olható, az eredeti stringet adja vissza.
+   */
   function formatDatum(datumStr) {
     if (!datumStr) return "";
     const d = new Date(datumStr);
@@ -52,9 +81,16 @@ export default function Makettek() {
       day: "2-digit",
     });
   }
+
+  /**
+   * Admin: makett módosítás (PUT /makettek/:id).
+   * - JWT token szükséges
+   * - siker esetén a modal tartalma azonnal frissül (UX okokból)
+   * - a lista frissítése a context/parent logikájától függ (itt csak a modalt frissítjük)
+   */
   async function adminMakettUpdate(id, payload) {
     const token = localStorage.getItem("token");
-  
+
     const res = await fetch(`${API_BASE_URL}/makettek/${id}`, {
       method: "PUT",
       headers: {
@@ -63,46 +99,62 @@ export default function Makettek() {
       },
       body: JSON.stringify(payload),
     });
-  
+
     if (!res.ok) {
       const h = await res.json().catch(() => ({}));
       throw new Error(h.uzenet || "Nem sikerült menteni a makettet.");
     }
-  
+
     const updated = await res.json();
-  
-    // UX: modal frissüljön az új adatokkal
+
+    // UX: a modal azonnal tükrözze a mentett állapotot
     setModalMakett(updated);
-  
+
     return updated;
   }
-  
+
+  /**
+   * Admin: makett törlés (DELETE /makettek/:id).
+   * - JWT token szükséges
+   * - siker esetén a modal bezáródik
+   *
+   * Megjegyzés: ha a lista nem frissül automatikusan a contextből,
+   * akkor itt kellene egy újratöltés (pl. betoltMakettek()) – de ez már programlogika, itt csak jelezzük.
+   */
   async function adminMakettDelete(id) {
     const token = localStorage.getItem("token");
-  
+
     const res = await fetch(`${API_BASE_URL}/makettek/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-  
+
     if (!res.ok) {
       const h = await res.json().catch(() => ({}));
       throw new Error(h.uzenet || "Nem sikerült törölni a makettet.");
     }
-  
-    // UX: modal zár
+
+    // UX: törlés után a modal záródik
     setModalMakett(null);
-  
-    // ⚠️ Ha a lista nem frissül magától a contextből,
-    // akkor itt kell egy "betoltMakettek()" vagy hasonló hívás.
+
+    // Megjegyzés: lista frissítése (ha nem történik automatikusan) a context szintjén intézendő.
   }
-  
+
+  /**
+   * Adott maketthez tartozó vélemények kinyerése a globális véleménylistából.
+   * Fontos: itt szigorú (===) összehasonlítás van, tehát a típusok (number/string) konzisztenciája számít.
+   */
   function makettVelemenyek(makettId) {
     return (velemenyek || []).filter((v) => v.makett_id === makettId);
   }
 
+  /**
+   * Kedvenc státusz meghatározása:
+   * - támogatja, ha a `kedvencek` tömb ID-kat tartalmaz (number/string)
+   * - és azt is, ha objektumokat tartalmaz (pl. { makett_id: ... } vagy { id: ... })
+   */
   function makettKedvenc(makettId) {
     if (!Array.isArray(kedvencek)) return false;
     const mid = Number(makettId);
@@ -113,6 +165,11 @@ export default function Makettek() {
     return kedvencek.some((id) => Number(id) === mid);
   }
 
+  /**
+   * Kedvenc váltás kezelése (UI esemény):
+   * - bejelentkezés nélkül nem engedjük (UX + auth védelem)
+   * - hiba esetén log + általános user üzenet
+   */
   async function kezeliKedvencValtas(makettId) {
     if (!bejelentkezve) {
       alert("Kedvencekhez kérlek jelentkezz be.");
@@ -126,7 +183,13 @@ export default function Makettek() {
     }
   }
 
-  // Szűrés + rendezés
+  /**
+   * Szűrés + rendezés:
+   * - kategória/skála/keresés/min átlagértékelés szűrések
+   * - többféle rendezés (név, év, átlagértékelés)
+   *
+   * useMemo: a lista csak akkor számolódik újra, ha bármelyik függőség változik.
+   */
   const szurtMakettek = useMemo(() => {
     let lista = [...(makettek || [])];
 
@@ -151,9 +214,11 @@ export default function Makettek() {
       });
     }
 
+    // Rendelés a kiválasztott rendezési mód szerint
     lista.sort((a, b) => {
       if (rendezes === "nev") return (a.nev || "").localeCompare(b.nev || "");
-      if (rendezes === "ev") return (b.megjelenes_eve || 0) - (a.megjelenes_eve || 0);
+      if (rendezes === "ev")
+        return (b.megjelenes_eve || 0) - (a.megjelenes_eve || 0);
       if (rendezes === "ertekeles") {
         const aAtlag = szamolAtlagErtekeles ? szamolAtlagErtekeles(a.id) || 0 : 0;
         const bAtlag = szamolAtlagErtekeles ? szamolAtlagErtekeles(b.id) || 0 : 0;
@@ -173,7 +238,11 @@ export default function Makettek() {
     szamolAtlagErtekeles,
   ]);
 
-  // Modal számolt adatok
+  /**
+   * Modalhoz számolt adatok:
+   * - átlagértékelés, véleménylista, kedvenc státusz
+   * Megjegyzés: ezek a `modalMakett` változásakor “derivált” értékek, ezért külön state helyett számoljuk.
+   */
   const modalAtlag = modalMakett
     ? (szamolAtlagErtekeles ? szamolAtlagErtekeles(modalMakett.id) || 0 : 0)
     : 0;
@@ -190,7 +259,7 @@ export default function Makettek() {
         </p>
       </header>
 
-      {/* Szűrők */}
+      {/* Szűrők: kliens oldali szűrés és rendezés vezérlők */}
       <section className="card filters">
         <div className="filters-row">
           <input
@@ -200,7 +269,10 @@ export default function Makettek() {
             onChange={(e) => beallitKereses(e.target.value)}
           />
 
-          <select value={kategoriaSzuro} onChange={(e) => beallitKategoriaSzuro(e.target.value)}>
+          <select
+            value={kategoriaSzuro}
+            onChange={(e) => beallitKategoriaSzuro(e.target.value)}
+          >
             <option value="osszes">Jármű Típus</option>
             <option value="harckocsi">Harckocsi</option>
             <option value="repülő">Repülő</option>
@@ -208,7 +280,10 @@ export default function Makettek() {
             <option value="mecha">mecha</option>
           </select>
 
-          <select value={skalaSzuro} onChange={(e) => beallitSkalaSzuro(e.target.value)}>
+          <select
+            value={skalaSzuro}
+            onChange={(e) => beallitSkalaSzuro(e.target.value)}
+          >
             <option value="osszes">Összes skála</option>
             <option value="1:35">1:35</option>
             <option value="1:72">1:72</option>
@@ -218,7 +293,8 @@ export default function Makettek() {
 
           <select
             value={minAtlagErtekeles}
-            onChange={(e) => beallitMinAtlagErtekeles(Number(e.target.value))}>
+            onChange={(e) => beallitMinAtlagErtekeles(Number(e.target.value))}
+          >
             <option value={0}>Értékelés</option>
             <option value={3}>Min. 3★</option>
             <option value={4}>Min. 4★</option>
@@ -236,7 +312,7 @@ export default function Makettek() {
       {betoltesFolyamatban && <p>Betöltés folyamatban...</p>}
       {hiba && <p className="error">Hiba történt az adatok betöltésekor: {hiba}</p>}
 
-      {/* Lista */}
+      {/* Lista: szűrt és rendezett makettek megjelenítése */}
       <section className="card-grid card-grid-5">
         {szurtMakettek.length === 0 ? (
           <p>Nincsenek a szűrésnek megfelelő makettek.</p>
@@ -261,7 +337,7 @@ export default function Makettek() {
                   beallitKivalasztottMakettId((prev) => (prev === id ? null : id))
                 }
                 onOpenModal={(mk) => setModalMakett(mk)}
-                // vélemény műveletek
+                // Vélemény műveletek: a kártya innen kapja a szükséges callbackeket és auth információt
                 bejelentkezve={bejelentkezve}
                 felhasznalo={felhasznalo}
                 isAdmin={isAdmin}
@@ -276,7 +352,7 @@ export default function Makettek() {
         )}
       </section>
 
-      {/* MODAL */}
+      {/* Modal: részletek + vélemények + kedvenc + admin műveletek (jogosultság szerint) */}
       <MakettModal
         open={!!modalMakett}
         makett={modalMakett}
@@ -296,9 +372,7 @@ export default function Makettek() {
         torolVelemeny={torolVelemeny}
         onAdminUpdate={adminMakettUpdate}
         onAdminDelete={adminMakettDelete}
-        
       />
     </section>
-    
   );
 }

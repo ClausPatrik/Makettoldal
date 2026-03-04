@@ -1,7 +1,12 @@
 import React, { useMemo, useState } from "react";
 import { useAdat } from "../context/AdatContext";
 
-
+/**
+ * CsillagokKicsi
+ * Kisméretű (inline) csillag-megjelenítő komponens 0–5 skálára.
+ * - `ertek` lehet tört is (pl. 4.2), itt vizuálisan a legközelebbi egészre kerekítünk.
+ * - A megjelenítés kizárólag UI célú, nem végez validációt.
+ */
 function CsillagokKicsi({ ertek }) {
   const teljes = Math.round(ertek || 0);
   return (
@@ -14,8 +19,15 @@ function CsillagokKicsi({ ertek }) {
 }
 
 export default function Kezdolap() {
+  /**
+   * AdatContext-ből érkező állapot + helper függvény.
+   * - `makettek`: makettek listája
+   * - `velemenyek`: vélemények listája
+   * - `szamolAtlagErtekeles`: atlag számító helper (ID alapján)
+   */
   const { makettek, velemenyek, szamolAtlagErtekeles } = useAdat();
 
+  // AI kérdezz–felelek: input, válasz, betöltés, hibák és modell betöltési állapot
   const [aiKerdes, beallitAiKerdes] = useState("");
   const [aiValasz, beallitAiValasz] = useState("");
   const [aiBetolt, beallitAiBetolt] = useState(false);
@@ -23,15 +35,28 @@ export default function Kezdolap() {
   const [aiModellToltes, beallitAiModellToltes] = useState(false);
   const [aiModellProgress, beallitAiModellProgress] = useState(0);
 
+  // Összesítő számok a kezdőlap “dashboard” részéhez
   const osszesMakett = makettek.length;
   const osszesVelemeny = velemenyek.length;
 
+  /**
+   * Globális átlagértékelés az összes vélemény alapján.
+   * Ha nincs vélemény, `null`, így a UI-ban “még nincs értékelés” jelenik meg.
+   */
   const globalisAtlag =
     velemenyek.length > 0
       ? velemenyek.reduce((sum, v) => sum + Number(v.ertekeles || 0), 0) /
         velemenyek.length
       : null;
 
+  /**
+   * Top makettek (legjobbra értékelt):
+   * - átlagot számolunk makett ID alapján
+   * - kiszűrjük a 0 átlagosakat (nincs értékelés)
+   * - csökkenő sorrendben rendezzük, majd top 3-at választunk
+   *
+   * useMemo: elkerüli a felesleges újraszámolást, ha a függőségek nem változnak.
+   */
   const topMakettek = useMemo(() => {
     if (!makettek.length || !velemenyek.length) return [];
 
@@ -47,6 +72,12 @@ export default function Kezdolap() {
     return lista;
   }, [makettek, velemenyek, szamolAtlagErtekeles]);
 
+  /**
+   * Legutóbbi vélemények:
+   * - másolatot készítünk, hogy ne módosítsuk a contextből érkező tömböt
+   * - `letrehozva` alapján csökkenő sorrend (legfrissebb elöl)
+   * - top 3 elem
+   */
   const legutobbiVelemenyek = useMemo(() => {
     if (!velemenyek.length) return [];
     const masolat = [...velemenyek];
@@ -60,12 +91,26 @@ export default function Kezdolap() {
     return masolat.slice(0, 3);
   }, [velemenyek]);
 
+  /**
+   * UI segédfüggvény: hosszú szöveg rövidítése listanézetben.
+   * - `max` alapértelmezetten 120 karakter
+   * - három ponttal zár
+   */
   function roviditSzoveg(szoveg, max = 120) {
     if (!szoveg) return "";
     if (szoveg.length <= max) return szoveg;
     return szoveg.slice(0, max - 3) + "...";
   }
 
+  /**
+   * AI kérdés elküldése:
+   * - form submit megfogása
+   * - WebGPU jelenlét ellenőrzése (a WebLLM / helyi futtatás előfeltétele lehet)
+   * - modell/engine betöltése progress callbackkel
+   * - chat completion kérés és válasz megjelenítése
+   *
+   * Megjegyzés: `getWebLlmEngine` ebben a fájlban nincs importálva; feltételezhetően globális vagy máshol kerül be.
+   */
   async function kezeliAiKerdesKuldes(e) {
     e.preventDefault();
     const kerdes = aiKerdes.trim();
@@ -76,6 +121,7 @@ export default function Kezdolap() {
       beallitAiHiba(null);
       beallitAiValasz("");
 
+      // WebGPU támogatás ellenőrzése (régebbi böngészők esetén érthető hibaüzenet)
       const nincsWebGPU =
         typeof navigator !== "undefined" && !("gpu" in navigator);
       if (nincsWebGPU) {
@@ -84,6 +130,7 @@ export default function Kezdolap() {
         );
       }
 
+      // Engine/model betöltése, progress megjelenítés az első használatkor
       const engine = await getWebLlmEngine((p) => {
         if (typeof p.progress === "number") {
           beallitAiModellToltes(true);
@@ -91,17 +138,22 @@ export default function Kezdolap() {
         }
       });
 
+      // A modell betöltése kész, a progress UI elrejthető
       beallitAiModellToltes(false);
 
+      /**
+       * Prompt / üzenetek:
+       * - system üzenet: persona + válaszstílus
+       * - user üzenet: a felhasználó kérdése
+       */
       const messages = [
         {
           role: "system",
           content:
-"Te egy 'MakettMester AI' nevű segítő vagy. Magyarul válaszolsz, tegezel. " +
-"Kezdő és haladó makettezőknek segítesz: festés, ragasztás, csiszolás, panelvonalak, diorámák. " +
-"Mindig adj konkrét, lépésről lépésre tippeket, említs meg gyakori hibákat és azok elkerülését. " +
-"Válaszaid legyenek rövidek (3–5 mondat), de informatívak. Ha valamiben nem vagy biztos, írd le, hogy bizonytalan vagy."
-
+            "Te egy 'MakettMester AI' nevű segítő vagy. Magyarul válaszolsz, tegezel. " +
+            "Kezdő és haladó makettezőknek segítesz: festés, ragasztás, csiszolás, panelvonalak, diorámák. " +
+            "Mindig adj konkrét, lépésről lépésre tippeket, említs meg gyakori hibákat és azok elkerülését. " +
+            "Válaszaid legyenek rövidek (3–5 mondat), de informatívak. Ha valamiben nem vagy biztos, írd le, hogy bizonytalan vagy.",
         },
         {
           role: "user",
@@ -109,16 +161,19 @@ export default function Kezdolap() {
         },
       ];
 
+      // Chat completion meghívása az engine-nel (WebLLM kompatibilis API)
       const reply = await engine.chat.completions.create({
         messages,
       });
 
+      // Biztonságos fallback, ha a válasz struktúrája nem a várt
       const text =
         reply?.choices?.[0]?.message?.content ||
         "Nem sikerült most értelmes választ adnom.";
 
       beallitAiValasz(text);
     } catch (err) {
+      // Diagnosztika: konzolra logolunk, a felhasználónak rövid hibaüzenet
       console.error(err);
       beallitAiHiba(err.message || "Nem sikerült választ kapni.");
     } finally {
@@ -129,19 +184,22 @@ export default function Kezdolap() {
   return (
     <section className="page">
       <h1>Üdv a MakettMester oldalán!</h1>
+
       <div className="card">
         <h2>Makettezők tudásbázisa és fóruma</h2>
-  <p>
-    Ez az oldal a makettezés iránt érdeklődők közösségi tere.  
-    Itt különböző maketteket böngészhetsz, értékeléseket és véleményeket
-    olvashatsz, valamint megoszthatod a saját tapasztalataidat is másokkal.
-  </p>
-  <p>
-    A fórumon kérdéseket tehetsz fel, építési naplókat követhetsz,
-    és segítséget kaphatsz festéssel, technikákkal vagy eszközökkel kapcsolatban.
-    Ha elakadnál, a <strong>MakettMester AI</strong> gyors tippekkel is segít.
-  </p>
-</div>
+        <p>
+          Ez az oldal a makettezés iránt érdeklődők közösségi tere. Itt különböző
+          maketteket böngészhetsz, értékeléseket és véleményeket olvashatsz,
+          valamint megoszthatod a saját tapasztalataidat is másokkal.
+        </p>
+        <p>
+          A fórumon kérdéseket tehetsz fel, építési naplókat követhetsz, és
+          segítséget kaphatsz festéssel, technikákkal vagy eszközökkel
+          kapcsolatban. Ha elakadnál, a <strong>MakettMester AI</strong> gyors
+          tippekkel is segít.
+        </p>
+      </div>
+
       <div className="card">
         <h2>Összefoglaló</h2>
         <p>
@@ -167,8 +225,8 @@ export default function Kezdolap() {
         <h2>Legjobbra értékelt makettek</h2>
         {topMakettek.length === 0 ? (
           <p className="small">
-            Még nincs elég értékelés a listához. Adj véleményt néhány
-            makettről a <strong>Makettek</strong> oldalon! 🙂
+            Még nincs elég értékelés a listához. Adj véleményt néhány makettről a{" "}
+            <strong>Makettek</strong> oldalon! 🙂
           </p>
         ) : (
           <ol style={{ paddingLeft: 20, margin: 0 }}>
@@ -229,8 +287,7 @@ export default function Kezdolap() {
                       <em>{v.makett_nev}</em> makettről
                     </span>
                     <span style={{ whiteSpace: "nowrap" }}>
-                      {v.ertekeles} / 5{" "}
-                      <CsillagokKicsi ertek={v.ertekeles} />
+                      {v.ertekeles} / 5 <CsillagokKicsi ertek={v.ertekeles} />
                     </span>
                   </div>
                   <p className="small">{roviditSzoveg(v.szoveg)}</p>
