@@ -30,7 +30,7 @@ function fmt(d) {
 }
 
 export default function MakettJovahagyas() {
-  const { felhasznalo } = useAuth();
+  const { felhasznalo } = useAuth(); 
 
   // Admin jogosultság jelző (szerepkör azonosító alapján)
   const admin = felhasznalo?.szerepkor_id === 2;
@@ -261,6 +261,6 @@ export default function MakettJovahagyas() {
         formatDatum={fmt}
       />
     </div>
-    
+
   );
 }
