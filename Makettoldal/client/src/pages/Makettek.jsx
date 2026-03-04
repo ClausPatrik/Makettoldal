@@ -237,7 +237,7 @@ export default function Makettek() {
       {hiba && <p className="error">Hiba történt az adatok betöltésekor: {hiba}</p>}
 
       {/* Lista */}
-      <section className="card-grid">
+      <section className="card-grid card-grid-5">
         {szurtMakettek.length === 0 ? (
           <p>Nincsenek a szűrésnek megfelelő makettek.</p>
         ) : (

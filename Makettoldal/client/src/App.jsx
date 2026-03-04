@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 
+// Oldalak (route-ok célkomponensei)
+
 import Kezdolap from "./pages/Kezdolap";
 import Makettek from "./pages/Makettek";
 import Bejelentkezes from "./pages/Bejelentkezes";
@@ -18,6 +20,8 @@ import MakettBekuldes from "./pages/MakettBekuldes";
 import MakettJovahagyas from "./pages/MakettJovahagyas";
 import Makettjeim from "./pages/Makettjeim";
 
+// Újrahasznosítható UI elemek
+
 
 import NavBar from "./components/NavBar";
 import AiChatWidget from "./components/AiChatWidget";
@@ -27,7 +31,9 @@ import AdminFelhasznalok from "./pages/AdminFelhasznalok";
 
 
 
-// Vite: automatikusan összeszedi az ikonokat ebből a mappából
+// Vite: dinamikus import (build időben) -> a mappában lévő favicon képeket összegyűjti.
+// - eager: true  -> azonnal betölti a modulokat (nem "lazy")
+// - query: "?url" -> a fájl URL-jét kapjuk meg stringként
 const favModules = import.meta.glob("./assets/favicons/*.{png,ico}", {
   eager: true,
   query: "?url",
@@ -37,6 +43,7 @@ const favIcons = Object.values(favModules);
 
 
 
+// Segédfüggvény: névből determinisztikus színt generálunk (HSL), hogy az avatar mindig ugyanúgy nézzen ki.
 function generalSzin(nev) {
   if (!nev) return "#4b5563";
   let hash = 0;
@@ -47,6 +54,7 @@ function generalSzin(nev) {
   return `hsl(${hue}, 70%, 45%)`;
 }
 
+// Kicsi avatar komponens: ha van profilkép, azt mutatjuk, különben kezdőbetű + generált háttérszín.
 function AvatarKicsi({ nev, profilKepUrl }) {
   if (profilKepUrl) {
     return (
@@ -79,19 +87,24 @@ function AvatarKicsi({ nev, profilKepUrl }) {
 }
 
 export default function App() {
+  // AuthContext: belépett felhasználó adatai + belépési állapot + kijelentkeztetés
   const { felhasznalo, bejelentkezve, kijelentkezes } = useAuth();
+  // Szerepkör példa (2 = admin). Itt most nem használjuk, de később jó lehet route védelemhez / UI elrejtéshez.
   const admin = felhasznalo?.szerepkor_id === 2;
 
-  // Favicon: frissítéskor random + percenként váltás
+  // Favicon: induláskor random választás + 10 másodpercenként váltás
 useEffect(() => {
   console.log("favicon effect ran, icons:", favIcons);
 
+  // Ha nincs betöltött ikon, akkor nincs mit állítani.
   if (!favIcons.length) return;
 
   const pick = () => favIcons[Math.floor(Math.random() * favIcons.length)];
 
   const setFavicon = () => {
     const chosen = pick();
+
+    // Cache-busting: hozzáadunk egy időbélyeget a URL-hez, hogy a böngésző biztosan frissítse.
     const href = chosen.includes("?") ? `${chosen}&v=${Date.now()}` : `${chosen}?v=${Date.now()}`;
 
     // 1) törlünk minden régi favicon linket (különben sokszor nem frissül)
@@ -114,7 +127,8 @@ useEffect(() => {
   };
 
   setFavicon(); // induláskor (frissítéskor)
-  const id = setInterval(setFavicon, 10_000); // percenként
+  const id = setInterval(setFavicon, 10_000); // 10 másodpercenként
+  // Cleanup: ha az App komponens unmountol, állítsuk le az időzítőt.
   return () => clearInterval(id);
 }, []);
 
@@ -132,9 +146,11 @@ useEffect(() => {
     
 
     <div className="app">
+      {/* Felső navigáció minden oldalon */}
       <NavBar />
 
       <main className="main">
+        {/* React Router: útvonal -> komponens */}
         <Routes>
           <Route path="/" element={<Kezdolap />} />
           <Route path="/makettek" element={<Makettek />} />
@@ -150,12 +166,15 @@ useEffect(() => {
 
           <Route path="/makett-bekuldes" element={<MakettBekuldes />} />
           <Route path="/makettjeim" element={<Makettjeim />} />
+
+          {/* Admin oldalak */}
           <Route path="/admin/makett-jovahagyas" element={<MakettJovahagyas />} />
           <Route path="/admin/felhasznalok" element={<AdminFelhasznalok />} />
 
         </Routes>
       </main>
 
+      {/* Lábléc minden oldalon */}
       <Footer />
 
       {/* Lebegő AI chat minden oldalon */}

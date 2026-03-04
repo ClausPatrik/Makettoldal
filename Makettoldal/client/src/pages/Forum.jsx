@@ -1,24 +1,37 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
+// Backend API alap URL (fórum témák + üzenetek endpointok)
 const API_BASE_URL = "http://localhost:3001/api";
 
 /**
- * Fórum oldal:
- * - Bal oldalt témák listája
- * - Jobb oldalt: kiválasztott téma + hozzászólások
- * - Admin: mindent tud, user: csak a sajátját szerkesztheti/törölheti
+ * Fórum oldal
+ *
+ * Felépítés:
+ * - Bal oldali panel: témák listája + kereső
+ * - Jobb oldali panel: kiválasztott téma részletei + hozzászólások
+ *
+ * Jogosultságok (UI szinten):
+ * - Admin: témát/üzenetet szerkeszthet és törölhet
+ * - Moderátor: üzenetet törölhet (és admin jogosultság nélkül nem szerkeszt témát)
+ * - Felhasználó: a saját témáját/üzenetét szerkesztheti, és a saját üzenetét törölheti
+ *
+ * Fontos: a frontend csak a gombokat rejti/mutatja, de a backendnek is ellenőriznie kell a jogokat.
  */
 export default function Forum() {
+  // Bejelentkezési állapot és felhasználói adatok (id, szerepkör) az AuthContextből
   const { bejelentkezve, felhasznalo } = useAuth();
 
-  // Admin ellenőrzés (nálad: szerepkor_id === 2)
+  // Admin ellenőrzés (szerepkor_id === 2)
   const isAdmin = felhasznalo?.szerepkor_id === 2;
 
-  // Moderátor ellenőrzés (nálad: szerepkor_id === 3)
+  // Moderátor ellenőrzés (szerepkor_id === 3)
   const isModerator = felhasznalo?.szerepkor_id === 3;
 
-  // Aktuális userId (ha nincs belépve, NaN lesz)
+  /**
+   * Aktuális felhasználó azonosítója számmá alakítva.
+   * Ha nincs belépve, Number(undefined) -> NaN, ezért később Number.isFinite(...) védi a logikát.
+   */
   const userId = Number(felhasznalo?.id);
 
   // ===== Témák (bal oldal) =====
@@ -30,17 +43,17 @@ export default function Forum() {
   const [uzenetek, setUzenetek] = useState([]);
   const [ujUzenet, setUjUzenet] = useState("");
 
-  // ===== Általános UI =====
+  // ===== Általános UI állapotok =====
   const [betoltes, setBetoltes] = useState(false);
   const [hiba, setHiba] = useState(null);
 
-  // ===== Új téma (gombbal nyíló) =====
+  // ===== Új téma űrlap (gombbal nyitható/zárható) =====
   const [ujTemaNyitva, setUjTemaNyitva] = useState(false);
   const [ujTemaCim, setUjTemaCim] = useState("");
   const [ujTemaKategoria, setUjTemaKategoria] = useState("általános");
   const [ujTemaLeiras, setUjTemaLeiras] = useState("");
 
-  // ===== Téma szerkesztés (admin vagy szerző) =====
+  // ===== Téma szerkesztés (admin vagy a téma indítója) =====
   const [temaEditNyitva, setTemaEditNyitva] = useState(false);
   const [temaEditForm, setTemaEditForm] = useState({
     cim: "",
@@ -48,17 +61,31 @@ export default function Forum() {
     leiras: "",
   });
 
-  // ===== Üzenet szerkesztés (admin vagy szerző; egy darab egyszerre) =====
+  /**
+   * Üzenet szerkesztés
+   * - Egyszerre csak 1 üzenet lehet szerkesztésben
+   * - uzenetEditId: melyik üzenetet szerkesztjük
+   * - uzenetEditSzoveg: kontrollált textarea értéke
+   */
   const [uzenetEditId, setUzenetEditId] = useState(null);
   const [uzenetEditSzoveg, setUzenetEditSzoveg] = useState("");
 
   // ---------------------------------------------------------------------------
-  // Segédek
+  // Segédfüggvények
   // ---------------------------------------------------------------------------
+
+  /**
+   * token() – JWT token lekérése localStorage-ből.
+   * (A fetch hívások Authorization: Bearer fejlécéhez használjuk.)
+   */
   function token() {
     return localStorage.getItem("token");
   }
 
+  /**
+   * Dátum formázása megjelenítéshez.
+   * - Ha nem értelmezhető dátum, akkor az eredeti stringet adjuk vissza.
+   */
   function formatDatum(datumStr) {
     if (!datumStr) return "";
     const d = new Date(datumStr);
@@ -66,16 +93,25 @@ export default function Forum() {
     return d.toLocaleString("hu-HU");
   }
 
-  // Kiválasztott téma objektum
+  // Kiválasztott téma objektum a listából (id alapján)
   const kivalasztottTema = useMemo(() => {
     return temak.find((t) => t.id === kivalasztottTemaId) || null;
   }, [temak, kivalasztottTemaId]);
 
-  // Téma szerző ellenőrzése: admin VAGY szerző
+  /**
+   * Téma szerkesztési jog:
+   * - admin mindig
+   * - egyébként csak a téma indítója (felhasznalo_id egyezés)
+   */
   const temaSzerzoId = Number(kivalasztottTema?.felhasznalo_id);
-  const canEditTema = isAdmin || (Number.isFinite(userId) && temaSzerzoId === userId);
+  const canEditTema =
+    isAdmin || (Number.isFinite(userId) && temaSzerzoId === userId);
 
-  // Témák szűrése keresővel
+  /**
+   * Témák szűrése kereső alapján:
+   * - cím / leírás / kategória mezőkben keres
+   * - kisbetűsítve hasonlít, hogy ne számítson a nagybetű
+   */
   const szurtTemak = useMemo(() => {
     const q = temaKereses.trim().toLowerCase();
     if (!q) return temak;
@@ -89,8 +125,13 @@ export default function Forum() {
   }, [temak, temaKereses]);
 
   // ---------------------------------------------------------------------------
-  // API: témák
+  // API: témák kezelése
   // ---------------------------------------------------------------------------
+
+  /**
+   * Témák betöltése a bal oldali listához.
+   * - Ha még nincs kiválasztott téma, automatikusan az elsőt kiválasztja.
+   */
   async function betoltTemak() {
     try {
       setBetoltes(true);
@@ -113,6 +154,11 @@ export default function Forum() {
     }
   }
 
+  /**
+   * Új téma létrehozása (POST).
+   * - Csak bejelentkezve engedélyezett.
+   * - Siker esetén: lista elejére tesszük + automatikusan kiválasztjuk.
+   */
   async function letrehozTema(e) {
     e.preventDefault();
     if (!bejelentkezve) {
@@ -148,7 +194,7 @@ export default function Forum() {
       setTemak((prev) => [uj, ...prev]);
       setKivalasztottTemaId(uj.id);
 
-      // form reset + bezárás
+      // Űrlap reset + bezárás
       setUjTemaCim("");
       setUjTemaKategoria("általános");
       setUjTemaLeiras("");
@@ -160,7 +206,11 @@ export default function Forum() {
     }
   }
 
-  // Téma mentés: admin vagy szerző (backendben is védekezik!)
+  /**
+   * Téma mentése (PUT)
+   * - UI szerint: admin vagy a téma indítója
+   * - Backendben is kell jogosultság-ellenőrzés
+   */
   async function temaMentes() {
     if (!canEditTema || !kivalasztottTemaId) return;
 
@@ -188,8 +238,10 @@ export default function Forum() {
 
       const frissitett = await res.json();
 
-      // Frissítjük a bal oldali listát
-      setTemak((prev) => prev.map((t) => (t.id === frissitett.id ? frissitett : t)));
+      // Frissítjük a bal oldali listát (id alapján cseréljük)
+      setTemak((prev) =>
+        prev.map((t) => (t.id === frissitett.id ? frissitett : t))
+      );
 
       setTemaEditNyitva(false);
     } catch (err) {
@@ -199,11 +251,21 @@ export default function Forum() {
     }
   }
 
-  // Téma törlés: admin vagy szerző (backendben is védekezik!)
+  /**
+   * Téma törlése (DELETE)
+   * - UI szerint: admin vagy a téma indítója
+   * - Confirm: véletlen törlés ellen
+   * - Siker esetén: kivesszük a listából, és átváltunk másik témára (ha van)
+   */
   async function temaTorles() {
     if (!canEditTema || !kivalasztottTemaId) return;
 
-    if (!window.confirm("Biztosan törlöd ezt a témát? A hozzászólások is elveszhetnek.")) return;
+    if (
+      !window.confirm(
+        "Biztosan törlöd ezt a témát? A hozzászólások is elveszhetnek."
+      )
+    )
+      return;
 
     try {
       setBetoltes(true);
@@ -236,8 +298,13 @@ export default function Forum() {
   }
 
   // ---------------------------------------------------------------------------
-  // API: üzenetek
+  // API: üzenetek (hozzászólások)
   // ---------------------------------------------------------------------------
+
+  /**
+   * Hozzászólások betöltése egy témához.
+   * - Témaváltáskor fut le (useEffect-ből hívva).
+   */
   async function betoltUzenetek(temaId) {
     if (!temaId) return;
     try {
@@ -257,6 +324,11 @@ export default function Forum() {
     }
   }
 
+  /**
+   * Új hozzászólás küldése (POST).
+   * - Csak bejelentkezve engedélyezett
+   * - Siker esetén: hozzáfűzzük a listához + textarea ürítés
+   */
   async function kuldUzenet(e) {
     e.preventDefault();
     if (!bejelentkezve) {
@@ -293,7 +365,11 @@ export default function Forum() {
     }
   }
 
-  // Üzenet mentés (admin vagy szerző)
+  /**
+   * Üzenet mentése (PUT).
+   * - UI szerint: admin vagy a hozzászólás szerzője
+   * - A szerkesztés szövegét a uzenetEditSzoveg állapot tárolja.
+   */
   async function uzenetMentes(uzenetId) {
     if (!uzenetId) return;
 
@@ -317,7 +393,10 @@ export default function Forum() {
 
       const frissitett = await res.json();
 
-      setUzenetek((prev) => prev.map((u) => (u.id === frissitett.id ? frissitett : u)));
+      // Lista frissítése: id alapján cseréljük a módosított elemet
+      setUzenetek((prev) =>
+        prev.map((u) => (u.id === frissitett.id ? frissitett : u))
+      );
       setUzenetEditId(null);
       setUzenetEditSzoveg("");
     } catch (err) {
@@ -327,7 +406,11 @@ export default function Forum() {
     }
   }
 
-  // Üzenet törlés (admin vagy szerző)
+  /**
+   * Üzenet törlése (DELETE).
+   * - UI szerint: admin, moderátor, vagy a szerző (saját üzenet)
+   * - Ha éppen azt szerkesztettük, a szerkesztést is bezárjuk.
+   */
   async function uzenetTorles(uzenetId) {
     if (!uzenetId) return;
     if (!window.confirm("Biztosan törlöd ezt a hozzászólást?")) return;
@@ -350,7 +433,7 @@ export default function Forum() {
 
       setUzenetek((prev) => prev.filter((u) => u.id !== uzenetId));
 
-      // ha épp ezt szerkesztette, zárjuk le
+      // Ha épp ezt szerkesztettük, zárjuk le a szerkesztő módot
       if (uzenetEditId === uzenetId) {
         setUzenetEditId(null);
         setUzenetEditSzoveg("");
@@ -363,16 +446,25 @@ export default function Forum() {
   }
 
   // ---------------------------------------------------------------------------
-  // Betöltések
+  // Betöltések (useEffect)
   // ---------------------------------------------------------------------------
+
+  /**
+   * Kezdeti betöltés: témák lekérése első render után.
+   * (A kommentelt eslint sor azért kell, mert betoltTemak nincs a deps-ben,
+   * és itt direkt csak egyszer akarjuk meghívni.)
+   */
   useEffect(() => {
     betoltTemak();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // téma váltáskor:
-  // - töltsük a hozzászólásokat
-  // - szerkesztő formot állítsuk be a kiválasztott témára
+  /**
+   * Téma váltás figyelése:
+   * - hozzászólások betöltése
+   * - téma szerkesztő űrlap feltöltése a kiválasztott téma adataival
+   * - üzenetszerkesztés lezárása (ne maradjon nyitva más témára)
+   */
   useEffect(() => {
     if (!kivalasztottTemaId) {
       setUzenetek([]);
@@ -391,9 +483,11 @@ export default function Forum() {
       });
     }
 
-    // üzenetszerkesztés záródjon témaváltáskor
+    // Üzenetszerkesztés záródjon témaváltáskor
     setUzenetEditId(null);
     setUzenetEditSzoveg("");
+
+    // Téma szerkesztés panelt is zárjuk témaváltáskor (átláthatóság miatt)
     setTemaEditNyitva(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kivalasztottTemaId]);
@@ -410,10 +504,11 @@ export default function Forum() {
         </p>
       </header>
 
+      {/* Globálisan megjelenített hiba és betöltés jelzés */}
       {hiba && <p className="error">{hiba}</p>}
       {betoltes && <p className="small">Betöltés...</p>}
 
-      {/* Új téma (gombbal nyíló) */}
+      {/* Új téma blokk: gomb nyitja/zárja, a form csak nyitva látszik */}
       <div className="card">
         <div className="forum-newtopic-header">
           <h2 style={{ margin: 0 }}>Új téma</h2>
@@ -428,6 +523,7 @@ export default function Forum() {
 
         {ujTemaNyitva && (
           <div className="form" style={{ marginTop: 12 }}>
+            {/* Bejelentkezés nélkül a form látszik, de a létrehozás gomb disabled */}
             {!bejelentkezve && <p className="small">Új téma indításához jelentkezz be.</p>}
 
             <form onSubmit={letrehozTema}>
@@ -472,13 +568,13 @@ export default function Forum() {
         )}
       </div>
 
-      {/* Két oszlopos elrendezés */}
+      {/* Két oszlopos elrendezés: bal (témák) + jobb (üzenetek) */}
       <div className="forum-layout" style={{ marginTop: 16 }}>
         {/* BAL: témák */}
         <div className="forum-right card">
           <h2>Témák</h2>
 
-          {/* kereső mező formázott wrapperben */}
+          {/* Kereső: a szűrt lista a szurtTemak useMemo-ból jön */}
           <div className="filters" style={{ marginBottom: 10 }}>
             <input
               type="text"
@@ -525,7 +621,7 @@ export default function Forum() {
             <p className="small">Válassz egy témát bal oldalon.</p>
           ) : (
             <>
-              {/* Téma fejléc + szerkesztés gomb (admin vagy szerző) */}
+              {/* Téma fejléc + szerkesztés toggle (ha van jog) */}
               <div className="forum-topic-header">
                 <div>
                   <h2 style={{ marginBottom: 4 }}>{kivalasztottTema.cim}</h2>
@@ -547,7 +643,7 @@ export default function Forum() {
                 )}
               </div>
 
-              {/* Téma szerkesztés blokk */}
+              {/* Téma szerkesztés panel (csak jogosultnak és ha nyitva) */}
               {canEditTema && temaEditNyitva && (
                 <div className="card form" style={{ marginTop: 12 }}>
                   <h3>Téma szerkesztése</h3>
@@ -612,13 +708,19 @@ export default function Forum() {
                   {uzenetek.map((u) => {
                     const szerkeszt = uzenetEditId === u.id;
 
-                    // jogosultság: admin vagy szerző (ez csak itt létezik!)
+                    /**
+                     * Üzenet jogosultság:
+                     * - szerkesztés: admin vagy szerző
+                     * - törlés: admin vagy moderátor vagy szerző
+                     */
                     const uzenetSzerzoId = Number(u.felhasznalo_id);
                     const canEditUzenet =
                       isAdmin || (Number.isFinite(userId) && uzenetSzerzoId === userId);
 
                     const canDeleteUzenet =
-                      isAdmin || isModerator || (Number.isFinite(userId) && uzenetSzerzoId === userId);
+                      isAdmin ||
+                      isModerator ||
+                      (Number.isFinite(userId) && uzenetSzerzoId === userId);
 
                     return (
                       <li key={u.id} className="forum-msg">
@@ -630,32 +732,34 @@ export default function Forum() {
                             </p>
                           </div>
 
-                        {!szerkeszt && (
-                        <div style={{ display: "flex", gap: 8 }}>
-                          {canEditUzenet && (
-                            <button
-                            type="button"
-                            className="btn secondary forum-admin-btn"
-                          onClick={() => {
-                            setUzenetEditId(u.id);
-                            setUzenetEditSzoveg(u.szoveg || "");
-                          }}
-                          >
-                          Szerkesztés
-                          </button>
-                         )}
+                          {/* Akciógombok: csak akkor látszanak, ha nem szerkesztő módban vagyunk */}
+                          {!szerkeszt && (
+                            <div style={{ display: "flex", gap: 8 }}>
+                              {canEditUzenet && (
+                                <button
+                                  type="button"
+                                  className="btn secondary forum-admin-btn"
+                                  onClick={() => {
+                                    // Szerkesztés indítása: id beállítás + textarea feltöltése
+                                    setUzenetEditId(u.id);
+                                    setUzenetEditSzoveg(u.szoveg || "");
+                                  }}
+                                >
+                                  Szerkesztés
+                                </button>
+                              )}
 
-                          {canDeleteUzenet && (
-                            <button
-                          type="button"
-                           className="btn danger"
-                          onClick={() => uzenetTorles(u.id)}
-                         >
-                         Törlés
-                        </button>
-                         )}
-                        </div>
-                        )}
+                              {canDeleteUzenet && (
+                                <button
+                                  type="button"
+                                  className="btn danger"
+                                  onClick={() => uzenetTorles(u.id)}
+                                >
+                                  Törlés
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
 
                         {/* Üzenet tartalom / szerkesztő mód */}
@@ -685,6 +789,7 @@ export default function Forum() {
                                 type="button"
                                 className="btn secondary"
                                 onClick={() => {
+                                  // Szerkesztés megszakítása: state-ek visszaállítása
                                   setUzenetEditId(null);
                                   setUzenetEditSzoveg("");
                                 }}
@@ -692,7 +797,7 @@ export default function Forum() {
                                 Mégse
                               </button>
 
-                              {/* törlés csak szerkesztés közben */}
+                              {/* Törlés gomb szerkesztés közben is megjelenhet (ha van jog) */}
                               {canDeleteUzenet && (
                                 <button
                                   type="button"
@@ -711,7 +816,7 @@ export default function Forum() {
                 </ul>
               )}
 
-              {/* Új hozzászólás */}
+              {/* Új hozzászólás űrlap */}
               <div style={{ marginTop: 12 }}>
                 {bejelentkezve ? (
                   <form onSubmit={kuldUzenet} className="form">

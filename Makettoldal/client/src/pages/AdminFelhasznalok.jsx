@@ -2,9 +2,18 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+// API és fájl kiszolgáló alap URL-ek (fejlesztői környezet: localhost)
 const API = "http://localhost:3001/api";
 const FILE_BASE = "http://localhost:3001";
 
+/**
+ * fmt
+ *
+ * Dátum/idő megjelenítés a felületen.
+ * - ha nincs érték, "—" jelzést ad
+ * - ha dátumként értelmezhető, akkor lokális formátumban kiírja
+ * - hibás értéknél stringgé alakítja (ne omoljon össze a UI)
+ */
 function fmt(d) {
   if (!d) return "—";
   try {
@@ -14,18 +23,38 @@ function fmt(d) {
   }
 }
 
+/**
+ * normalizalKep
+ *
+ * Profilkép URL normalizálása:
+ * - ha a backend relatív "/uploads/..." útvonalat ad, előtagoljuk a szerver címével
+ * - egyébként változtatás nélkül visszaadjuk az URL-t
+ */
 function normalizalKep(url) {
   if (!url) return "";
   if (url.startsWith("/uploads/")) return FILE_BASE + url;
   return url;
 }
 
+/**
+ * roleLabel
+ *
+ * Szerepkör azonosító (szerepkor_id) → felirat a UI-hoz.
+ * Megjegyzés: itt csak a megjelenítés miatt van (nem jogosultság-ellenőrzés).
+ */
 function roleLabel(roleId) {
   if (roleId === 2) return "ADMIN";
   if (roleId === 3) return "MODERÁTOR";
   return "FELHASZNÁLÓ";
 }
 
+/**
+ * AvatarMini
+ *
+ * Admin listában megjelenő mini avatar:
+ * - ha van profilkép, akkor <img>
+ * - ha nincs, akkor fallback: név első betűje
+ */
 function AvatarMini({ url, nev }) {
   const src = normalizalKep(url);
   if (src) {
@@ -40,26 +69,56 @@ function AvatarMini({ url, nev }) {
   );
 }
 
+/**
+ * AdminFelhasznalok oldal
+ *
+ * Funkciók:
+ * - felhasználók listázása (admin endpoint)
+ * - keresés név/email/id alapján
+ * - szerepkör állítás: felhasználó ↔ moderátor (admin nem állítható innen)
+ * - tiltás kezelése: nincs / ideiglenes / végleges + ok + ideiglenesnél dátum
+ * - aktivitás napló megtekintése felhasználónként (utolsó 50)
+ *
+ * Jogosultság:
+ * - az oldalt csak admin láthatja (szerepkor_id === 2)
+ */
 export default function AdminFelhasznalok() {
   const { felhasznalo } = useAuth();
   const token = felhasznalo?.token || "";
+
+  // Egyszerű admin ellenőrzés (UI szint, a backend is ellenőrizze!)
   const admin = felhasznalo?.szerepkor_id === 2;
 
+  // Lista + UI állapotok
   const [lista, setLista] = useState([]);
   const [hiba, setHiba] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Kereső mező állapota
   const [kereses, setKereses] = useState("");
 
   // Tiltás szerkesztés UI (felhasználónként)
+  // tiltForm: az űrlap állapota id-kulccsal tárolva (hogy több usernél külön kezelhető legyen)
   const [tiltForm, setTiltForm] = useState({}); // { [id]: { tiltva, tilt_eddig, tilt_ok } }
+
+  // Mentés folyamatban jelző userenként (gomb disabled és "Mentés..." felirat)
   const [mentesFut, setMentesFut] = useState({}); // { [id]: boolean }
 
-  // Aktivitás panel
+  // Aktivitás panel (egy kiválasztott felhasználóra)
   const [aktivitasok, setAktivitasok] = useState([]);
   const [aktivFelhasznaloId, setAktivFelhasznaloId] = useState(null);
   const [aktivitasBetolt, setAktivitasBetolt] = useState(false);
 
+  /**
+   * toDateTimeLocal
+   *
+   * Backend dátum → <input type="datetime-local"> által elvárt formátum:
+   * "YYYY-MM-DDTHH:mm"
+   *
+   * Megjegyzés:
+   * - A datetime-local nem kezeli a másodpercet / timezone-t úgy, mint egy sima ISO string,
+   *   ezért itt kézzel formázunk.
+   */
   function toDateTimeLocal(d) {
     try {
       const dt = new Date(d);
@@ -72,6 +131,14 @@ export default function AdminFelhasznalok() {
     }
   }
 
+  /**
+   * betoltLista
+   *
+   * Admin felhasználólista betöltése a backendből.
+   * - token szükséges (Authorization: Bearer)
+   * - siker után beállítja a listát
+   * - és inicializálja a tiltForm állapotot a felhasználók aktuális tiltási adatai alapján
+   */
   const betoltLista = async () => {
     setHiba("");
     setLoading(true);
@@ -87,7 +154,8 @@ export default function AdminFelhasznalok() {
 
       setLista(Array.isArray(data) ? data : []);
 
-      // alap tiltForm feltöltés
+      // Tiltás form alapértékek feltöltése:
+      // azért kell külön tiltForm, hogy a felhasználó szerkeszthessen mentés előtt
       const init = {};
       (Array.isArray(data) ? data : []).forEach((u) => {
         init[u.id] = {
@@ -105,11 +173,19 @@ export default function AdminFelhasznalok() {
     }
   };
 
+  // Az oldal megnyitásakor (és ha admin jogosultság adott) betöltjük a listát
   useEffect(() => {
     if (admin) betoltLista();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [admin]);
 
+  /**
+   * szurt
+   *
+   * Keresési szűrés a listára:
+   * - név / email / id mezőkben keres (kisbetűsítve)
+   * - useMemo: csak akkor számolja újra, ha lista vagy keresés változik
+   */
   const szurt = useMemo(() => {
     const q = (kereses || "").trim().toLowerCase();
     if (!q) return lista;
@@ -120,6 +196,13 @@ export default function AdminFelhasznalok() {
     });
   }, [lista, kereses]);
 
+  /**
+   * betoltAktivitas
+   *
+   * Egy felhasználó aktivitás naplóját tölti be (limit=50).
+   * - a panel a kiválasztott userhez jelenik meg
+   * - betöltés közben státusz jelzés
+   */
   const betoltAktivitas = async (id) => {
     try {
       setAktivFelhasznaloId(id);
@@ -142,6 +225,13 @@ export default function AdminFelhasznalok() {
     }
   };
 
+  /**
+   * setUserForm
+   *
+   * Egy felhasználó tiltForm állapotának részleges frissítése (patch).
+   * Megjegyzés:
+   * - immutábilis frissítés (spread) → React state szabályos kezelése
+   */
   const setUserForm = (id, patch) => {
     setTiltForm((prev) => ({
       ...prev,
@@ -149,6 +239,14 @@ export default function AdminFelhasznalok() {
     }));
   };
 
+  /**
+   * mentesTiltas
+   *
+   * Tiltás adatok mentése a backend felé.
+   * - ideiglenes tiltásnál tilt_eddig mezőt küldünk (különben null)
+   * - ok mező opcionális
+   * - siker után frissítjük a listát és (ha nyitva van) az aktivitás panelt is
+   */
   const mentesTiltas = async (id) => {
     try {
       setMentesFut((p) => ({ ...p, [id]: true }));
@@ -183,6 +281,14 @@ export default function AdminFelhasznalok() {
     }
   };
 
+  /**
+   * toggleModerator
+   *
+   * Szerepkör átállítása:
+   * - itt csak felhasználó (1) ↔ moderátor (3) váltás történik
+   * - admin usert a UI eleve kihagyja ebből a blokkból
+   * - siker után friss lista + (ha nyitva) aktivitás is
+   */
   const toggleModerator = async (id, ujSzerepkorId) => {
     try {
       const res = await fetch(`${API}/admin/felhasznalok/${id}/szerepkor`, {
@@ -205,6 +311,7 @@ export default function AdminFelhasznalok() {
     }
   };
 
+  // Ha nem admin a felhasználó, akkor egy egyszerű "nincs jogosultság" panelt mutatunk
   if (!admin) {
     return (
       <div className="page admin-page">
@@ -221,7 +328,7 @@ export default function AdminFelhasznalok() {
 
   return (
     <div className="page admin-page">
-      {/* HEAD */}
+      {/* HEAD: cím + gyors frissítés gomb */}
       <div className="admin-head card">
         <div className="admin-head-left">
           <div className="admin-title">
@@ -240,7 +347,7 @@ export default function AdminFelhasznalok() {
         </div>
       </div>
 
-      {/* TOOLBAR */}
+      {/* TOOLBAR: keresés + találat számláló + hibák / betöltés jelzés */}
       <div className="admin-toolbar card">
         <div className="admin-search">
           <input
@@ -258,11 +365,16 @@ export default function AdminFelhasznalok() {
         {loading && <div className="notice">Betöltés…</div>}
       </div>
 
-      {/* LIST */}
+      {/* LIST: felhasználók kártyás megjelenítése */}
       <div className="admin-list">
         {szurt.map((u) => {
+          // Az aktuális (vagy alap) tiltás form értékek ehhez a userhez
           const f = tiltForm[u.id] || { tiltva: u.tiltva || "nincs", tilt_eddig: "", tilt_ok: "" };
+
+          // Az admin felhasználót nem módosítjuk itt (védelem a UI-ban)
           const isAdminUser = u.szerepkor_id === 2;
+
+          // Ennél a usernél moderátor-e
           const isModerator = u.szerepkor_id === 3;
 
           return (
@@ -280,6 +392,7 @@ export default function AdminFelhasznalok() {
                 </div>
 
                 <div className="admin-user-right">
+                  {/* Szerepkör pill (csak megjelenítés) */}
                   <span
                     className={`admin-pill ${u.szerepkor_id === 2 ? "is-admin" : isModerator ? "is-mod" : "is-user"}`}
                     title="Szerepkör"
@@ -287,13 +400,14 @@ export default function AdminFelhasznalok() {
                     {roleLabel(u.szerepkor_id)}
                   </span>
 
+                  {/* Aktivitás panel megnyitása */}
                   <button className="btn secondary" onClick={() => betoltAktivitas(u.id)}>
                     Aktivitás
                   </button>
                 </div>
               </div>
 
-              {/* MODERATOR SWITCH */}
+              {/* MODERATOR SWITCH: admin usernél nem jelenik meg */}
               {!isAdminUser && (
                 <div className="admin-row">
                   <div className="admin-row-title">Moderátor</div>
@@ -309,7 +423,7 @@ export default function AdminFelhasznalok() {
                 </div>
               )}
 
-              {/* BAN */}
+              {/* BAN: tiltás kezelő blokk */}
               <div className="admin-divider" />
 
               <div className="admin-row">
@@ -328,6 +442,7 @@ export default function AdminFelhasznalok() {
                     <option value="vegleges">végleges</option>
                   </select>
 
+                  {/* Ideiglenes tiltásnál kérjük be a lejárati dátumot */}
                   {f.tiltva === "ideiglenes" && (
                     <input
                       className="admin-input"
@@ -338,6 +453,7 @@ export default function AdminFelhasznalok() {
                     />
                   )}
 
+                  {/* Indok (opcionális) */}
                   <input
                     className="admin-input"
                     value={f.tilt_ok || ""}
@@ -346,6 +462,7 @@ export default function AdminFelhasznalok() {
                     disabled={isAdminUser}
                   />
 
+                  {/* Mentés gomb: userenként külön disabled állapot */}
                   <button
                     className="btn"
                     onClick={() => mentesTiltas(u.id)}
@@ -355,6 +472,7 @@ export default function AdminFelhasznalok() {
                   </button>
                 </div>
 
+                {/* Jelenlegi tiltás állapot visszajelzés (nem az űrlap, hanem a backend szerinti érték) */}
                 <div className="admin-ban-status small">
                   Jelenlegi: <b>{u.tiltva}</b>
                   {u.tiltva === "ideiglenes" && u.tilt_eddig ? (
@@ -372,7 +490,7 @@ export default function AdminFelhasznalok() {
                 </div>
               </div>
 
-              {/* ACTIVITY */}
+              {/* ACTIVITY: csak a kiválasztott felhasználónál jelenik meg */}
               {aktivFelhasznaloId === u.id && (
                 <div className="admin-activity">
                   <div className="admin-activity-head">
