@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logo from "../assets/logo.png";
 
 /**
  * AvatarKicsi komponens
@@ -100,10 +101,10 @@ export default function NavBar() {
   return (
     <>
       <header className="nav">
-        <div className="nav-left">
-          {/* Logo / brand felirat */}
-          <span className="logo">MakettMester</span>
-        </div>
+      <div className="nav-left">
+  <img src={logo} alt="logo" className="nav-logo" />
+  <span className="logo">MakettMester</span>
+</div>
 
         {/* Desktop menu */}
         <nav className="nav-links-desktop" aria-label="Fo menu">

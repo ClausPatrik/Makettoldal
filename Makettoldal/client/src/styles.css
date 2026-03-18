@@ -2609,3 +2609,19 @@ html::-webkit-scrollbar-thumb:hover {
     width: 100%;
   }
 }
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-logo {
+  height: 40px;
+  width: auto;
+}
+
+.nav-logo {
+  height: 40px;
+  filter: drop-shadow(0 0 5px rgba(0, 255, 100, 0.5));
+}
