@@ -1,0 +1,85 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-gradient-from: #2f4b28; /* olive mid tone */
+  --bg-gradient-to: #07110a;   /* very dark olive/near-black */
+  --bg-top-light: #1c2b1b;     /* darkened top (much darker than before) */
+  --card-bg: rgba(8,12,8,0.9);
+  --card-border: rgba(30,40,30,0.45);
+  --accent: #14532d; /* dark oily green (kept) */
+  --accent-soft: #2b6a38;
+  --danger: #dc2626;
+  --muted: #9ca3af;
+  --text: #e7ebdf; /* slightly warm off-white suited to olive bg */
+  --text-soft: #cfd8c4;
+
+  --hud-glow: 0 0 18px rgba(20,83,45,0.18);
+  --warning-glow: 0 0 18px rgba(224, 90, 42, 0.18);
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* Layered background: light top -> mid olive -> dark bottom, with subtle radial textures */
+  background:
+    radial-gradient(1000px 500px at 10% 10%, rgba(40,80,40,0.06), transparent 35%),
+    radial-gradient(900px 600px at 90% 80%, rgba(0,0,0,0.55), transparent 60%),
+    linear-gradient(180deg, var(--bg-top-light) 0%, var(--bg-gradient-from) 45%, var(--bg-gradient-to) 100%);
+  color: var(--text);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02) 1px, transparent 1px, transparent 6px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.015), rgba(255,255,255,0.015) 1px, transparent 1px, transparent 8px);
+  mix-blend-mode: overlay;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  padding: 24px;
+  flex: 1;
+}
+
+.page {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+h1, h2, h3 {
+  margin-top: 0;
+  letter-spacing: 0.06em;
+}
+
+h1 {
+  text-transform: uppercase;
+  text-shadow: var(--hud-glow);
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* scrollbar defaults (use oily green) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(20,83,45,0.35) rgba(255,255,255,0.06);
+}
+html::-webkit-scrollbar { width: 10px; }
+html::-webkit-scrollbar-track { background: rgba(255,255,255,0.06); }
+html::-webkit-scrollbar-thumb { background: rgba(20,83,45,0.28); border-radius: 999px; border: 2px solid rgba(2,6,23,0.55); }
+html::-webkit-scrollbar-thumb:hover { background: rgba(20,83,45,0.42); }

@@ -69,39 +69,31 @@ export default function MakettCard({
             {makett.nev}
           </h2>
 
-          {/* Gyártó, skála és kategória */}
-          <p className="small">
-            {makett.gyarto} • {makett.skala} • {makett.kategoria}
-          </p>
+          {/* Manufacturer directly under the name */}
+          <p className="small">{makett.gyarto}</p>
 
-          {/* Nehézségi szint és kiadás éve */}
-          <p className="small">
-            Nehézség: {makett.nehezseg}/5 • Megjelenés éve:{" "}
-            {makett.megjelenes_eve}
-          </p>
-        </div>
+          {/* Difficulty under the manufacturer */}
+          <p className="small">Nehézség: {makett.nehezseg}/5</p>
 
-        {/* Átlagos értékelés megjelenítése csillagokkal (nem kattintható) */}
-        <div className="makett-ertekeles">
-          <CsillagValaszto value={atlag} readOnly />
+          {/* Stars and review count under difficulty (in-flow) */}
+          <div className="makett-ertekeles">
+            <CsillagValaszto value={atlag} readOnly />
+            <p className="small">Átlag: {Number(atlag).toFixed(1)} ({velemenyek.length} vélemény)</p>
+          </div>
 
-          {/* Szöveges átlag + vélemények száma */}
-          <p className="small">
-            Átlag: {Number(atlag).toFixed(1)} ({velemenyek.length} vélemény)
+          {/* Other meta (scale/category/year) shown below */}
+          <p className="small" style={{ marginTop: 6 }}>
+            {makett.skala} • {makett.kategoria} • {makett.megjelenes_eve}
           </p>
         </div>
-      </div>
+       </div>
 
-      {/* Makett kép – kattintásra modal nyílik */}
       {makett.kep_url && (
         <div
           className="makett-kep-wrapper"
           onClick={() => onOpenModal?.(makett)}
           role="button"
           tabIndex={0}
-
-          // Billentyűzet támogatás (accessibility)
-          // Enter vagy Space lenyomására is megnyílik a modal
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") onOpenModal?.(makett);
           }}

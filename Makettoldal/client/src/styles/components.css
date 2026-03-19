@@ -1,0 +1,330 @@
+.card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid var(--card-border);
+  margin-bottom: 16px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.65);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 22px 50px rgba(15,23,42,0.85); border-color: rgba(20,83,45,0.5); }
+
+/* Grid: use fixed max column width so cards keep the same size whether 1 or many per row */
+.card-grid {
+  display: grid;
+  gap: 16px;
+  /* each column will be at least 260px and at most 320px; grid will create as many as fit */
+  grid-template-columns: repeat(auto-fill, minmax(260px, 320px));
+  justify-content: center; /* center the grid when fewer columns */
+  align-items: start;
+  grid-auto-rows: 1fr;
+}
+.card-grid-fixed { grid-template-columns: repeat(auto-fill, minmax(260px, 320px)); justify-content: center; }
+
+/* Ensure direct grid children are flex columns and don't stretch the columns beyond the cap */
+.card-grid > * { display: flex; flex-direction: column; align-self: stretch; }
+
+/* Ensure cards in grid are equal height and content doesn't overflow */
+.card-grid .makett-card { width: 100%; max-width: 320px; display: flex; flex-direction: column; min-height: 0; }
+
+.makett-nev {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 700;
+  min-height: calc(1.3em * 2);
+  /* use -webkit-box for multiline clamp and avoid overriding it with display:block */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.makett-kep-wrapper { margin-top: 10px; border-radius: 14px; overflow: hidden; border: 1px solid #1f2937; cursor: pointer; flex: 0 0 auto; }
+.makett-kep { width: 100%; height: 180px; object-fit: cover; display: block; transition: transform 0.25s ease, filter 0.25s ease; flex: 0 0 180px; }
+.makett-kep-wrapper:hover .makett-kep { transform: scale(1.03); filter: brightness(1.02) saturate(1.05); }
+
+.card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+
+.btn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(20,83,45,0.6);
+  background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 10px 25px rgba(20,83,45,0.18), inset 0 -2px 0 rgba(0,0,0,0.25);
+  transition: transform 0.1s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 16px 35px rgba(20,83,45,0.6); }
+.btn.secondary { background: transparent; color: var(--text); border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(6px); }
+.btn.danger { background: #dc2626; box-shadow: 0 10px 25px rgba(239,68,68,0.45); }
+.btn:disabled { opacity: 0.6; cursor: default; box-shadow: none; }
+.btn:active { transform: translateY(1px) scale(0.997); }
+
+/* Rating stars: inline row with centered items and no fixed height to avoid shifting */
+.rating-stars {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  line-height: 1;
+}
+
+.rating-stars .star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;          /* let line-height control vertical rhythm */
+  min-width: 0;
+  padding: 0 4px;       /* horizontal padding only */
+  font-size: 14px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+  transform-origin: center center;
+  vertical-align: middle;
+}
+
+/* Hover/active: scale only (no translate) to avoid baseline shift */
+.rating-stars .star:hover { background-color: rgba(250,204,21,0.10); transform: scale(1.06); }
+.rating-stars .star.active { color: #facc15; background-color: rgba(250,204,21,0.14); box-shadow: 0 0 6px rgba(250,204,21,0.12); transform: scale(1.04); }
+
+/* Slightly smaller on very small screens to preserve layout */
+@media (max-width: 520px) {
+  .rating-stars .star { font-size: 12px; padding: 0 3px; }
+}
+
+.card.skeleton { position: relative; overflow: hidden; border-color: #111827; }
+.skeleton-line { height: 10px; border-radius: 999px; background: #111827; margin-bottom: 10px; }
+.skeleton-line.skeleton-title { height: 16px; width: 70%; }
+.skeleton-line.short { width: 40%; }
+.card.skeleton::before { content: ""; position: absolute; inset: 0; background: linear-gradient(120deg, transparent, rgba(148,163,184,0.22), transparent); transform: translateX(-100%); animation: skeleton-shimmer 1.4s infinite; }
+@keyframes skeleton-shimmer { 100% { transform: translateX(100%); } }
+
+.chip { display:inline-flex; align-items:center; padding:2px 10px; border-radius:999px; font-size:12px; border:1px solid #1f2937; background: rgba(17,24,39,0.7); color: var(--text-soft); }
+.chip-wait { border-color: rgba(249,115,22,0.45); }
+
+.notice { margin-top:12px; padding:10px 12px; border-radius:12px; border:1px solid #1f2937; background: rgba(2,6,23,0.6); color: var(--text); }
+.notice.success { border-color: rgba(20,83,45,0.5); }
+.notice.error { border-color: rgba(220,38,38,0.6); }
+
+.fav-btn { background: transparent; border: none; cursor: pointer; font-size: 20px; transition: transform 0.1s ease, filter 0.15s ease; }
+.fav-btn:hover { transform: translateY(-1px) scale(1.05); filter: drop-shadow(0 0 6px rgba(248,250,252,0.6)); }
+.fav-btn.active { filter: drop-shadow(0 0 10px #f97316); }
+
+.ai-fab { position: fixed; right: 20px; bottom: 20px; width: 52px; height: 52px; border-radius: 999px; border: none; background: linear-gradient(135deg, #22c55e, #16a34a); color: #f9fafb; font-size: 24px; box-shadow: 0 15px 35px rgba(22,163,74,0.7); cursor: pointer; z-index: 50; display:flex; align-items:center; justify-content:center; transition: transform 0.1s ease, box-shadow 0.15s ease; }
+.ai-fab:hover { transform: translateY(-1px) scale(1.03); box-shadow: 0 20px 45px rgba(22,163,74,0.9); }
+
+.ai-chat-window { position: fixed; right: 20px; bottom: 84px; width: 320px; max-height: 420px; background: #020617f0; border-radius: 16px; border: 1px solid #1f2937; box-shadow: 0 25px 60px rgba(15,23,42,0.9); display:flex; flex-direction:column; overflow:hidden; z-index:50; }
+.ai-chat-header { padding:8px 12px; border-bottom:1px solid #1f2937; display:flex; align-items:center; justify-content:space-between; background: radial-gradient(circle at top left, #22c55e, #020617); }
+.ai-chat-close { background:transparent; border:none; color:#e5e7eb; font-size:18px; cursor:pointer; }
+.ai-chat-body { padding:8px 10px; flex:1; overflow-y:auto; font-size:13px; }
+.ai-chat-footer { padding:8px; border-top:1px solid #1f2937; display:flex; gap:6px; }
+.ai-chat-footer input { flex:1; border-radius:999px; border:1px solid #4b5563; background:#020617; color:#e5e7eb; font-size:13px; padding:6px 8px; }
+.ai-chat-footer button { border-radius:999px; border:none; padding:6px 10px; font-size:13px; background:#22c55e; color:#020617; cursor:pointer; }
+.ai-chat-footer button:disabled { opacity:0.6; cursor:default; }
+.ai-chat-hint { color:#9ca3af; font-size:12px; }
+.ai-msg { margin-bottom:6px; max-width:85%; padding:6px 8px; border-radius:10px; font-size:13px; }
+.ai-msg-user { margin-left:auto; background: var(--accent); }
+.ai-msg-bot { margin-right:auto; background:#111827; }
+
+/* Makett-specific card tweaks */
+.makett-card {
+  background: linear-gradient(180deg, rgba(10,14,10,0.88), rgba(8,10,8,0.92));
+  border: 1px solid var(--card-border);
+  box-shadow: 0 12px 40px rgba(2,6,3,0.6), 0 2px 6px rgba(0,0,0,0.6);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.12s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+}
+.makett-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(2,6,3,0.7), 0 6px 18px rgba(0,0,0,0.6);
+  border-color: rgba(20,83,45,0.6);
+}
+
+/* Prevent card header from breaking when some fields are empty (flex layout, keep header in flow) */
+.makett-fejlec {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 72px;
+  padding: 12px 16px;
+  /* keep header in normal flow so it cannot overlap the image */
+}
+.makett-fejlec > div:first-child { flex: 1 1 auto; min-width: 0; margin-right: 12px; }
+
+/* Rating area: place stars and numeric label on one row and center them vertically */
+.makett-ertekeles {
+  display: flex;
+  flex-direction: row; /* place stars and number inline */
+  align-items: center; /* vertical center relative to text */
+  gap: 8px; /* space between stars and numeric label */
+  flex: 0 0 auto !important;
+  min-width: 0;
+  max-width: none;
+}
+
+/* On makett cards, place stars above the numeric average (left-aligned per request) */
+.makett-card .makett-ertekeles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* left-align stars and average */
+  gap: 4px;
+  text-align: left;
+}
+
+/* Ensure stars row inside card is left aligned */
+.makett-card .rating-stars { justify-content: flex-start; }
+
+@media (max-width: 720px) {
+  .makett-card .makett-ertekeles { align-items: flex-start; }
+}
+
+/* Responsive: stack header on small screens */
+@media (max-width: 720px) {
+  .makett-fejlec { flex-direction: column; align-items: flex-start; padding: 12px; position: static; padding-right: 0; }
+  .makett-ertekeles { position: static; width: auto; text-align: left; align-items: flex-start; }
+  .card-grid .makett-card { height: auto; }
+  .makett-kep { height: 160px; }
+  .makett-card { min-height: initial; }
+}
+
+/* Defensive text wrapping for small/meta fields */
+.makett-fejlec .small,
+.card .small,
+.small {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.25;
+  color: var(--text-soft);
+}
+
+.makett-fejlec .small { opacity: 0.95; }
+
+/* Hide empty meta lines instead of leaving blank space that can collapse awkwardly */
+.makett-fejlec .small:empty { display: none; }
+
+/* Make the footer message button match primary buttons */
+.footer-message-btn {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(20,83,45,0.6);
+  background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(20,83,45,0.16);
+}
+.footer-message-btn:hover { transform: translateY(-2px); box-shadow: 0 18px 45px rgba(20,83,45,0.22); }
+
+/* ensure button-row spacing remains comfortable on mobile */
+.button-row { gap: 10px; display:flex; flex-wrap:wrap; }
+
+/* Push action buttons to the bottom so variable content doesn't move them */
+.card .button-row { margin-top: auto; }
+
+@media (max-width: 520px) {
+  .makett-ertekeles { flex: none; max-width: none; min-width: 0; text-align: left; }
+}
+
+/* Fallback / stronger rules to prevent layout shifts */
+.card-grid-5, .card-grid { align-items: stretch !important; }
+.card-grid-5 > *, .card-grid > * { align-self: stretch !important; }
+
+.card-grid-5 .makett-card, .card-grid .makett-card { display: flex !important; flex-direction: column !important; justify-content: space-between !important; align-items: stretch !important; min-height: 320px; }
+
+/* Ensure image placeholder matches image height */
+.makett-kep-placeholder { width: 100%; height: 180px; display: flex; align-items: center; justify-content: center; background: rgba(10,14,10,0.6); color: var(--text-soft); font-weight: 700; }
+
+/* Header should not grow and push content */
+.makett-fejlec { flex: 0 0 auto !important; }
+.makett-fejlec > div:first-child { overflow: hidden; }
+
+/* Rating area defensive tweaks (normalized to the tightened values) */
+.makett-ertekeles {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto !important;
+  min-width: 0;
+  max-width: none;
+  gap: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.makett-ertekeles .small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Star sizing consistent */
+.rating-stars { gap: 4px; }
+.rating-stars .star { font-size: 12px; padding: 0 3px; min-width: 14px; }
+
+/* Ensure buttons stick to bottom even if content varies */
+.makett-card .button-row { margin-top: auto !important; }
+
+/* last resort: prevent very long unbroken strings from overflowing */
+.makett-card, .makett-fejlec, .makett-nev, .small { word-wrap: break-word; overflow-wrap: break-word; }
+
+/* Make the left part of the header stack its lines neatly */
+.makett-fejlec > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* tightened gap between name, manufacturer, difficulty, rating */
+  min-width: 0; /* allow truncation */
+}
+
+/* Image and buttons spacing */
+.makett-kep-wrapper { margin-top: 10px; }
+.makett-card .button-row { margin-top: 12px; padding-top: 6px; }
+
+/* Prevent long small text from pushing layout */
+.makett-fejlec .small, .makett-card .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Ensure reviews area doesn't overlap header or buttons */
+.makett-card .velemeny { margin-top: 8px; }
+
+/* Mobile adjustments: make meta wrap instead of truncating too aggressively */
+@media (max-width: 520px) {
+  .makett-fejlec > div:first-child { gap: 4px; }
+  .makett-fejlec .small { white-space: normal; }
+  .makett-ertekeles { text-align: left; align-items: flex-start; }
+}
+
+/* Make stars larger on makett cards for better visibility */
+.makett-card .rating-stars { gap: 6px; }
+.makett-card .rating-stars .star {
+  font-size: 14px; /* reduced from 18px */
+  padding: 1px 4px;
+  min-width: 16px;
+}
+@media (max-width: 520px) {
+  .makett-card .rating-stars .star { font-size: 12px; }
+}
+
+/* Slightly increase active/hover visual scale for emphasis (no translate to avoid vertical shift) */
+.makett-card .rating-stars .star:hover { transform: scale(1.04); }
+.makett-card .rating-stars .star.active { transform: scale(1.06); }
+
+/* Ensure makett-card specific rules don't conflict */
+.makett-card .rating-stars { gap: 6px; }
+.makett-card .rating-stars .star { font-size: 14px; height: 20px; min-width: 20px; }
