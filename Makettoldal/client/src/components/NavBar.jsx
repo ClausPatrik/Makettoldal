@@ -100,14 +100,14 @@ export default function NavBar() {
 
   return (
     <>
-      <header className="nav">
-      <div className="nav-left">
+      <header className="nav animate-pop" style={{ animationDelay: '40ms' }}>
+      <div className="nav-left animate-pop" style={{ animationDelay: '80ms' }}>
   <img src={logo} alt="logo" className="nav-logo" />
   <span className="logo">MakettMester</span>
 </div>
 
         {/* Desktop menu */}
-        <nav className="nav-links-desktop" aria-label="Fo menu">
+        <nav className="nav-links-desktop animate-pop" aria-label="Fo menu" style={{ animationDelay: '120ms' }}>
           {/* Alap menüpontok mindenki számára */}
           <NavLink to="/" className={linkClass}>Kezdolap</NavLink>
           <NavLink to="/makettek" className={linkClass}>Makettek</NavLink>
@@ -139,7 +139,7 @@ export default function NavBar() {
         </nav>
 
         {/* Desktop right: profil + auth gombok */}
-        <div className="nav-right nav-right-desktop">
+        <div className="nav-right nav-right-desktop animate-pop" style={{ animationDelay: '160ms' }}>
           {bejelentkezve ? (
             <>
               {/* Profil link: avatarral és névvel */}
@@ -167,7 +167,8 @@ export default function NavBar() {
 
         {/* Hamburger (mobile) */}
         <button
-          className="nav-hamburger"
+          className="nav-hamburger animate-pop"
+          style={{ animationDelay: '200ms' }}
           onClick={toggleMenu}
           aria-label="Menu"
           // Accessibility: jelzi, hogy a menü nyitva van-e
@@ -179,10 +180,10 @@ export default function NavBar() {
 
       {/* Overlay: csak akkor látszik, ha a mobil menü nyitva van.
           Kattintásra bezárjuk a menüt. */}
-      {menuNyitva && <div className="nav-overlay" onClick={closeMenu} />}
+      {menuNyitva && <div className="nav-overlay show animate-fade" onClick={closeMenu} />}
 
       {/* Mobile menu */}
-      <nav className={`nav-mobile ${menuNyitva ? "open" : ""}`} aria-label="Mobil menu">
+      <nav className={`nav-mobile ${menuNyitva ? "open" : ""} animate-pop`} aria-label="Mobil menu" style={{ animationDelay: '220ms' }}>
         <div className="nav-mobile-inner">
           {/* Alap menüpontok mobilon */}
           <NavLink to="/" className={linkClass} onClick={closeMenu}>Kezdolap</NavLink>

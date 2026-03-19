@@ -60,7 +60,7 @@ export default function MakettCard({
       : makett?.kep_url;
 
   return (
-    <article className="card makett-card">
+    <article className={"card makett-card animate-pop"} style={{ animationDelay: `${((makett?.id ?? 1) % 8) * 60 + 60}ms` }}>
 
       {/* Kártya fejléc: név, alap adatok és átlagos értékelés */}
       <div className="makett-fejlec">
@@ -90,7 +90,8 @@ export default function MakettCard({
 
       {makett.kep_url && (
         <div
-          className="makett-kep-wrapper"
+          className="makett-kep-wrapper animate-pop"
+          style={{ animationDelay: `${((makett?.id ?? 1) % 8) * 60 + 140}ms` }}
           onClick={() => onOpenModal?.(makett)}
           role="button"
           tabIndex={0}
