@@ -1,3 +1,4 @@
+/* Profil kártya: kétoszlopos rács (avatár + adatok) */
 .profile-card {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -5,6 +6,7 @@
   align-items: flex-start;
 }
 
+/* Profil avatár wrapper: kör, zöld szegély, árnyék */
 .profile-avatar-wrapper {
   width: 96px;
   height: 96px;
@@ -14,183 +16,314 @@
   box-shadow: 0 10px 26px rgba(20, 83, 45, 0.55);
 }
 
+/* Profil avatár kép: kitölti a kört */
 .profile-avatar-image { width: 100%; height: 100%; object-fit: cover; }
 
+/* Profil info szöveg méret */
 .profile-info { font-size: 14px; }
+/* Profil űrlap: teljes szélességű (mindkét oszlop) */
 .profile-form { grid-column: 1 / -1; }
 
+/* Kedvencek lista: díszítés nélkül */
 .kedvenc-lista { list-style: none; padding-left: 0; margin: 0; }
+/* Kedvenc sor: alsó szegéllyel elválasztva */
 .kedvenc-sor { padding: 6px 0; border-bottom: 1px solid #111827; }
 
+/* Bejelentkezés/regisztráció oldal: max 480px széles */
 .auth-page { max-width: 480px; }
+/* Auth űrlap alsó térköz */
 .auth-form { margin-bottom: 16px; }
 
+/* Profil oldal rács: bal oldalsáv (360px) + fő tartalom */
 .profile-grid { display:grid; grid-template-columns: 360px 1fr; gap:16px; }
+/* Mobil reszponzív: egyoszlopos profil */
 @media (max-width: 980px){ .profile-grid{ grid-template-columns: 1fr; } }
 
+/* Profil oldalsáv: oszlop elrendezés */
 .profile-side { display:flex; flex-direction:column; gap:14px; }
+/* Oldalsáv teteje: avatár + metaadatok egymás mellett */
 .profile-side-top { display:flex; align-items:center; gap:14px; }
+/* Oldalsáv meta: túlcsordulás kezelés */
 .profile-side-meta { min-width:0; }
 
+/* Profil név: nagy, vastag betű */
 .profile-name { font-size:18px; font-weight:800; letter-spacing:.02em; }
+/* Profil email: halványabb, kis betű, tördelés */
 .profile-email { color: var(--text-soft); font-size:13px; margin-top:4px; word-break: break-word; }
+/* Profil szerepkör: felső térköz */
 .profile-role{ margin-top:10px; }
 
+/* Avatár fallback: nagy kezdőbetű, kör, árnyékos */
 .profile-avatar-fallback{ width:96px; height:96px; border-radius:9999px; display:flex; align-items:center; justify-content:center; font-size:42px; font-weight:900; color:#fff; border:1px solid rgba(116,130,112,0.25); box-shadow: 0 18px 46px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08); }
 
+/* Profil statisztikák: 3 oszlopos rács */
 .profile-side-stats{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; }
+/* Statisztika kártya: sötét háttér, szegély */
 .stat{ border:1px solid rgba(116,130,112,0.20); border-radius:12px; padding:10px; background: rgba(7,10,8,0.55); }
+/* Stat címke: apró, nagybetűs */
 .stat-label{ font-size:12px; color: var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+/* Stat érték: nagy, vastag, izzó */
 .stat-value{ margin-top:6px; font-size:18px; font-weight:900; text-shadow: var(--hud-glow); }
+/* Stat érték zöld variáns */
 .stat-value.ok{ color: var(--accent); }
 
+/* Oldalsáv műveletek: alulra tolva */
 .profile-side-actions{ margin-top:auto; }
 
+/* Profil fő tartalom: oszlop elrendezés */
 .profile-main{ display:flex; flex-direction:column; gap:12px; }
+/* Fő tartalom fejléc: cím + műveletek egymás mellett */
 .profile-main-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom: 6px; }
 
+/* Profil űrlap rács: kétoszlopos */
 .profile-form-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+/* Mobil reszponzív: egyoszlopos űrlap */
 @media (max-width: 760px){ .profile-form-grid{ grid-template-columns: 1fr; } }
+/* Fájl feltöltő: teljes szélességű */
 .profile-file{ grid-column: 1 / -1; }
+/* Űrlap műveletek: teljes szélességű gombsor */
 .profile-form-actions{ grid-column: 1 / -1; display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+/* Profil link gomb: inline-flex, díszítés nélkül */
 .profile-linkbtn{ display:inline-flex; align-items:center; justify-content:center; text-decoration:none; }
 
+/* Rejtett fájl input (egyedi gomb mögé rejtve) */
 .file-hidden-input { display: none; }
+/* Fájl feltöltő címke */
 .profile-file-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; display: block; }
+/* Fájl feltöltő gomb: zöld gradiens, nagybetűs, árnyékos */
 .file-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; background: linear-gradient(180deg, rgba(95,191,120,0.22), rgba(95,191,120,0.08)), linear-gradient(135deg, rgba(20,83,45,0.92), rgba(9,12,10,0.98)); border: 1px solid rgba(95,191,120,0.35); color: var(--text); box-shadow: 0 10px 22px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08); transition: 0.2s; }
+/* Fájl gomb hover: erősebb árnyék, felemelkedés */
 .file-btn:hover { box-shadow: 0 14px 34px rgba(0,0,0,0.55), 0 0 0 1px rgba(95,191,120,0.22), var(--hud-glow); transform: translateY(-1px); }
+/* Fájl gomb lenyomás */
 .file-btn:active { transform: translateY(1px); }
+/* Kiválasztott fájl neve: zöld, monospace */
 .file-name { margin-top: 10px; font-size: 13px; color: var(--accent); font-family: monospace; text-shadow: var(--hud-glow); }
+/* Fájl méret/típus segédszöveg */
 .file-hint { display: block; margin-top: 6px; opacity: 0.75; }
 
+/* Veszély gomb: piros háttér */
 .btn.danger { background: #dc2626; border: 1px solid rgba(0,0,0,0.2); }
 .btn.danger:hover { filter: brightness(1.05); }
 
-/* Forum */
+/* Fórum elrendezés: kétoszlopos (témalista + üzenetek) */
 .forum-layout { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; align-items: start; }
+/* Fórum bal oldal: ragadós, görgethető témalista */
 .forum-left { position: sticky; top: 76px; max-height: calc(100vh - 96px); overflow: auto; }
+/* Témalista: díszítés nélkül */
 .forum-topic-list { list-style: none; padding-left: 0; margin: 0; }
+/* Téma elem: lekerekített, hover kiemelés */
 .forum-topic { padding: 10px 10px; border-bottom: 1px solid #111827; cursor: pointer; border-radius: 12px; transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease; }
+/* Téma hover: zöld háttér, felemelkedés */
 .forum-topic:hover { background: rgba(20, 83, 45, 0.12); transform: translateY(-1px); }
+/* Aktív téma: erősebb zöld háttér és szegély */
 .forum-topic.active { background: rgba(20, 83, 45, 0.18); border: 1px solid rgba(20, 83, 45, 0.35); }
+/* Téma fejléc: cím és metaadatok egymás mellett */
 .forum-topic-top { display: flex; justify-content: space-between; gap: 10px; }
+/* Téma metaadatok: jobbra igazított */
 .forum-topic-meta { text-align: right; min-width: 140px; }
+/* Üzenetlista: díszítés nélkül */
 .forum-msg-list { list-style: none; padding-left: 0; margin: 0; }
+/* Üzenet elem: alsó szegéllyel elválasztva */
 .forum-msg { padding: 10px 0; border-bottom: 1px solid #111827; }
+/* Mobil reszponzív: egyoszlopos fórum */
 @media (max-width: 900px) { .forum-layout { grid-template-columns: 1fr; } .forum-left { position: static; max-height: none; overflow: visible; } .forum-topic-meta { text-align: left; min-width: auto; } }
+/* Új téma fejléc: cím + gomb egymás mellett */
 .forum-newtopic-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 
+/* Fórum kereső mező: lekerekített, sötét, fókusz kiemelés */
 .forum-left input[type="text"] { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.10); background: rgba(17, 24, 39, 0.6); color: #e5e7eb; outline: none; }
 .forum-left input[type="text"]::placeholder { color: rgba(229, 231, 235, 0.6); }
 .forum-left input[type="text"]:focus { border-color: rgba(20, 83, 45, 0.6); box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.18); }
 
-/* Footer */
+/* Lábléc: sötét gradiens háttér, felső szegély, árnyék */
 .tank-footer { margin-top: 80px; background: linear-gradient(180deg, rgba(15,20,16,0.96), rgba(8,11,9,0.98)); border-top: 1px solid rgba(116,130,112,0.25); box-shadow: 0 -10px 40px rgba(0,0,0,0.6); }
+/* Lábléc belső: reszponzív rács, max 1300px */
 .tank-footer-inner { max-width: 1300px; margin: auto; padding: 40px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+/* Lábléc panel: sötét kártya, belső fény árnyékkal */
 .footer-panel { background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent 30%), rgba(10,14,11,0.85); border: 1px solid rgba(116,130,112,0.22); border-radius: 14px; padding: 20px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.45), 0 16px 40px rgba(0,0,0,0.45); }
+/* Lábléc cím: nagybetűs, zöld, izzó */
 .footer-title { font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; color: var(--accent); text-shadow: var(--hud-glow); }
+/* Lábléc leírás szöveg */
 .footer-desc { font-size: 14px; color: var(--text-soft); line-height: 1.6; }
+/* Lábléc navigáció: linkek listája, bal szegély kiemelés */
 .footer-nav ul { list-style: none; padding: 0; margin: 0; }
 .footer-nav li { margin-bottom: 10px; }
 .footer-nav a { color: var(--text-soft); text-decoration: none; font-size: 14px; border-left: 2px solid transparent; padding-left: 8px; transition: 0.2s; }
 .footer-nav a:hover { color: var(--accent); border-left-color: var(--accent); text-shadow: var(--hud-glow); }
+/* Lábléc státusz: szerver állapot kijelző */
 .footer-status { margin-top: 14px; font-family: monospace; font-size: 13px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+/* Státusz pont: zöld izzó kör */
 .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px rgba(95,191,120,0.8); }
 .status-dot.online { background: #5fbf78; }
+/* Lábléc alsó sáv: copyright és címke */
 .footer-bottom { border-top: 1px solid rgba(116,130,112,0.18); padding: 14px 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); background: rgba(6,8,7,0.95); }
+/* Lábléc címke: halvány nagybetűs felirat */
 .footer-tag { letter-spacing: 0.15em; text-transform: uppercase; color: rgba(214,224,210,0.5); }
 
-/* modal.edit-modal (overrides) */
+/* Szerkesztő modal: kisebb max szélesség, zöld gradiens háttér */
 .modal.edit-modal{ width: min(780px, 100%); max-height: 90vh; overflow: auto; border-radius: 14px; padding: 16px; border: 1px solid rgba(116,130,112,0.22); background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent 28%), radial-gradient(800px 260px at 20% 0%, rgba(95,191,120,0.06), transparent 60%), rgba(7, 10, 8, 0.92); box-shadow: 0 30px 85px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.35); }
+/* Szerkesztő modal fejléc: cím + bezáró gomb */
 .modal.edit-modal .modal-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom: 10px; border-bottom: 1px solid rgba(116,130,112,0.20); margin-bottom: 12px; }
+/* Szerkesztő modal cím: nagybetűs, izzó */
 .modal.edit-modal .modal-head h2{ margin:0; font-size: 16px; letter-spacing: .10em; text-transform: uppercase; color: rgba(236,244,236,0.95); text-shadow: var(--hud-glow); }
+/* Szerkesztő modal ikon gomb: lekerekített, hover kiemelés */
 .modal.edit-modal .icon-btn{ width: 38px; height: 38px; border-radius: 12px; border: 1px solid rgba(116,130,112,0.25); background: rgba(255,255,255,0.06); color: rgba(236,244,236,0.92); cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
 .modal.edit-modal .icon-btn:hover{ background: rgba(255,255,255,0.10); border-color: rgba(95,191,120,0.35); box-shadow: var(--hud-glow); }
 .modal.edit-modal .modal-head h2{ margin:0; }
+/* Szerkesztő modal címkék: nagybetűs, halvány */
 .modal.edit-modal .form-grid label{ font-weight: 900; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: rgba(214,224,210,0.72); }
+/* Szerkesztő modal mezők: sötét háttér, belső árnyék */
 .modal.edit-modal input, .modal.edit-modal select, .modal.edit-modal textarea{ padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(116,130,112,0.25); background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 35%), rgba(7,10,8,0.92); color: var(--text); outline: none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.55); }
+/* Szerkesztő modal fókusz: zöld szegély és izzás */
 .modal.edit-modal input:focus, .modal.edit-modal select:focus, .modal.edit-modal textarea:focus{ border-color: rgba(95,191,120,0.55); box-shadow: 0 0 0 2px rgba(95,191,120,0.14), var(--hud-glow); }
+/* Szerkesztő modal figyelmeztető alert: narancs izzás */
 .modal.edit-modal .alert.warn{ border-radius: 14px; border: 1px solid rgba(224,90,42,0.45); background: linear-gradient(180deg, rgba(224,90,42,0.12), transparent 60%), rgba(7,10,8,0.75); box-shadow: var(--warning-glow); }
+/* Szerkesztő modal gombsor térköz */
 .modal.edit-modal .button-row{ margin-top: 8px; }
+/* Szerkesztő modal mobil reszponzív: egyoszlopos űrlap, teljes szélességű gombok */
 @media (max-width: 760px){ .modal.edit-modal .form-grid{ grid-template-columns: 1fr; } .modal.edit-modal .form-grid .span-2{ grid-column: span 1; } .modal.edit-modal .button-row{ flex-direction: column; align-items: stretch; } .modal.edit-modal .button-row .btn{ width: 100%; } }
 
-/* Admin */
+/* Admin oldal: felső padding */
 .admin-page { padding: 10px 0; }
+/* Admin fejléc: cím és műveletek egymás mellett */
 .admin-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+/* Admin cím: ikon + szöveg egymás mellett */
 .admin-title { display: flex; align-items: center; gap: 10px; }
 .admin-title h2 { margin: 0; font-size: 18px; }
+/* Admin cím badge: zöld szegélyes, izzó címke */
 .admin-title-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 10px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: rgba(236,244,236,0.92); border: 1px solid rgba(95,191,120,0.35); background: rgba(95,191,120,0.10); box-shadow: var(--hud-glow); }
+/* Admin alcím térköz */
 .admin-sub { margin-top: 8px; }
+/* Admin kereső eszköztár */
 .admin-toolbar .admin-search { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* Admin kereső mező: sötét, lekerekített, fókusz kiemelés */
 .admin-input { width: 100%; max-width: 520px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(116,130,112,0.25); background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 35%), rgba(7, 10, 8, 0.92); color: var(--text); outline: none; transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease; }
 .admin-input:focus { border-color: rgba(95,191,120,0.55); box-shadow: 0 0 0 2px rgba(95,191,120,0.14), var(--hud-glow); }
+/* Admin számláló: inline badge */
 .admin-count { display: inline-flex; align-items: center; gap: 6px; }
+/* Admin lista: rács elrendezés */
 .admin-list { margin-top: 16px; display: grid; gap: 12px; }
+/* Admin felhasználó kártya padding */
 .admin-user-card { padding: 14px; }
+/* Admin felhasználó kártya teteje: adatok és műveletek egymás mellett */
 .admin-user-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+/* Admin felhasználó bal oldal: avatár + adatok */
 .admin-user-left { display: flex; align-items: center; gap: 12px; min-width: 280px; }
+/* Admin avatár kép: kör, szegély */
 .admin-avatar { width: 46px; height: 46px; border-radius: 999px; object-fit: cover; border: 1px solid rgba(116,130,112,0.25); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); flex-shrink: 0; }
+/* Admin avatár fallback: kezdőbetű, izzó szöveg */
 .admin-avatar-fallback { display: grid; place-items: center; font-weight: 900; background: rgba(7,10,8,0.65); text-shadow: var(--hud-glow); }
+/* Admin felhasználó metaadatok: túlcsordulás kezelés */
 .admin-user-meta { min-width: 0; }
+/* Admin felhasználónév: vastag, inline badge-dzsel */
 .admin-user-name { font-weight: 900; letter-spacing: .02em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Admin ID: monospace betűtípus */
 .admin-id { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color: rgba(208,225,208,0.85); opacity: .9; }
+/* Admin email: tördelés hosszú címeknél */
 .admin-user-email { color: var(--text-soft); font-size: 14px; word-break: break-word; margin-top: 2px; }
+/* Admin jobb oldal: műveleti gombok */
 .admin-user-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* Admin szerepkör pill: nagybetűs, szegélyes */
 .admin-pill { padding: 6px 10px; border-radius: 12px; border: 1px solid rgba(116,130,112,0.25); background: rgba(7,10,8,0.55); font-weight: 900; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+/* Admin pill: narancs izzás */
 .admin-pill.is-admin { border-color: rgba(224,90,42,0.55); box-shadow: var(--warning-glow); }
+/* Moderátor pill: zöld izzás */
 .admin-pill.is-mod { border-color: rgba(95,191,120,0.45); box-shadow: var(--hud-glow); }
+/* Felhasználó pill: halványabb */
 .admin-pill.is-user { opacity: .9; }
+/* Admin sor: szekció a kártyán belül */
 .admin-row { margin-top: 12px; }
+/* Admin sor cím: nagybetűs, izzó */
 .admin-row-title { font-weight: 900; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; color: rgba(236,244,236,0.92); text-shadow: var(--hud-glow); }
+/* Admin műveleti gombsor */
 .admin-row-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* Admin elválasztó vonal */
 .admin-divider { margin-top: 14px; height: 1px; background: rgba(116,130,112,0.20); }
+/* Admin tiltás rács: 4 oszlopos elrendezés */
 .admin-ban-grid { display: grid; grid-template-columns: 180px 240px 1fr 140px; gap: 10px; align-items: center; }
+/* Tiltás státusz térköz */
 .admin-ban-status { margin-top: 10px; }
+/* Mobil reszponzív: egyoszlopos tiltás és szélesebb kereső */
 @media (max-width: 980px) { .admin-ban-grid { grid-template-columns: 1fr; } .admin-input { max-width: 100%; } }
 
+/* Admin aktivitás panel: sötét kártya, szegélyes */
 .admin-activity { margin-top: 14px; padding: 12px; border-radius: 14px; border: 1px solid rgba(116,130,112,0.22); background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent 30%), rgba(7, 10, 8, 0.70); }
+/* Aktivitás fejléc: cím + szűrő egymás mellett */
 .admin-activity-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
 .admin-activity-head h3 { margin: 0; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+/* Aktivitás lista: rács */
 .admin-activity-list { display: grid; gap: 8px; }
+/* Aktivitás elem: sötét háttér, szegélyes */
 .admin-activity-item { padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(116,130,112,0.18); background: rgba(2, 6, 23, 0.25); }
+/* Aktivitás típus: vastag betű */
 .admin-activity-type { font-weight: 900; letter-spacing: .04em; }
+/* Aktivitás szöveg */
 .admin-activity-text { color: rgba(236,244,236,0.90); margin-top: 3px; }
+/* Aktivitás időbélyeg */
 .admin-activity-time { margin-top: 6px; }
 
+/* Jóváhagyás kártya: flex oszlop, automatikus magasság */
 .approval-card{ height: auto; display: flex; flex-direction: column; }
+/* Statikus kép wrapper: nem kattintható */
 .makett-kep-wrapper--static{ cursor: default; }
+/* Kép nélküli placeholder: sötét háttér, középre igazított szöveg */
 .makett-kep-placeholder{ width: 100%; height: 180px; display: flex; align-items: center; justify-content: center; margin-top: 10px; border-radius: 14px; overflow: hidden; border: 1px solid #1f2937; background: rgba(15, 23, 42, 0.45); color: var(--muted); font-size: 13px; }
+/* Jóváhagyás metaadatok: csonkolás */
 .approval-card .approval-meta{ margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Jóváhagyás gombok: oszlop, teljes szélesség */
 .approval-card .button-row{ flex-direction: column; align-items: stretch; }
 .approval-card .button-row .btn{ width: 100%; }
 
+/* Napló overlay: legfelső z-index */
 .modal-overlay.naplo-overlay{ z-index: 10000; }
+/* Kártya fejléc: balra igazított flex sor */
 .card-header{ display:flex; align-items:flex-start; justify-content:flex-start; }
+/* Bal oldali info: oszlop elrendezés */
 .bal-info{ display:flex; flex-direction:column; gap:6px; }
+/* Értékelés sor: csillagok és szám egymás mellett */
 .ertekeles{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+/* Átlag szám: világos, félkövér */
 .atlag{ font-weight:600; color:#ddd; }
+/* Státusz badge: arany háttér */
 .status{ background:#b8860b; color:white; padding:2px 8px; border-radius:6px; font-size:12px; }
 
+/* Szerkesztő overlay: sötétebb háttér, blur */
 .modal-overlay.edit-overlay{ background: rgba(0,0,0,0.68); backdrop-filter: blur(6px); z-index: 9999; }
 
-/* Uzenet modal */
+/* Üzenet modal overlay: blur háttér, középre igazítás */
 .uzenet-modal-overlay{ position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; }
+/* Üzenet modal: sötét panel, lekerekített */
 .uzenet-modal{ width: min(640px, 100%); border-radius: 18px; border: 1px solid rgba(20,83,45,0.25); background: rgba(2,6,23,0.92); box-shadow: 0 18px 70px rgba(0,0,0,0.65); padding: 14px; }
+/* Üzenet modal fejléc: cím + bezáró gomb */
 .uzenet-modal-head{ display:flex; align-items:center; justify-content: space-between; gap: 10px; padding: 8px 6px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
 .uzenet-modal-head h3{ margin: 0; color: rgba(255,255,255,0.92); letter-spacing: 0.6px; }
+/* Üzenet modal bezáró gomb */
 .uzenet-modal-close{ width: 38px; height: 38px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.92); cursor: pointer; }
 .uzenet-modal-close:hover{ background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.2); }
+/* Üzenet modal info doboz: sárga szegélyes figyelmeztetés */
 .uzenet-modal-info{ margin-top: 12px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(245,158,11,0.30); background: rgba(245,158,11,0.10); color: rgba(255,255,255,0.92); font-weight: 700; }
+/* Üzenet űrlap: rács elrendezés */
 .uzenet-form{ padding: 12px 6px 6px; display: grid; gap: 12px; }
+/* Üzenet űrlap címkék: vastag, kis betű */
 .uzenet-form label{ display: grid; gap: 6px; color: rgba(255,255,255,0.78); font-weight: 800; font-size: 13px; }
+/* Üzenet űrlap mezők: sötét háttér, zöld szegély */
 .uzenet-form input, .uzenet-form textarea{ padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(20,83,45,0.22); background: rgba(2,6,23,0.55); color: rgba(255,255,255,0.92); outline: none; }
+/* Üzenet textarea: minimum magasság */
 .uzenet-form textarea{ min-height: 140px; resize: vertical; }
+/* Üzenet mezők fókusz: zöld szegély és árnyék */
 .uzenet-form input:focus, .uzenet-form textarea:focus{ border-color: rgba(20,83,45,0.65); box-shadow: 0 0 0 3px rgba(20,83,45,0.18); background: rgba(2,6,23,0.68); }
+/* Üzenet sikeres küldés visszajelzés */
 .uzenet-modal-msg{ padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(20,83,45,0.25); background: rgba(20,83,45,0.10); color: rgba(255,255,255,0.92); font-weight: 800; }
+/* Üzenet űrlap műveletek: jobbra igazított gombok */
 .uzenet-form-actions{ display:flex; gap: 10px; justify-content: flex-end; padding-top: 4px; }
+/* Üzenet gombok: lekerekített, halvány háttér */
 .uzenet-btn{ padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.92); font-weight: 900; cursor: pointer; }
+/* Elsődleges üzenet gomb: zöld szegély */
 .uzenet-btn.primary{ border-color: rgba(20,83,45,0.55); background: rgba(20,83,45,0.16); }
 .uzenet-btn.primary:hover{ box-shadow: 0 0 16px rgba(20,83,45,0.30); }
+/* Másodlagos üzenet gomb hover */
 .uzenet-btn.secondary:hover{ background: rgba(255,255,255,0.10); }
+/* Letiltott üzenet gomb */
 .uzenet-btn:disabled{ opacity: 0.6; cursor: not-allowed; }
+/* Mobil reszponzív: oszlop elrendezésű gombok */
 @media (max-width: 520px){ .uzenet-form-actions{ flex-direction: column; } .uzenet-btn{ width: 100%; } }

@@ -1,3 +1,4 @@
+/* Általános kártya: sötét háttér, lekerekítés, árnyék, hover emelkedés */
 .card {
   background: var(--card-bg);
   border-radius: 16px;
@@ -10,31 +11,31 @@
 }
 .card:hover { transform: translateY(-2px); box-shadow: 0 22px 50px rgba(15,23,42,0.85); border-color: rgba(20,83,45,0.5); }
 
-/* Grid: use fixed max column width so cards keep the same size whether 1 or many per row */
+/* Kártya rács: reszponzív, fix max oszlopszélesség, középre igazított */
 .card-grid {
   display: grid;
   gap: 16px;
-  /* each column will be at least 260px and at most 320px; grid will create as many as fit */
   grid-template-columns: repeat(auto-fill, minmax(260px, 320px));
-  justify-content: center; /* center the grid when fewer columns */
+  justify-content: center;
   align-items: start;
   grid-auto-rows: 1fr;
 }
+/* Fix szélességű kártya rács variáns */
 .card-grid-fixed { grid-template-columns: repeat(auto-fill, minmax(260px, 320px)); justify-content: center; }
 
-/* Ensure direct grid children are flex columns and don't stretch the columns beyond the cap */
+/* Rács gyerekek: flex oszlopok, egyforma magasság */
 .card-grid > * { display: flex; flex-direction: column; align-self: stretch; }
 
-/* Ensure cards in grid are equal height and content doesn't overflow */
+/* Makett kártyák a rácsban: max 320px széles, flex oszlop */
 .card-grid .makett-card { width: 100%; max-width: 320px; display: flex; flex-direction: column; min-height: 0; }
 
+/* Makett neve: max 2 soros, csonkolás pontokkal, félkövér */
 .makett-nev {
   margin: 0;
   font-size: 18px;
   line-height: 1.25;
   font-weight: 700;
   min-height: calc(1.3em * 2);
-  /* use -webkit-box for multiline clamp and avoid overriding it with display:block */
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -45,12 +46,17 @@
   white-space: normal;
 }
 
+/* Makett kép wrapper: lekerekített, hover-re enyhe zoom */
 .makett-kep-wrapper { margin-top: 10px; border-radius: 14px; overflow: hidden; border: 1px solid #1f2937; cursor: pointer; flex: 0 0 auto; }
+/* Makett kép: fix 180px magas, kitöltés */
 .makett-kep { width: 100%; height: 180px; object-fit: cover; display: block; transition: transform 0.25s ease, filter 0.25s ease; flex: 0 0 180px; }
+/* Kép hover: enyhe nagyítás és fényerő növelés */
 .makett-kep-wrapper:hover .makett-kep { transform: scale(1.03); filter: brightness(1.02) saturate(1.05); }
 
+/* Kártya fejléc: tartalom és gombok egymás mellett */
 .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
 
+/* Általános gomb: lekerekített, zöld gradiens, árnyék */
 .btn {
   padding: 6px 14px;
   border-radius: 999px;
@@ -63,13 +69,18 @@
   box-shadow: 0 10px 25px rgba(20,83,45,0.18), inset 0 -2px 0 rgba(0,0,0,0.25);
   transition: transform 0.1s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
+/* Gomb hover: felemelkedés, erősebb árnyék */
 .btn:hover { transform: translateY(-1px); box-shadow: 0 16px 35px rgba(20,83,45,0.6); }
+/* Másodlagos gomb: átlátszó háttér, halvány szegély */
 .btn.secondary { background: transparent; color: var(--text); border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(6px); }
+/* Veszély gomb: piros háttér */
 .btn.danger { background: #dc2626; box-shadow: 0 10px 25px rgba(239,68,68,0.45); }
+/* Letiltott gomb: halványított, nem kattintható */
 .btn:disabled { opacity: 0.6; cursor: default; box-shadow: none; }
+/* Gomb lenyomás: enyhe benyomódás */
 .btn:active { transform: translateY(1px) scale(0.997); }
 
-/* Rating stars: inline row with centered items and no fixed height to avoid shifting */
+/* Értékelő csillagok: vízszintes sor */
 .rating-stars {
   display: inline-flex;
   align-items: center;
@@ -78,13 +89,14 @@
   line-height: 1;
 }
 
+/* Egyedi csillag gomb: hover és aktív állapot sárga szín */
 .rating-stars .star {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: auto;          /* let line-height control vertical rhythm */
+  height: auto;
   min-width: 0;
-  padding: 0 4px;       /* horizontal padding only */
+  padding: 0 4px;
   font-size: 14px;
   line-height: 1;
   background: transparent;
@@ -97,50 +109,66 @@
   vertical-align: middle;
 }
 
-/* Hover/active: scale only (no translate) to avoid baseline shift */
+/* Csillag hover: háttér kiemelés, nagyítás */
 .rating-stars .star:hover { background-color: rgba(250,204,21,0.10); transform: scale(1.06); }
+/* Aktív csillag: sárga szín és izzó árnyék */
 .rating-stars .star.active { color: #facc15; background-color: rgba(250,204,21,0.14); box-shadow: 0 0 6px rgba(250,204,21,0.12); transform: scale(1.04); }
 
-/* Slightly smaller on very small screens to preserve layout */
+/* Csillagok reszponzív: kisebb méret mobil nézetben */
 @media (max-width: 520px) {
   .rating-stars .star { font-size: 12px; padding: 0 3px; }
 }
 
+/* Skeleton betöltési kártya: csillogó shimmer animáció */
 .card.skeleton { position: relative; overflow: hidden; border-color: #111827; }
+/* Skeleton sorok: placeholder vonalak tartalom helyén */
 .skeleton-line { height: 10px; border-radius: 999px; background: #111827; margin-bottom: 10px; }
 .skeleton-line.skeleton-title { height: 16px; width: 70%; }
 .skeleton-line.short { width: 40%; }
 .card.skeleton::before { content: ""; position: absolute; inset: 0; background: linear-gradient(120deg, transparent, rgba(148,163,184,0.22), transparent); transform: translateX(-100%); animation: skeleton-shimmer 1.4s infinite; }
 @keyframes skeleton-shimmer { 100% { transform: translateX(100%); } }
 
+/* Chip/címke: kis lekerekített badge szövegekhez */
 .chip { display:inline-flex; align-items:center; padding:2px 10px; border-radius:999px; font-size:12px; border:1px solid #1f2937; background: rgba(17,24,39,0.7); color: var(--text-soft); }
+/* Várakozó állapotú chip: narancs szegély */
 .chip-wait { border-color: rgba(249,115,22,0.45); }
 
+/* Értesítő doboz: siker és hiba variáns */
 .notice { margin-top:12px; padding:10px 12px; border-radius:12px; border:1px solid #1f2937; background: rgba(2,6,23,0.6); color: var(--text); }
 .notice.success { border-color: rgba(20,83,45,0.5); }
 .notice.error { border-color: rgba(220,38,38,0.6); }
 
+/* Kedvenc gomb: szív ikon, hover-re fényes árnyék */
 .fav-btn { background: transparent; border: none; cursor: pointer; font-size: 20px; transition: transform 0.1s ease, filter 0.15s ease; }
 .fav-btn:hover { transform: translateY(-1px) scale(1.05); filter: drop-shadow(0 0 6px rgba(248,250,252,0.6)); }
+/* Aktív kedvenc: narancs izzás */
 .fav-btn.active { filter: drop-shadow(0 0 10px #f97316); }
 
+/* AI chat lebegő gomb: fix pozíció, jobb alsó sarok, zöld kör */
 .ai-fab { position: fixed; right: 20px; bottom: 20px; width: 52px; height: 52px; border-radius: 999px; border: none; background: linear-gradient(135deg, #22c55e, #16a34a); color: #f9fafb; font-size: 24px; box-shadow: 0 15px 35px rgba(22,163,74,0.7); cursor: pointer; z-index: 50; display:flex; align-items:center; justify-content:center; transition: transform 0.1s ease, box-shadow 0.15s ease; }
 .ai-fab:hover { transform: translateY(-1px) scale(1.03); box-shadow: 0 20px 45px rgba(22,163,74,0.9); }
 
+/* AI chat ablak: fix pozíció, sötét panel, fejléc/üzenetek/beviteli mező */
 .ai-chat-window { position: fixed; right: 20px; bottom: 84px; width: 320px; max-height: 420px; background: #020617f0; border-radius: 16px; border: 1px solid #1f2937; box-shadow: 0 25px 60px rgba(15,23,42,0.9); display:flex; flex-direction:column; overflow:hidden; z-index:50; }
+/* AI chat fejléc: zöld gradiens háttér */
 .ai-chat-header { padding:8px 12px; border-bottom:1px solid #1f2937; display:flex; align-items:center; justify-content:space-between; background: radial-gradient(circle at top left, #22c55e, #020617); }
+/* AI chat bezáró gomb */
 .ai-chat-close { background:transparent; border:none; color:#e5e7eb; font-size:18px; cursor:pointer; }
+/* AI chat üzenetek területe: görgethető */
 .ai-chat-body { padding:8px 10px; flex:1; overflow-y:auto; font-size:13px; }
+/* AI chat beviteli mező és küldés gomb */
 .ai-chat-footer { padding:8px; border-top:1px solid #1f2937; display:flex; gap:6px; }
 .ai-chat-footer input { flex:1; border-radius:999px; border:1px solid #4b5563; background:#020617; color:#e5e7eb; font-size:13px; padding:6px 8px; }
 .ai-chat-footer button { border-radius:999px; border:none; padding:6px 10px; font-size:13px; background:#22c55e; color:#020617; cursor:pointer; }
 .ai-chat-footer button:disabled { opacity:0.6; cursor:default; }
+/* AI chat segítő szöveg */
 .ai-chat-hint { color:#9ca3af; font-size:12px; }
+/* AI üzenet buborék: felhasználó jobbra, bot balra */
 .ai-msg { margin-bottom:6px; max-width:85%; padding:6px 8px; border-radius:10px; font-size:13px; }
 .ai-msg-user { margin-left:auto; background: var(--accent); }
 .ai-msg-bot { margin-right:auto; background:#111827; }
 
-/* Makett-specific card tweaks */
+/* Makett kártya: sötét gradiens háttér, hover-re felemelkedés */
 .makett-card {
   background: linear-gradient(180deg, rgba(10,14,10,0.88), rgba(8,10,8,0.92));
   border: 1px solid var(--card-border);
@@ -157,7 +185,7 @@
   border-color: rgba(20,83,45,0.6);
 }
 
-/* Prevent card header from breaking when some fields are empty (flex layout, keep header in flow) */
+/* Makett kártya fejléc: név + értékelés egymás mellett */
 .makett-fejlec {
   display: flex;
   align-items: flex-start;
@@ -165,38 +193,39 @@
   gap: 8px;
   min-height: 72px;
   padding: 12px 16px;
-  /* keep header in normal flow so it cannot overlap the image */
 }
+/* Fejléc bal oldali rész: kitölti a rendelkezésre álló helyet */
 .makett-fejlec > div:first-child { flex: 1 1 auto; min-width: 0; margin-right: 12px; }
 
-/* Rating area: place stars and numeric label on one row and center them vertically */
+/* Értékelés terület: csillagok és szám egy sorban */
 .makett-ertekeles {
   display: flex;
-  flex-direction: row; /* place stars and number inline */
-  align-items: center; /* vertical center relative to text */
-  gap: 8px; /* space between stars and numeric label */
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   flex: 0 0 auto !important;
   min-width: 0;
   max-width: none;
 }
 
-/* On makett cards, place stars above the numeric average (left-aligned per request) */
+/* Makett kártyán belüli értékelés: oszlop elrendezés, balra igazított */
 .makett-card .makett-ertekeles {
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* left-align stars and average */
+  align-items: flex-start;
   gap: 4px;
   text-align: left;
 }
 
-/* Ensure stars row inside card is left aligned */
+/* Makett kártyán csillagok balra igazítása */
 .makett-card .rating-stars { justify-content: flex-start; }
 
+/* Tablet reszponzív: értékelés balra igazítás */
 @media (max-width: 720px) {
   .makett-card .makett-ertekeles { align-items: flex-start; }
 }
 
-/* Responsive: stack header on small screens */
+/* Tablet reszponzív: fejléc oszlopba rendezés, kisebb kép */
 @media (max-width: 720px) {
   .makett-fejlec { flex-direction: column; align-items: flex-start; padding: 12px; position: static; padding-right: 0; }
   .makett-ertekeles { position: static; width: auto; text-align: left; align-items: flex-start; }
@@ -205,7 +234,7 @@
   .makett-card { min-height: initial; }
 }
 
-/* Defensive text wrapping for small/meta fields */
+/* Apró szöveg stílus: szürke, kis betűméret, tördelés */
 .makett-fejlec .small,
 .card .small,
 .small {
@@ -218,12 +247,13 @@
   color: var(--text-soft);
 }
 
+/* Fejlécben a kis szöveg kissé átlátszó */
 .makett-fejlec .small { opacity: 0.95; }
 
-/* Hide empty meta lines instead of leaving blank space that can collapse awkwardly */
+/* Üres metaadat sorok elrejtése */
 .makett-fejlec .small:empty { display: none; }
 
-/* Make the footer message button match primary buttons */
+/* Lábléc üzenet gomb: zöld gradiens, lekerekített */
 .footer-message-btn {
   padding: 10px 14px;
   border-radius: 999px;
@@ -236,30 +266,32 @@
 }
 .footer-message-btn:hover { transform: translateY(-2px); box-shadow: 0 18px 45px rgba(20,83,45,0.22); }
 
-/* ensure button-row spacing remains comfortable on mobile */
+/* Gombsor: vízszintes elrendezés, tördelés */
 .button-row { gap: 10px; display:flex; flex-wrap:wrap; }
 
-/* Push action buttons to the bottom so variable content doesn't move them */
+/* Kártya gombok: mindig alulra tolva */
 .card .button-row { margin-top: auto; }
 
+/* Mobil reszponzív: értékelés igazítás */
 @media (max-width: 520px) {
   .makett-ertekeles { flex: none; max-width: none; min-width: 0; text-align: left; }
 }
 
-/* Fallback / stronger rules to prevent layout shifts */
+/* Kártya rácsok: egyforma magasság biztosítása */
 .card-grid-5, .card-grid { align-items: stretch !important; }
 .card-grid-5 > *, .card-grid > * { align-self: stretch !important; }
 
+/* Makett kártyák a rácsban: flex oszlop, tartalom elosztás */
 .card-grid-5 .makett-card, .card-grid .makett-card { display: flex !important; flex-direction: column !important; justify-content: space-between !important; align-items: stretch !important; min-height: 320px; }
 
-/* Ensure image placeholder matches image height */
+/* Kép nélküli placeholder: fix magasság, középre igazított szöveg */
 .makett-kep-placeholder { width: 100%; height: 180px; display: flex; align-items: center; justify-content: center; background: rgba(10,14,10,0.6); color: var(--text-soft); font-weight: 700; }
 
-/* Header should not grow and push content */
+/* Fejléc ne nőjön: fix magasságú terület */
 .makett-fejlec { flex: 0 0 auto !important; }
 .makett-fejlec > div:first-child { overflow: hidden; }
 
-/* Rating area defensive tweaks (normalized to the tightened values) */
+/* Értékelés terület végleges: egy sor, túlcsordulás csonkolás */
 .makett-ertekeles {
   display: flex;
   flex-direction: row;
@@ -275,56 +307,175 @@
 }
 .makett-ertekeles .small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Star sizing consistent */
+/* Csillagok alapértelmezett méret */
 .rating-stars { gap: 4px; }
 .rating-stars .star { font-size: 12px; padding: 0 3px; min-width: 14px; }
 
-/* Ensure buttons stick to bottom even if content varies */
+/* Makett kártya gombjai mindig alul */
 .makett-card .button-row { margin-top: auto !important; }
 
-/* last resort: prevent very long unbroken strings from overflowing */
+/* Szövegtördelés: hosszú szavak ne lógjanak ki */
 .makett-card, .makett-fejlec, .makett-nev, .small { word-wrap: break-word; overflow-wrap: break-word; }
 
-/* Make the left part of the header stack its lines neatly */
+/* Fejléc bal rész: oszlop elrendezés, kis gap a sorok közt */
 .makett-fejlec > div:first-child {
   display: flex;
   flex-direction: column;
-  gap: 2px; /* tightened gap between name, manufacturer, difficulty, rating */
-  min-width: 0; /* allow truncation */
+  gap: 2px;
+  min-width: 0;
 }
 
-/* Image and buttons spacing */
+/* Kép és gombsor térköz */
 .makett-kep-wrapper { margin-top: 10px; }
 .makett-card .button-row { margin-top: 12px; padding-top: 6px; }
 
-/* Prevent long small text from pushing layout */
+/* Fejléc kis szövegek: egy soros, csonkolás */
 .makett-fejlec .small, .makett-card .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Ensure reviews area doesn't overlap header or buttons */
+/* Vélemény szekció térköz */
 .makett-card .velemeny { margin-top: 8px; }
 
-/* Mobile adjustments: make meta wrap instead of truncating too aggressively */
+/* Mobil reszponzív: kis szöveg tördelés, értékelés igazítás */
 @media (max-width: 520px) {
   .makett-fejlec > div:first-child { gap: 4px; }
   .makett-fejlec .small { white-space: normal; }
   .makett-ertekeles { text-align: left; align-items: flex-start; }
 }
 
-/* Make stars larger on makett cards for better visibility */
+/* Makett kártyán nagyobb csillagok a jobb láthatóságért */
 .makett-card .rating-stars { gap: 6px; }
 .makett-card .rating-stars .star {
-  font-size: 14px; /* reduced from 18px */
+  font-size: 14px;
   padding: 1px 4px;
   min-width: 16px;
 }
+/* Mobil csillag méret */
 @media (max-width: 520px) {
   .makett-card .rating-stars .star { font-size: 12px; }
 }
 
-/* Slightly increase active/hover visual scale for emphasis (no translate to avoid vertical shift) */
+/* Csillag hover/aktív: enyhe nagyítás eltolás nélkül */
 .makett-card .rating-stars .star:hover { transform: scale(1.04); }
 .makett-card .rating-stars .star.active { transform: scale(1.06); }
 
-/* Ensure makett-card specific rules don't conflict */
+/* Makett kártya csillagok végleges mérete */
 .makett-card .rating-stars { gap: 6px; }
 .makett-card .rating-stars .star { font-size: 14px; height: 20px; min-width: 20px; }
+
+/* Makett bal oldali meta blokk: értékelés + státusz egymás alatt */
+.makett-bal-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* Napló blokk tippek pre: formázott szöveg, tördelés */
+.naplo-pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-soft);
+  background: rgba(2, 6, 23, 0.35);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(116,130,112,0.15);
+}
+
+/* Toast komponens: fix pozíció, felül középen */
+.toast-wrap {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 11000;
+  pointer-events: none;
+}
+
+/* Toast doboz: sötét háttér, szegélyes, flex sor */
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(20,83,45,0.35);
+  background: rgba(2, 6, 23, 0.92);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.65);
+  color: var(--text);
+  min-width: 280px;
+  max-width: 480px;
+  animation: toast-slide-in 0.25s ease;
+}
+
+/* Toast hiba variáns: piros szegély */
+.toast--error {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  background: rgba(2, 6, 23, 0.92);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.65);
+  color: var(--text);
+  min-width: 280px;
+  max-width: 480px;
+  animation: toast-slide-in 0.25s ease;
+}
+
+/* Toast ikon: fix méret */
+.toast__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--muted);
+}
+.toast--error .toast__icon {
+  color: #f97373;
+}
+
+/* Toast cím: vastag, kis betűméret */
+.toast__title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Toast szöveg: halványabb, kis betű */
+.toast__text {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+/* Toast műveletek: jobbra tolva */
+.toast__actions {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Toast OK gomb: kis lekerekített gomb */
+.toast__btn {
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+.toast__btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* Toast megjelenési animáció: felülről becsúszik */
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

@@ -1,13 +1,18 @@
+/* Figyelmeztetés doboz: lekerekített, szegéllyel */
 .alert{
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.12);
   margin: 10px 0;
 }
+/* Sikeres alert: zöld szegély és háttér */
 .alert.ok{ background: rgba(20,83,45,0.12); border-color: rgba(20,83,45,0.35); }
+/* Figyelmeztető alert: sárga szegély és háttér */
 .alert.warn{ background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.35); }
+/* Hiba alert: piros szegély és háttér */
 .alert.bad{ background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.35); }
 
+/* Státusz pill: kis lekerekített címke állapotjelzéshez */
 .status-pill{
   padding: 6px 10px;
   border-radius: 999px;
@@ -17,10 +22,12 @@
   border: 1px solid rgba(255,255,255,0.12);
   white-space: nowrap;
 }
+/* Státusz variánsok: zöld (ok), sárga (figyelmeztetés), piros (hiba) */
 .status-ok{ background: rgba(20,83,45,0.12); border-color: rgba(20,83,45,0.35); }
 .status-warn{ background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.35); }
 .status-bad{ background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.35); }
 
+/* Oldal fejléc: cím és műveletek egymás mellett, tördelés */
 .page-head{
   display:flex;
   justify-content:space-between;
@@ -30,6 +37,7 @@
   flex-wrap:wrap;
 }
 
+/* Avatár kezdőbetűk: kör alakú, piros háttér, középre igazított betű */
 .avatar-initials{
   display:flex;
   align-items:center;
@@ -38,6 +46,8 @@
   font-weight:600;
 }
 
+/* Apró segédszöveg: szürke, kis betűméret */
 .small{ font-size:13px; color:var(--muted); }
 
+/* Elem elrejtése: nem látható, nem foglal helyet */
 .hidden { display:none !important; }

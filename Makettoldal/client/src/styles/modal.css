@@ -1,3 +1,4 @@
+/* Modal háttér overlay: fix pozíció, sötét blur, középre igazítás */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -9,6 +10,7 @@
   z-index: 9999;
 }
 
+/* Modal ablak: max szélesség, görgethető, sötét háttér, árnyék */
 .modal {
   width: min(920px, 100%);
   max-height: min(95vh, 820px);
@@ -20,6 +22,7 @@
   padding: 20px;
 }
 
+/* Modal fejléc: cím és bezáró gomb egymás mellett */
 .modal-header {
   display: flex;
   align-items: center;
@@ -28,10 +31,14 @@
   margin-bottom: 12px;
 }
 
+/* Modal fejléc bal oldal: ikon + szöveg */
 .modal-head-left { display:flex; align-items:center; gap:12px; }
+/* Modal cím stílus */
 .modal-head-title { margin:0; font-size:18px; color: var(--text); }
+/* Modal alcím: halványabb szöveg */
 .modal-sub { color: var(--text-soft); font-size:13px; }
 
+/* Modal kép: teljes szélességű, lekerekített */
 .modal-kep {
   width: 100%;
   height: auto;
@@ -41,6 +48,7 @@
   margin: 10px 0 14px 0;
 }
 
+/* Modal tartalom rács: kétoszlopos adatmegjelenítés */
 .modal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -49,14 +57,17 @@
   background-color: #020617;
 }
 
+/* Mobil reszponzív: egyoszlopos rács, kisebb padding */
 @media (max-width: 700px) {
   .modal { padding: 14px; }
   .modal-grid { grid-template-columns: 1fr; }
 }
 
+/* Modal apró szöveg és gombsor térköz */
 .modal .small { opacity: 0.85; }
 .modal .button-row { margin-top: 10px; }
 
+/* Modal bezáró gomb: átlátszó, hover-re háttér */
 .modal-close {
   border: 0;
   background: transparent;
@@ -69,6 +80,7 @@
 }
 .modal-close:hover { background: rgba(255,255,255,0.03); }
 
+/* Modal kép wrapper: 16:9 arány, contain illesztés */
 .modal-kep-wrap {
   width: 100%;
   max-height: 420px;
@@ -83,8 +95,10 @@
   margin: 12px 0;
 }
 
+/* Modal kép: teljes kitöltés, arányos illesztés */
 .modal-kep { width: 100%; height: 100%; object-fit: contain; }
 
+/* Modal űrlap elemek: sötét háttér, zöld szegély, fókusz kiemelés */
 .modal input,
 .modal select,
 .modal textarea {
@@ -100,6 +114,7 @@
   transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
 
+/* Modal select: egyedi nyíl ikon CSS-sel */
 .modal select {
   appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.7) 50%), linear-gradient(135deg, rgba(255,255,255,0.7) 50%, transparent 50%);
@@ -109,23 +124,28 @@
   padding-right: 34px;
 }
 
+/* Modal textarea: minimum magasság, átméretezhető */
 .modal textarea { min-height: 110px; resize: vertical; }
 
+/* Modal űrlap fókusz: zöld szegély és halvány árnyék */
 .modal input:focus, .modal select:focus, .modal textarea:focus {
   border-color: rgba(20,83,45,0.65);
   box-shadow: 0 0 0 4px rgba(20,83,45,0.08);
   background: rgba(2, 6, 23, 0.68);
 }
 
+/* Modal placeholder szöveg színe */
 .modal input::placeholder, .modal textarea::placeholder { color: rgba(255,255,255,0.45); }
 
+/* Checkbox és radio szélesség feloldása */
 .modal input[type="checkbox"], .modal input[type="radio"] { width: auto; }
 
-/* Modal buttons match page buttons */
+/* Modal gombok: elsődleges (zöld) és másodlagos (átlátszó) */
 .modal .btn { padding: 8px 14px; border-radius: 10px; }
 .modal .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-soft)); border: 1px solid rgba(20,83,45,0.6); color: #fff; }
 .modal .btn.secondary { background: transparent; border: 1px solid rgba(255,255,255,0.06); color: var(--text); }
 
+/* Modal scrollbar testreszabás: zöld stílus */
 .modal.card::-webkit-scrollbar { width: 10px; }
 .modal.card::-webkit-scrollbar-track { background: rgb(0, 65, 16); border-radius: 999px; }
 .modal.card::-webkit-scrollbar-thumb { background: rgba(20,83,45,0.30); border-radius: 999px; border: 2px solid rgba(2,6,23,0.55); }

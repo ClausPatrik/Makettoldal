@@ -1,28 +1,30 @@
+/* Alapértelmezett dobozméretezés: padding és border beleszámít a szélességbe */
 * {
   box-sizing: border-box;
 }
 
+/* Globális CSS változók: színek, háttér, árnyékok */
 :root {
-  --bg-gradient-from: #2f4b28; /* olive mid tone */
-  --bg-gradient-to: #07110a;   /* very dark olive/near-black */
-  --bg-top-light: #1c2b1b;     /* darkened top (much darker than before) */
+  --bg-gradient-from: #2f4b28;
+  --bg-gradient-to: #07110a;
+  --bg-top-light: #1c2b1b;
   --card-bg: rgba(8,12,8,0.9);
   --card-border: rgba(30,40,30,0.45);
-  --accent: #14532d; /* dark oily green (kept) */
+  --accent: #14532d;
   --accent-soft: #2b6a38;
   --danger: #dc2626;
   --muted: #9ca3af;
-  --text: #e7ebdf; /* slightly warm off-white suited to olive bg */
+  --text: #e7ebdf;
   --text-soft: #cfd8c4;
 
   --hud-glow: 0 0 18px rgba(20,83,45,0.18);
   --warning-glow: 0 0 18px rgba(224, 90, 42, 0.18);
 }
 
+/* Body: alapbetűtípus, többrétegű olívazöld gradiens háttér */
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  /* Layered background: light top -> mid olive -> dark bottom, with subtle radial textures */
   background:
     radial-gradient(1000px 500px at 10% 10%, rgba(40,80,40,0.06), transparent 35%),
     radial-gradient(900px 600px at 90% 80%, rgba(0,0,0,0.55), transparent 60%),
@@ -30,6 +32,7 @@ body {
   color: var(--text);
 }
 
+/* Body rácsmintás textúra-overlay (dekoratív, nem kattintható) */
 body::before {
   content: "";
   position: fixed;
@@ -42,43 +45,77 @@ body::before {
   mix-blend-mode: overlay;
 }
 
+/* Fő alkalmazás wrapper: teljes magasság, oszlop elrendezés */
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
+/* Fő tartalom terület padding és kitöltés */
 .main {
   padding: 24px;
   flex: 1;
 }
 
+/* Oldal tartalom max szélesség és középre igazítás */
 .page {
   max-width: 1400px;
   margin: 0 auto;
 }
 
+/* Container: alternatív oldal wrapper (pl. Makettjeim oldal) */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Oldal cím: nagybetűs, izzó árnyék */
+.page-title {
+  text-transform: uppercase;
+  text-shadow: var(--hud-glow);
+  letter-spacing: 0.06em;
+  margin-top: 0;
+}
+
+/* Oldal fejléc szekció: alsó térköz */
+.page-header {
+  margin-bottom: 20px;
+}
+
+/* Oldal bevezető szöveg: halványabb, max 800px szélességű */
+.page-intro {
+  max-width: 800px;
+  color: var(--text-soft);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Címsorok alap stílusa: betűköz */
 h1, h2, h3 {
   margin-top: 0;
   letter-spacing: 0.06em;
 }
 
+/* H1 nagybetűs, zöld izzó árnyékkal */
 h1 {
   text-transform: uppercase;
   text-shadow: var(--hud-glow);
 }
 
+/* Reszponzív rács elrendezés kártyákhoz */
 .grid {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-/* scrollbar defaults (use oily green) */
+/* Egyedi scrollbar: vékony, olívazöld stílus */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(20,83,45,0.35) rgba(255,255,255,0.06);
 }
+/* Webkit scrollbar testreszabás (Chrome, Edge) */
 html::-webkit-scrollbar { width: 10px; }
 html::-webkit-scrollbar-track { background: rgba(255,255,255,0.06); }
 html::-webkit-scrollbar-thumb { background: rgba(20,83,45,0.28); border-radius: 999px; border: 2px solid rgba(2,6,23,0.55); }

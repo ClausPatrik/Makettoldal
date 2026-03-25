@@ -1,4 +1,4 @@
-/* New file: animations.css - global animations and utilities */
+/* Animációs változók: időzítés, gyorsulási görbe, léptetés */
 :root {
   --anim-ease: cubic-bezier(0.2, 0.9, 0.2, 1);
   --anim-short: 220ms;
@@ -7,13 +7,13 @@
   --anim-stagger-step: 60ms;
 }
 
-/* Respect user preference for reduced motion */
+/* Csökkentett mozgás preferencia: animációk kikapcsolása akadálymentességhez */
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
   .reduce-motion { transition: none !important; }
 }
 
-/* --- Keyframes --- */
+/* Kulcskocka animációk: fade, csúszás, felpattanás, lebegés, shimmer, forgás */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -22,7 +22,7 @@
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 @keyframes spin360 { to { transform: rotate(360deg); } }
 
-/* --- Utilities: default animation helpers --- */
+/* Segédosztályok animációkhoz: fade, csúszás, pop, lebegés, pörgés, pulzálás */
 .animate-fade { animation: fadeIn var(--anim-short) var(--anim-ease) both; }
 .animate-slide-up { animation: slideUp var(--anim-base) var(--anim-ease) both; }
 .animate-slide-down { animation: slideDown var(--anim-base) var(--anim-ease) both; }
@@ -31,7 +31,7 @@
 .animate-spin { animation: spin360 900ms linear infinite; }
 .animate-pulse { animation: fadeIn 800ms ease-in-out infinite alternate; }
 
-/* Quick hover-pop for buttons and clickable elements */
+/* Gombok és nav elemek hover hatása: felemelkedés + enyhe nagyítás */
 button, .nav-link, .nav-hamburger, .nav-btn {
   will-change: transform;
   transition: transform 160ms var(--anim-ease), box-shadow 160ms var(--anim-ease), opacity 160ms var(--anim-ease);
@@ -40,13 +40,12 @@ button:hover:not(:disabled), .nav-link:hover, .nav-hamburger:hover, .nav-btn:hov
   transform: translateY(-3px) scale(1.01);
 }
 
-/* Cards and grid children entrance with staggered delays */
+/* Rács elemek léptetett megjelenése: egymás után pattannak be */
 .grid > * {
   opacity: 0;
   transform: translateY(8px) scale(.995);
   animation: popIn var(--anim-base) var(--anim-ease) both;
 }
-/* apply a simple stagger for up to 12 children */
 .grid > *:nth-child(1)  { animation-delay: calc(var(--anim-stagger-step) * 1); }
 .grid > *:nth-child(2)  { animation-delay: calc(var(--anim-stagger-step) * 2); }
 .grid > *:nth-child(3)  { animation-delay: calc(var(--anim-stagger-step) * 3); }
@@ -60,48 +59,48 @@ button:hover:not(:disabled), .nav-link:hover, .nav-hamburger:hover, .nav-btn:hov
 .grid > *:nth-child(11) { animation-delay: calc(var(--anim-stagger-step) * 11); }
 .grid > *:nth-child(12) { animation-delay: calc(var(--anim-stagger-step) * 12); }
 
-/* Nav entrance */
+/* Navigáció: felülről lecsúszó megjelenés */
 .nav { opacity: 0; transform: translateY(-6px); animation: slideDown 420ms var(--anim-ease) both; }
 
-/* Nav mobile open animation */
+/* Mobil navigáció: kinyíló/záródó animáció */
 .nav-mobile { transform-origin: top center; transition: max-height 260ms var(--anim-ease), transform 260ms var(--anim-ease); }
 .nav-mobile.open { animation: popIn 340ms var(--anim-ease) both; }
+/* Mobil overlay: fade átmenet */
 .nav-overlay { opacity: 0; transition: opacity 220ms var(--anim-ease); }
 .nav-overlay.show { opacity: 1; }
 
-/* Modal / dialog entrance */
+/* Modal/dialog ablakok: alulról felpattanó megjelenés */
 .modal, .makett-modal, .MakettModal, .dialog {
   opacity: 0;
   transform: translateY(10px) scale(.995);
   animation: popIn var(--anim-base) var(--anim-ease) both;
 }
 
-/* Toasts */
+/* Toast értesítések: jobbról bepattanó megjelenés */
 .toast, .Toast {
   opacity: 0;
   transform: translateY(8px) translateX(6px) scale(.995);
   animation: popIn var(--anim-short) var(--anim-ease) both;
 }
 
-/* Images and avatars subtle float */
+/* Képek és avatarok: hover-re felemelkednek és nagyítódnak */
 img, .nav-avatar-img, .nav-avatar {
   transition: transform 320ms var(--anim-ease), box-shadow 320ms var(--anim-ease);
 }
 img:hover, .nav-avatar:hover { transform: translateY(-4px) scale(1.02); }
 
-/* Shimmer / skeleton helper */
+/* Skeleton/shimmer betöltési placeholder: csillogó gradiens animáció */
 .skeleton, .shimmer {
   background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.02) 80%);
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
 }
 
-/* Small attention animations */
+/* Figyelemfelhívó lebegő animáció */
 .attention { animation: floatSlow 3.8s ease-in-out infinite; }
+/* Badge/jelvény: pop-in pulzálás */
 .badge, .nav-badge { transform-origin: center; transition: transform 220ms var(--anim-ease); }
 .badge.pulse { animation: popIn 420ms var(--anim-ease) both; }
 
-/* Helper to disable animations programmatically */
+/* Csökkentett mozgás mód: minden átmenet és animáció kikapcsolása */
 .reduce-motion, [data-reduced-motion="true"] * { transition: none !important; animation: none !important; }
-
-/* End of animations.css */

@@ -1,9 +1,11 @@
+/* Űrlap címkék: blokk szintű, kis betűméret */
 .form label {
   display: block;
   font-size: 14px;
   margin-bottom: 8px;
 }
 
+/* Űrlap beviteli mezők: sötét háttér, lekerekített, fókusz kiemelés */
 .form input,
 .form textarea,
 .form select {
@@ -19,6 +21,7 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
+/* Űrlap fókusz állapot: zöld szegély és árnyék */
 .form input:focus,
 .form textarea:focus,
 .form select:focus {
@@ -27,8 +30,10 @@
   background: #020617;
 }
 
+/* Szövegdoboz: minimum magasság, függőlegesen átméretezhető */
 .form textarea { min-height: 80px; resize: vertical; }
 
+/* Szűrő sor: vízszintes elrendezés, tördelés */
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -36,6 +41,7 @@
   margin-bottom: 16px;
 }
 
+/* Szűrő mezők: lekerekített kapszula stílus */
 .filters input,
 .filters select {
   padding: 6px 10px;
@@ -48,31 +54,40 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* Szűrő fókusz: zöld szegély kiemelés */
 .filters input:focus,
 .filters select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgba(20, 83, 45, 0.6);
 }
 
+/* Űrlap rács: kétoszlopos elrendezés */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-top: 12px;
 }
+/* Rács címkék: flex oszlop */
 .form-grid label{ display: flex; flex-direction: column; gap: 6px; }
+/* Rács mezők: teljes szélesség */
 .form-grid input,
 .form-grid textarea{ width: 100%; }
+/* Két oszlopot átfogó elem */
 .form-grid .span-2{ grid-column: span 2; }
 
+/* Mobil reszponzív: egyoszlopos rács */
 @media (max-width: 720px){
   .form-grid{ grid-template-columns: 1fr; }
   .form-grid .span-2{ grid-column: span 1; }
 }
 
+/* Vélemény panel: felső térköz */
 .velemeny-panel { margin-top: 32px; }
+/* Vélemény lista: alsó térköz */
 .velemeny-lista { margin-bottom: 16px; }
 
+/* Gombsor: vízszintes elrendezés, tördelés */
 .button-row {
   display: flex;
   gap: 8px;
@@ -80,5 +95,7 @@
   flex-wrap: wrap;
 }
 
+/* Hibaüzenet szöveg: piros szín */
 .error { color: #f97373; }
+/* Apró szöveg: szürke, kis betűméret */
 .small { font-size: 13px; color: var(--muted); }
