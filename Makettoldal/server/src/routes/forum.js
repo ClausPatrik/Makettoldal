@@ -2,19 +2,9 @@ import express from "express";
 
 export default function createForumRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { adatbazisLekeres, authMiddleware } = ctx;
 
+  // Fórum témák listázása (üzenetszám, utolsó válasz időpontja)
   router.get("/api/forum/temak", async (req, res) => {
     try {
       const temak = await adatbazisLekeres(
@@ -35,6 +25,7 @@ export default function createForumRoutes(ctx) {
     }
   });
 
+  // Új fórum téma létrehozása
   router.post("/api/forum/temak", authMiddleware, async (req, res) => {
     try {
       const { cim, leiras, kategoria } = req.body;
@@ -63,6 +54,7 @@ export default function createForumRoutes(ctx) {
     }
   });
 
+  // Adott témához tartozó üzenetek lekérdezése (időrend szerint)
   router.get("/api/forum/temak/:id/uzenetek", async (req, res) => {
     try {
       const temaId = Number(req.params.id);
@@ -82,6 +74,7 @@ export default function createForumRoutes(ctx) {
     }
   });
 
+  // Új hozzászólás küldése egy fórum témához
   router.post("/api/forum/temak/:id/uzenetek", authMiddleware, async (req, res) => {
     try {
       const temaId = Number(req.params.id);
@@ -109,6 +102,7 @@ export default function createForumRoutes(ctx) {
     }
   });
 
+  // Fórum téma szerkesztése (saját vagy admin)
   router.put("/api/forum/temak/:id", authMiddleware, async (req, res) => {
     try {
       const temaId = Number(req.params.id);
@@ -135,6 +129,7 @@ export default function createForumRoutes(ctx) {
     }
   });
 
+  // Fórum téma törlése (saját vagy admin)
   router.delete("/api/forum/temak/:id", authMiddleware, async (req, res) => {
     try {
       const temaId = Number(req.params.id);
@@ -155,6 +150,7 @@ export default function createForumRoutes(ctx) {
     }
   });
 
+  // Fórum hozzászólás szerkesztése (saját vagy admin)
   router.put("/api/forum/uzenetek/:id", authMiddleware, async (req, res) => {
     try {
       const uzenetId = Number(req.params.id);
@@ -177,6 +173,7 @@ export default function createForumRoutes(ctx) {
     }
   });
 
+  // Fórum hozzászólás törlése (saját, admin vagy moderátor)
   router.delete("/api/forum/uzenetek/:id", authMiddleware, async (req, res) => {
     try {
       const uzenetId = Number(req.params.id);

@@ -2,19 +2,9 @@ import express from "express";
 
 export default function createVelemenyekRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { adatbazisLekeres, authMiddleware } = ctx;
 
+  // Összes vélemény listázása (makett névvel együtt)
   router.get("/api/velemenyek", async (req, res) => {
     try {
       const velemenyek = await adatbazisLekeres(
@@ -32,6 +22,7 @@ export default function createVelemenyekRoutes(ctx) {
     }
   });
 
+  // Bejelentkezett felhasználó saját véleményeinek lekérdezése
   router.get("/api/sajat/velemenyek", authMiddleware, async (req, res) => {
     try {
       const felhasznaloId = req.felhasznalo.id;
@@ -51,6 +42,7 @@ export default function createVelemenyekRoutes(ctx) {
     }
   });
 
+  // Vélemény szerkesztése (saját vagy admin)
   router.put("/api/velemenyek/:id", authMiddleware, async (req, res) => {
     try {
       const velemenyId = Number(req.params.id);
@@ -88,6 +80,7 @@ export default function createVelemenyekRoutes(ctx) {
     }
   });
 
+  // Vélemény törlése (saját, admin vagy moderátor)
   router.delete("/api/velemenyek/:id", authMiddleware, async (req, res) => {
     try {
       const velemenyId = Number(req.params.id);

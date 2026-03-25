@@ -2,19 +2,9 @@ import express from "express";
 
 export default function createAuthRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { adatbazisLekeres, generalToken, bcrypt } = ctx;
 
+  // Regisztráció – új felhasználó létrehozása, jelszó hashelése, token visszaadása
   router.post("/api/auth/register", async (req, res) => {
     try {
       const { felhasznalo_nev, email, jelszo } = req.body;
@@ -54,6 +44,7 @@ export default function createAuthRoutes(ctx) {
     }
   });
 
+  // Bejelentkezés – email/jelszó ellenőrzés, tiltás kezelés, token visszaadása
   router.post("/api/auth/login", async (req, res) => {
     try {
       const { email, jelszo } = req.body;
@@ -68,7 +59,6 @@ export default function createAuthRoutes(ctx) {
         return res.status(400).json({ uzenet: "Hibás email vagy jelszó." });
       }
 
-      // tiltás login-nál is
       if (user.tiltva && user.tiltva !== "nincs") {
         if (user.tiltva === "ideiglenes" && user.tilt_eddig) {
           const most = new Date();

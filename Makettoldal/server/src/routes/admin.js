@@ -2,19 +2,9 @@ import express from "express";
 
 export default function createAdminRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { adatbazisLekeres, authMiddleware, adminMiddleware, naplozAktivitas } = ctx;
 
+  // Várakozó makett javaslatok listázása (admin)
   router.get("/api/admin/makett-javaslatok", authMiddleware, adminMiddleware, async (req, res) => {
     try {
       const sorok = await adatbazisLekeres(
@@ -31,6 +21,7 @@ export default function createAdminRoutes(ctx) {
     }
   });
 
+  // Makett javaslat jóváhagyása (admin)
   router.post("/api/admin/makett-javaslatok/:id/jovahagy", authMiddleware, adminMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -59,6 +50,7 @@ export default function createAdminRoutes(ctx) {
     }
   });
 
+  // Makett javaslat elutasítása indoklással (admin)
   router.post("/api/admin/makett-javaslatok/:id/elutasit", authMiddleware, adminMiddleware, async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -89,6 +81,7 @@ export default function createAdminRoutes(ctx) {
     }
   });
 
+  // Összes felhasználó listázása (admin)
   router.get("/api/admin/felhasznalok", authMiddleware, adminMiddleware, async (req, res) => {
     try {
       const sorok = await adatbazisLekeres(
@@ -105,6 +98,7 @@ export default function createAdminRoutes(ctx) {
     }
   });
 
+  // Adott felhasználó aktivitás naplójának lekérdezése (admin)
   router.get("/api/admin/felhasznalok/:id/aktivitas", authMiddleware, adminMiddleware, async (req, res) => {
     try {
       const celId = Number(req.params.id);
@@ -127,6 +121,7 @@ export default function createAdminRoutes(ctx) {
     }
   });
 
+  // Felhasználó tiltása/feloldása – ideiglenes vagy végleges (admin)
   router.put("/api/admin/felhasznalok/:id/tiltas", authMiddleware, adminMiddleware, async (req, res) => {
     try {
       const celId = Number(req.params.id);
@@ -217,6 +212,7 @@ export default function createAdminRoutes(ctx) {
     }
   });
 
+  // Felhasználó szerepkörének módosítása (admin)
   router.put("/api/admin/felhasznalok/:id/szerepkor", authMiddleware, adminMiddleware, async (req, res) => {
     try {
       const celId = Number(req.params.id);

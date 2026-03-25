@@ -1,20 +1,9 @@
 import express from "express";
 
-export default function createRootRoutes(ctx) {
+export default function createRootRoutes() {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
 
+  // Gyökér végpont – API állapot ellenőrzés
   router.get("/", (req, res) => res.send("Makett API fut."));
 
   return router;

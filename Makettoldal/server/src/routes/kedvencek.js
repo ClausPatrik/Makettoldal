@@ -2,19 +2,9 @@ import express from "express";
 
 export default function createKedvencekRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { adatbazisLekeres, authMiddleware } = ctx;
 
+  // Bejelentkezett felhasználó kedvenc makettjeinek lekérdezése
   router.get("/api/kedvencek", authMiddleware, async (req, res) => {
     try {
       const userId = req.felhasznalo.id;
@@ -32,6 +22,7 @@ export default function createKedvencekRoutes(ctx) {
     }
   });
 
+  // Makett hozzáadása a kedvencekhez
   router.post("/api/kedvencek/:makettId", authMiddleware, async (req, res) => {
     try {
       const userId = req.felhasznalo.id;
@@ -47,6 +38,7 @@ export default function createKedvencekRoutes(ctx) {
     }
   });
 
+  // Makett eltávolítása a kedvencek közül
   router.delete("/api/kedvencek/:makettId", authMiddleware, async (req, res) => {
     try {
       const userId = req.felhasznalo.id;

@@ -2,19 +2,9 @@ import express from "express";
 
 export default function createAiRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { aiLimiter } = ctx;
 
+  // AI chat – OpenAI API-n keresztül válaszol a felhasználó üzeneteire
   router.post("/api/ai/chat", aiLimiter, async (req, res) => {
     try {
       const apiKey = process.env.OPENAI_API_KEY;

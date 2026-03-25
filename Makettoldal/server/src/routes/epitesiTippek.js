@@ -2,19 +2,9 @@ import express from "express";
 
 export default function createEpitesiTippekRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { adatbazisLekeres, authMiddleware } = ctx;
 
+  // Jogosultság ellenőrzés: admin, moderátor vagy a napló tulajdonosa
   function adminVagyTulajTippekNaplo(req, naplo) {
     const szerep = req.felhasznalo?.szerepkor_id;
     const admin = szerep === 2;
@@ -23,6 +13,7 @@ export default function createEpitesiTippekRoutes(ctx) {
     return admin || moderator || tulaj;
   }
 
+  // Adott naplóhoz tartozó blokkok lekérdezése (sorrend szerint)
   router.get("/api/epitesi-tippek/:naploId/blokkok", async (req, res) => {
     try {
       const naploId = Number(req.params.naploId);
@@ -42,6 +33,7 @@ export default function createEpitesiTippekRoutes(ctx) {
     }
   });
 
+  // Új blokk hozzáadása egy építési tippek naplóhoz
   router.post("/api/epitesi-tippek/:naploId/blokkok", authMiddleware, async (req, res) => {
     try {
       const naploId = Number(req.params.naploId);
@@ -73,6 +65,7 @@ export default function createEpitesiTippekRoutes(ctx) {
     }
   });
 
+  // Építési tippek blokk módosítása
   router.put("/api/epitesi-tippek-blokk/:blokkId", authMiddleware, async (req, res) => {
     try {
       const blokkId = Number(req.params.blokkId);
@@ -105,6 +98,7 @@ export default function createEpitesiTippekRoutes(ctx) {
     }
   });
 
+  // Építési tippek blokk törlése
   router.delete("/api/epitesi-tippek-blokk/:blokkId", authMiddleware, async (req, res) => {
     try {
       const blokkId = Number(req.params.blokkId);

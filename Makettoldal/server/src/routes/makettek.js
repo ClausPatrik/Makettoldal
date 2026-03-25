@@ -2,19 +2,9 @@ import express from "express";
 
 export default function createMakettekRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { adatbazisLekeres, authMiddleware, adminMiddleware, upload } = ctx;
 
+  // Jóváhagyott makettek listázása szűrőkkel (kategória, skála, keresés, értékelés, rendezés)
   router.get("/api/makettek", async (req, res) => {
     try {
       const { kategoria, skala, q, minPont, rendezes } = req.query;
@@ -67,6 +57,7 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Új makett létrehozása (admin, azonnal jóváhagyva)
   router.post("/api/makettek", authMiddleware, adminMiddleware, async (req, res) => {
     try {
       const {
@@ -122,6 +113,7 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Makett adatainak módosítása (admin)
   router.put("/api/makettek/:id", authMiddleware, adminMiddleware, async (req, res) => {
     try {
       const makettId = Number(req.params.id);
@@ -180,6 +172,7 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Makett törlése (admin vagy a beküldő felhasználó)
   router.delete("/api/makettek/:id", authMiddleware, async (req, res) => {
     try {
       const makettId = Number(req.params.id);
@@ -206,6 +199,7 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Makett javaslat beküldése jóváhagyásra (felhasználó, képfeltöltéssel)
   router.post("/api/makett-javaslatok", authMiddleware, upload.single("kep"), async (req, res) => {
     try {
       const { nev, gyarto, kategoria, skala, nehezseg, megjelenes_eve, kep_url, leiras, vasarlasi_link } = req.body;
@@ -236,6 +230,7 @@ export default function createMakettekRoutes(ctx) {
            kep_url, leiras, vasarlasi_link,
            allapot, bekuldo_felhasznalo_id)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'varakozik', ?)`,
+
         [
           String(nev).trim(),
           String(gyarto).trim(),
@@ -257,6 +252,7 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Saját beküldött makett javaslatok listázása
   router.get("/api/sajat/makett-javaslatok", authMiddleware, async (req, res) => {
     try {
       const sorok = await adatbazisLekeres(
@@ -275,6 +271,7 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Saját makettek listázása (összes státusszal)
   router.get("/api/sajat/makettek", authMiddleware, async (req, res) => {
     try {
       const sorok = await adatbazisLekeres(
@@ -293,12 +290,12 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Saját makett szerkesztése (visszakerül jóváhagyásra)
   router.put("/api/sajat/makettek/:id", authMiddleware, async (req, res) => {
     try {
       const makettId = Number(req.params.id);
       if (!Number.isFinite(makettId)) return res.status(400).json({ uzenet: "Érvénytelen makett ID." });
 
-      // tulaj ellenőrzés
       const [mk] = await adatbazisLekeres(
         `SELECT id, bekuldo_felhasznalo_id
          FROM makett
@@ -384,6 +381,7 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Adott maketthez tartozó vélemények lekérdezése
   router.get("/api/makettek/:id/velemenyek", async (req, res) => {
     try {
       const makettId = Number(req.params.id);
@@ -403,6 +401,7 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Új vélemény hozzáadása egy maketthez
   router.post("/api/makettek/:id/velemenyek", authMiddleware, async (req, res) => {
     try {
       const makettId = Number(req.params.id);
@@ -435,18 +434,17 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Adott maketthez tartozó építési tippek naplók lekérdezése
   router.get("/api/makettek/:makettId/epitesi-tippek", async (req, res) => {
     try {
       const makettId = Number(req.params.makettId);
       if (!Number.isFinite(makettId)) return res.status(400).json({ uzenet: "Érvénytelen makett azonosító." });
 
-      // Több napló is lehet egy maketthez, ezért listát adunk vissza.
       const naplok = await adatbazisLekeres(
         "SELECT * FROM epitesi_tippek_naplo WHERE makett_id = ? ORDER BY id DESC",
         [makettId]
       );
 
-      // Visszafelé kompatibilitás: ha nincs napló, régi forma szerint is értelmezhető
       if (!naplok.length) return res.json({ naplok: [] });
 
       return res.json({ naplok });
@@ -456,6 +454,7 @@ export default function createMakettekRoutes(ctx) {
     }
   });
 
+  // Új építési tippek napló létrehozása egy maketthez
   router.post("/api/makettek/:makettId/epitesi-tippek", authMiddleware, async (req, res) => {
     try {
       const makettId = Number(req.params.makettId);

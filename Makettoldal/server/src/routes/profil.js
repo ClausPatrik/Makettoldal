@@ -2,19 +2,9 @@ import express from "express";
 
 export default function createProfilRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { adatbazisLekeres, authMiddleware, upload, generalToken } = ctx;
 
+  // Profil adatok módosítása (felhasználónév, profilkép URL)
   router.put("/api/profil", authMiddleware, async (req, res) => {
     try {
       const { felhasznalo_nev, profil_kep_url } = req.body;
@@ -46,10 +36,10 @@ export default function createProfilRoutes(ctx) {
     }
   });
 
+  // Profilkép feltöltése fájlként, URL mentése az adatbázisba
   router.post("/api/profil/feltoltes", authMiddleware, upload.single("profilkep"), async (req, res) => {
     if (!req.file) return res.status(400).json({ uzenet: "Nincs feltöltött fájl." });
 
-    // frontend a /uploads/...-t is tudja kezelni (jobb), de ha kell, itt a teljes URL
     const kepUrl = `/uploads/${req.file.filename}`;
 
     try {

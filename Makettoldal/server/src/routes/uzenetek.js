@@ -2,22 +2,11 @@ import express from "express";
 
 export default function createUzenetekRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { adatbazisLekeres, authMiddleware, nodemailer } = ctx;
 
+  // Email értesítés küldése a fejlesztőnek (nodemailer, .env alapján)
   async function kuldEmailErtesitesFejlesztonek({ kuldoNev, kuldoEmail, targy, uzenet }) {
     try {
-      // Ha nincs rendesen beállítva a mail, akkor ne dobjon hibát, csak lépjen tovább
       if (!process.env.MAIL_HOST || !process.env.MAIL_USER || !process.env.MAIL_PASS || !process.env.MAIL_TO) {
         console.log("MAIL nincs beállítva rendesen (.env) -> kihagyva az email küldés.");
         return;
@@ -26,7 +15,7 @@ export default function createUzenetekRoutes(ctx) {
       const transporter = nodemailer.createTransport({
         host: process.env.MAIL_HOST,
         port: Number(process.env.MAIL_PORT || 587),
-        secure: String(process.env.MAIL_SECURE || "false") === "true", // 465 esetén true
+        secure: String(process.env.MAIL_SECURE || "false") === "true",
         auth: {
           user: process.env.MAIL_USER,
           pass: process.env.MAIL_PASS,
@@ -47,6 +36,7 @@ export default function createUzenetekRoutes(ctx) {
     }
   }
 
+  // Összes üzenet listázása (csak admin)
   router.get("/api/uzenetek", authMiddleware, async (req, res) => {
     try {
       const admin = req.felhasznalo?.szerepkor_id === 2;
@@ -66,6 +56,7 @@ export default function createUzenetekRoutes(ctx) {
     }
   });
 
+  // Üzenet olvasottnak jelölése (csak admin)
   router.patch("/api/uzenetek/:id/olvasva", authMiddleware, async (req, res) => {
     try {
       const admin = req.felhasznalo?.szerepkor_id === 2;

@@ -2,19 +2,9 @@ import express from "express";
 
 export default function createEpitesinaploRoutes(ctx) {
   const router = express.Router();
-  const {
-    adatbazisLekeres,
-    authMiddleware,
-    adminMiddleware,
-    upload,
-    aiLimiter,
-    generalToken,
-    bcrypt,
-    jwt,
-    nodemailer,
-    naplozAktivitas,
-  } = ctx;
+  const { adatbazisLekeres, authMiddleware } = ctx;
 
+  // Összes építési napló bejegyzés listázása (makett és felhasználó adatokkal)
   router.get("/api/epitesinaplo", async (req, res) => {
     try {
       const sorok = await adatbazisLekeres(
@@ -33,6 +23,7 @@ export default function createEpitesinaploRoutes(ctx) {
     }
   });
 
+  // Bejelentkezett felhasználó saját építési naplóinak lekérdezése
   router.get("/api/epitesinaplo/sajat", authMiddleware, async (req, res) => {
     try {
       const felhasznaloId = req.felhasznalo.id;
@@ -52,6 +43,7 @@ export default function createEpitesinaploRoutes(ctx) {
     }
   });
 
+  // Új építési napló bejegyzés létrehozása
   router.post("/api/epitesinaplo", authMiddleware, async (req, res) => {
     try {
       const felhasznaloId = req.felhasznalo.id;
@@ -64,6 +56,7 @@ export default function createEpitesinaploRoutes(ctx) {
       const eredmeny = await adatbazisLekeres(
         `INSERT INTO epitesi_naplo (makett_id, felhasznalo_id, cim, leiras, kep_url)
          VALUES (?, ?, ?, ?, ?)`,
+
         [makettId, felhasznaloId, String(cim).trim(), String(leiras).trim(), kep_url || null]
       );
 
