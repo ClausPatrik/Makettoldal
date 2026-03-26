@@ -233,18 +233,18 @@ const ctx = {
   naplozAktivitas,
 };
 
-app.use(createAiRoutes(ctx));          // AI chatbot végpontok
-app.use(createAuthRoutes(ctx));        // Regisztráció és bejelentkezés
-app.use(createProfilRoutes(ctx));      // Profil megtekintés és szerkesztés
-app.use(createMakettekRoutes(ctx));    // Makettek CRUD műveletei
-app.use(createAdminRoutes(ctx));       // Admin felület (felhasználókezelés, jóváhagyás)
-app.use(createVelemenyekRoutes(ctx));  // Vélemények és értékelések kezelése
-app.use(createKedvencekRoutes(ctx));   // Kedvencek hozzáadása/eltávolítása
+app.use(createAiRoutes(ctx));            // AI chatbot végpontok
+app.use(createAuthRoutes(ctx));          // Regisztráció és bejelentkezés
+app.use(createProfilRoutes(ctx));        // Profil megtekintés és szerkesztés
+app.use(createMakettekRoutes(ctx));      // Makettek CRUD műveletei
+app.use(createAdminRoutes(ctx));         // Admin felület (felhasználókezelés, jóváhagyás)
+app.use(createVelemenyekRoutes(ctx));    // Vélemények és értékelések kezelése
+app.use(createKedvencekRoutes(ctx));     // Kedvencek hozzáadása/eltávolítása
 app.use(createEpitesiTippekRoutes(ctx)); // Építési tippek lekérdezése
 app.use(createEpitesinaploRoutes(ctx));  // Építési napló bejegyzések kezelése
-app.use(createUzenetekRoutes(ctx));    // Privát üzenetek küldése/fogadása
-app.use(createForumRoutes(ctx));       // Fórum témák és hozzászólások
-app.use(createRootRoutes(ctx));        // Gyökér és egyéb általános végpontok
+app.use(createUzenetekRoutes(ctx));      // Privát üzenetek küldése/fogadása
+app.use(createForumRoutes(ctx));         // Fórum témák és hozzászólások
+app.use(createRootRoutes(ctx));          // Gyökér és egyéb általános végpontok
 
 // MySQL connection pool inicializálása
 async function inicializalAdatbazis() {
