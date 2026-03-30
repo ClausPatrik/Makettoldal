@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useAdat } from "../context/AdatContext";
-
+import logo from "../assets/logo.png";
 /**
  * CsillagokKicsi
  * Kisméretű (inline) csillag-megjelenítő komponens 0–5 skálára.
@@ -183,7 +183,15 @@ export default function Kezdolap() {
 
   return (
     <section className="page">
-      <h1>Üdv a MakettMester oldalán!</h1>
+      <h1 style={{ textAlign: "center", margin: "1rem 0 2rem" }}>Üdv a MakettMester oldalán!</h1>
+    
+      <div style={{ textAlign: "center", margin: "1rem 0 2rem" }}>
+        <img
+          src={logo}
+          alt="MakettMester logó"
+          style={{ maxWidth: "440px", width: "120%", height: "auto" }}
+        />
+      </div>
 
       <div className="card">
         <h2>Makettezők tudásbázisa és fóruma</h2>
