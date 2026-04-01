@@ -219,7 +219,15 @@ export function AdatProvider({ children }) {
     const adat = await valasz.json();
     beallitKedvencek(adat.map((k) => Number(k.makett_id)));
   }, []);
-
+async function betoltMakettek() {
+  try {
+    const res = await fetch("http://localhost:3001/api/makettek");
+    const data = await res.json();
+    setMakettek(data);
+  } catch (err) {
+    console.error("Makettek betöltési hiba:", err);
+  }
+}
   /**
    * valtKedvenc
    *

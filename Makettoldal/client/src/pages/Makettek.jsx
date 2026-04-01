@@ -23,6 +23,7 @@ export default function Makettek() {
     torolVelemeny,
     kedvencek,
     betoltKedvencek,
+    betoltMakettek,
     valtKedvenc,
     betoltesFolyamatban,
     hiba,
@@ -138,7 +139,7 @@ export default function Makettek() {
 
     // UX: törlés után a modal záródik
     setModalMakett(null);
-
+    betoltMakettek();
     // Megjegyzés: lista frissítése (ha nem történik automatikusan) a context szintjén intézendő.
   }
 
