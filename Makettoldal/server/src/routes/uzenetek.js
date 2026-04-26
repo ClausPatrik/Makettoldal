@@ -36,6 +36,38 @@ export default function createUzenetekRoutes(ctx) {
     }
   }
 
+  // Új üzenet küldése (bejelentkezett felhasználó)
+  router.post("/api/uzenetek", authMiddleware, async (req, res) => {
+    try {
+      const { targy, uzenet } = req.body;
+
+      if (!targy?.trim() || !uzenet?.trim()) {
+        return res.status(400).json({ uzenet: "A tárgy és az üzenet mező kötelező." });
+      }
+      if (targy.trim().length > 120) {
+        return res.status(400).json({ uzenet: "A tárgy maximum 120 karakter lehet." });
+      }
+
+      const kuldo = req.felhasznalo;
+      await adatbazisLekeres(
+        "INSERT INTO uzenetek (kuldo_felhasznalo_id, targy, uzenet) VALUES (?, ?, ?)",
+        [kuldo.id, targy.trim(), uzenet.trim()]
+      );
+
+      await kuldEmailErtesitesFejlesztonek({
+        kuldoNev: kuldo.felhasznalo_nev,
+        kuldoEmail: kuldo.email,
+        targy: targy.trim(),
+        uzenet: uzenet.trim(),
+      });
+
+      return res.status(201).json({ uzenet: "Üzenet elküldve." });
+    } catch (err) {
+      console.error("Uzenet kuldese hiba:", err?.message || err);
+      return res.status(500).json({ uzenet: "Szerver hiba." });
+    }
+  });
+
   // Összes üzenet listázása (csak admin)
   router.get("/api/uzenetek", authMiddleware, async (req, res) => {
     try {
